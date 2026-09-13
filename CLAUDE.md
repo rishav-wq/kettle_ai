@@ -1,11 +1,12 @@
 # Kettle
 
-Everyday AI video courses in Hindi for Indians over 40. Mobile-first PWA. One Next.js app, Postgres on Neon via Drizzle, deployed on Vercel. Solo engineer, so every choice favors one person being able to run it.
+Everyday AI video courses in Hindi for Indians over 40. Mobile-first PWA. One Next.js app, MongoDB on Atlas, deployed on Render. Solo engineer, so every choice favors one person being able to run it.
 
 ## Rules that are not obvious from the code
 
 - **Viewer state is the spine.** `src/lib/viewer.ts` resolves `anonymous | free | gold` plus the tenant once per request. Every gating decision, popup, and nav item is a function of it. No page decides access on its own.
-- **Every tenant-scoped query goes through `withTenant()`.** `src/lib/db/tenant.ts` opens a transaction and sets `app.tenant_id`; row-level security in `schema.ts` filters on it. Never query `users`, `memberships`, `payments`, `progress`, or `audit_log` outside it. Never take a tenant id from the client. `bypassRls` is for the seed script and the payment webhook only.
+- **Every tenant-scoped query goes through `withTenant()`.** `src/lib/db/scope.ts` hands you a handle that narrows every read and stamps every write with the tenant; `src/lib/db/collections.ts` classifies each collection. Never take a tenant id from the client. `bypass` is for the seed script and the payment webhook only.
+- **Nothing outside `src/lib/db` imports the MongoDB driver.** This is the rule that replaced row-level security, and it is now the whole of the isolation guarantee. Postgres refused another tenant's rows itself, so a forgotten filter returned nothing; MongoDB returns everything. `npm run check:tenancy` proves the scoped path holds, but it cannot see a raw driver call made elsewhere — hence the rule.
 - **Row-level security is FORCEd**, so it applies to the table owner too. A missing `set_config` returns zero rows rather than all rows. If a page shows nothing unexpectedly, that is usually why.
 - **Every route handler** parses input with a schema from `src/lib/security/validators.ts`, checks `assertSameOrigin` on mutations, and rate limits with `src/lib/security/rate-limit.ts`. Webhooks skip origin checks and verify a signature instead.
 - **Pine on white.** Text and controls are Pine `#00311F`; the ground is white. Milk `#F0EEE6` is a secondary surface only. Every grey is a tint of pine. Components use the semantic tokens in `globals.css` (`ink`, `paper`, `fill`, `line`, `wash`), never raw hex. No gradients. Large blocks are outlined, not filled; only controls (buttons, tabs, avatars, step numbers) are solid pine.
@@ -20,17 +21,17 @@ Everyday AI video courses in Hindi for Indians over 40. Mobile-first PWA. One Ne
 - **Unfilled landing content is flagged, not faked.** `content/kettle-site.json` holds the teacher, testimonials and FAQ. Any entry with `"placeholder": true` renders with a dashed border and an EXAMPLE chip so it cannot ship unnoticed. Replace with real people and real photographs, then drop the flag.
 - **No urgency, ever.** No countdown, no "offer ends", no struck-through price. Most comparable products do this; it is the visual grammar of the scams our first course warns about.
 - **Entitlement flips only from the server.** Payment success is confirmed by the Razorpay webhook writing to `memberships`. The client polls `/api/payments/status`, it never asserts. `/api/payments/simulate` stands in for the webhook locally and refuses to exist once real keys are set or in production.
-- **Sessions are rows, not signed tokens.** The cookie holds an opaque secret; the database holds only its SHA-256 hash. That makes revocation and account deletion real. `src/lib/auth/session.ts` is one of the few places that touches the database outside `withTenant()`, because the tenant is not known until the session is read.
+- **Sessions are documents, not signed tokens.** The cookie holds an opaque secret; the database holds only its SHA-256 hash. That makes revocation and account deletion real. `src/lib/auth/session.ts` is one of the few places that touches the database outside `withTenant()`, because the tenant is not known until the session is read.
 - **Secrets resolve on use, not on import.** `getAuthSecret()` and the SMS sender are lazy, because `next build` evaluates every route with `NODE_ENV=production` before secrets are necessarily in scope. A module-level throw breaks the build; a lazy one still refuses a real request.
 - **Swapping the SMS provider is one file.** `src/lib/auth/sms.ts` holds the interface, the dev sender that prints to the log, and the MSG91 implementation. India needs DLT registration per template per language.
-- **Local dev needs no database.** Without `DATABASE_URL` the app runs an embedded Postgres (PGlite) under `.data/`, with the same migrations and RLS. Production refuses to fall back.
+- **`DATABASE_URL` is required everywhere, including locally.** MongoDB has no in-process equivalent of the embedded Postgres this used to run, so there is no zero-setup path any more: a clean checkout needs an Atlas connection string before `npm run dev` will serve a page. It must name a database, or the driver quietly uses one called `test`.
 
 ## Layout
 
 - `src/app` routes. `/kit` is the component kit, not linked from the product.
 - `src/components/ui` the reusable pieces. `src/components/app-shell.tsx` is the frame every signed-in screen uses: one column with a bottom bar on phones, a fixed sidebar and a content area from `lg` (1024px) up. Pass `width="wide"` for catalog-style pages, the default `"reading"` for everything else.
 - **Two layouts, one tree.** Phone first, then `lg:` overrides. Never a separate desktop route or component. A phone column centred in a desktop window reads as unfinished, so from `lg` the landing page goes two-column and the app grows a sidebar.
-- `src/lib/db/schema.ts` the whole data model including RLS policies. `drizzle/` holds generated SQL; regenerate with `npm run db:generate` after schema edits, never hand-edit a generated file. `0001_force-rls.sql` is hand-written on purpose.
+- `src/lib/db/documents.ts` the whole data model as document types. `src/lib/db/indexes.ts` is what replaced the migrations: applied on every connection, it carries the uniqueness constraints the app's correctness depends on — one phone to one account, one receipt to one charge, one progress document per lesson.
 - `content/kettle-content.json` is the course source of truth in v0. `npm run db:seed` loads it. `content/kettle-site.json` is the landing page content and is read at request time, no seed needed.
 - `src/components/landing.tsx` holds the landing sections; `src/app/page.tsx` is mostly the ordering decision, which is the part that matters. The order follows verified patterns from thirteen comparable products, with two departures noted in the file.
 - `src/components/logo.tsx` is the kettle mark, inline so it inherits `currentColor`. `scripts/make-demo-art.mjs` regenerates the placeholder course and portrait art; delete it when real photographs land.
@@ -38,13 +39,12 @@ Everyday AI video courses in Hindi for Indians over 40. Mobile-first PWA. One Ne
 ## Commands
 
 ```
-npm run dev          # local, embedded Postgres, migrates on first request
+npm run dev          # needs DATABASE_URL; indexes are applied on connect
 npm run db:seed      # load content/kettle-content.json
-npm run db:generate  # schema.ts -> drizzle/*.sql
-npm run db:migrate   # apply drizzle/ to DATABASE_URL (Neon)
+npm run db:ping      # prove the cluster is reachable, without printing secrets
 npm run build        # what Vercel runs
 npm run typecheck && npm run lint
-npm run check:rls    # proves tenant isolation against the real database
+npm run check:tenancy # proves tenant isolation through the scoped handle
 npm run smoke -- http://localhost:3080 <path-to-dev-log>   # walks the whole product
 ```
 

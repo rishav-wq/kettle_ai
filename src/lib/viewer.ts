@@ -1,8 +1,7 @@
 import "server-only";
 import { cache } from "react";
-import { and, count, eq, gt, sql } from "drizzle-orm";
-import { PUBLIC_TENANT, freeWatchLog, memberships, users } from "@/lib/db/schema";
-import { withTenant } from "@/lib/db/tenant";
+import { PUBLIC_TENANT, withTenant } from "@/lib/db/scope";
+import type { FreeWatchDoc, MembershipDoc, UserDoc } from "@/lib/db/documents";
 import { readSession } from "@/lib/auth/session";
 
 /*
@@ -59,33 +58,21 @@ export const getViewer = cache(async (): Promise<Viewer> => {
   const session = await readSession();
   if (!session) return ANONYMOUS;
 
-  return withTenant(session.tenantId, async (tx) => {
-    const [user] = await tx
-      .select({ id: users.id, name: users.name, lang: users.lang, onboardedAt: users.onboardedAt, preferredCategoryId: users.preferredCategoryId })
-      .from(users)
-      .where(eq(users.id, session.userId))
-      .limit(1);
+  return withTenant(session.tenantId, async (db) => {
+    const user = await db.findOne<UserDoc>("users", { id: session.userId });
 
-    // The session row outlived the user, which means the account was deleted.
+    // The session outlived the user, which means the account was deleted.
     if (!user) return ANONYMOUS;
 
-    const [gold] = await tx
-      .select({ validUntil: memberships.validUntil })
-      .from(memberships)
-      .where(
-        and(
-          eq(memberships.userId, user.id),
-          eq(memberships.status, "active"),
-          gt(memberships.validUntil, new Date())
-        )
-      )
-      .orderBy(sql`${memberships.validUntil} desc`)
-      .limit(1);
+    // The furthest-future active membership decides gold, so a referral bonus
+    // that opened a second one cannot shorten the answer.
+    const [gold] = await db.find<MembershipDoc>(
+      "memberships",
+      { userId: user.id, status: "active", validUntil: { $gt: new Date() } },
+      { sort: { validUntil: -1 }, limit: 1 }
+    );
 
-    const [watched] = await tx
-      .select({ n: count() })
-      .from(freeWatchLog)
-      .where(eq(freeWatchLog.userId, user.id));
+    const watched = await db.countDocuments<FreeWatchDoc>("free_watch_log", { userId: user.id });
 
     return {
       state: gold ? ("gold" as const) : ("free" as const),
@@ -93,7 +80,7 @@ export const getViewer = cache(async (): Promise<Viewer> => {
       userId: user.id,
       name: user.name,
       lang: user.lang,
-      freeWatched: watched?.n ?? 0,
+      freeWatched: watched,
       onboarded: user.onboardedAt !== null,
       goldUntil: gold?.validUntil ?? null,
       preferredCategoryId: user.preferredCategoryId,

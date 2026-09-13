@@ -1,6 +1,5 @@
-import { eq } from "drizzle-orm";
 import { withTenant } from "@/lib/db/tenant";
-import { memberships, payments } from "@/lib/db/schema";
+import type { MembershipDoc, PaymentDoc } from "@/lib/db/documents";
 import { verifyWebhookSignature } from "@/lib/payments/razorpay-signature";
 import { validUntilFrom } from "@/lib/payments/plan";
 import { audit } from "@/lib/audit";
@@ -59,18 +58,9 @@ export async function POST(req: Request) {
     payment up with RLS bypassed to discover which tenant it belongs to, then do
     all the writing inside that tenant's scope.
   */
-  const found = await withTenant(
-    "public",
-    (tx) =>
-      tx
-        .select({ id: payments.id, tenantId: payments.tenantId, userId: payments.userId, membershipId: payments.membershipId, status: payments.status })
-        .from(payments)
-        .where(eq(payments.razorpayOrderId, orderId))
-        .limit(1),
-    { bypassRls: true }
-  );
-
-  const payment = found[0];
+  const payment = await withTenant("public", (db) => db.findOne<PaymentDoc>("payments", { razorpayOrderId: orderId }), {
+    bypass: true,
+  });
   if (!payment) return Response.json({ ok: true, ignored: "unknown_order" });
 
   // Already settled. Razorpay retried; do nothing and report success so it stops.
@@ -78,27 +68,37 @@ export async function POST(req: Request) {
     return Response.json({ ok: true, idempotent: true });
   }
 
-  await withTenant(payment.tenantId, async (tx) => {
+  await withTenant(payment.tenantId, async (db) => {
     if (failed) {
-      await tx.update(payments).set({ status: "failed" }).where(eq(payments.id, payment.id));
-      await audit(tx, { tenantId: payment.tenantId, actorUserId: payment.userId, action: "payment.failed", targetType: "order", targetId: orderId });
+      await db.updateOne<PaymentDoc>("payments", { id: payment.id }, { $set: { status: "failed" } });
+      await audit(db, { tenantId: payment.tenantId, actorUserId: payment.userId, action: "payment.failed", targetType: "order", targetId: orderId });
       return;
     }
 
     const now = new Date();
-    await tx
-      .update(payments)
-      .set({ status: "paid", paidAt: now, razorpayPaymentId: entity?.id ?? null })
-      .where(eq(payments.id, payment.id));
+
+    /*
+      Conditional on the status, so the settle is the lock. Razorpay retries,
+      and without a transaction two retries arriving together could both pass
+      the "already settled" check above and both activate. Only the caller that
+      actually flips "created" goes on to grant anything.
+    */
+    const claimed = await db.updateOne<PaymentDoc>(
+      "payments",
+      { id: payment.id, status: "created" },
+      { $set: { status: "paid", paidAt: now, razorpayPaymentId: entity?.id ?? null } }
+    );
+    if (claimed === 0) return;
 
     if (payment.membershipId) {
-      await tx
-        .update(memberships)
-        .set({ status: "active", validFrom: now, validUntil: validUntilFrom(now) })
-        .where(eq(memberships.id, payment.membershipId));
+      await db.updateOne<MembershipDoc>(
+        "memberships",
+        { id: payment.membershipId },
+        { $set: { status: "active", validFrom: now, validUntil: validUntilFrom(now) } }
+      );
     }
 
-    await audit(tx, {
+    await audit(db, {
       tenantId: payment.tenantId,
       actorUserId: payment.userId,
       action: "membership.activated",
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
 
     // The one moment a referral pays out. Idempotent, so a retried webhook cannot pay twice.
     if (payment.userId) {
-      await grantReferralReward(tx, payment.tenantId, payment.userId);
+      await grantReferralReward(db, payment.tenantId, payment.userId);
     }
   });
 

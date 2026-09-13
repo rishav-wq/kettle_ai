@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { LIMITS, enforceRate } from "@/lib/security/rate-limit";
 import { assertSameOrigin, clientIp, toErrorResponse } from "@/lib/security/request";
 import { withTenant } from "@/lib/db/tenant";
-import { memberships, payments } from "@/lib/db/schema";
+import type { MembershipDoc, PaymentDoc } from "@/lib/db/documents";
 import { GOLD } from "@/lib/payments/plan";
 import { createOrder } from "@/lib/payments/razorpay";
 import { audit } from "@/lib/audit";
@@ -32,42 +32,52 @@ export async function POST(req: Request) {
 
     const ip = await clientIp();
 
-    const existing = await withTenant(viewer.tenantId, (tx) =>
-      tx
-        .select({ orderId: payments.razorpayOrderId, status: payments.status })
-        .from(payments)
-        .where(and(eq(payments.receipt, receipt), eq(payments.userId, viewer.userId!)))
-        .limit(1)
+    const existing = await withTenant(viewer.tenantId, (db) =>
+      db.findOne<PaymentDoc>("payments", { receipt, userId: viewer.userId! })
     );
 
-    if (existing[0]?.orderId && existing[0].status === "created") {
-      const order = { orderId: existing[0].orderId, amountPaise: GOLD.amountPaise, currency: GOLD.currency };
-      return Response.json({ ...order, keyId: process.env.RAZORPAY_KEY_ID ?? null, simulated: existing[0].orderId.startsWith("order_sim_") });
+    if (existing?.razorpayOrderId && existing.status === "created") {
+      const order = { orderId: existing.razorpayOrderId, amountPaise: GOLD.amountPaise, currency: GOLD.currency };
+      return Response.json({ ...order, keyId: process.env.RAZORPAY_KEY_ID ?? null, simulated: existing.razorpayOrderId.startsWith("order_sim_") });
     }
 
     const order = await createOrder(receipt, { userId: viewer.userId, plan: "gold" });
 
-    await withTenant(viewer.tenantId, async (tx) => {
-      // A pending membership is the row the webhook will later activate.
-      const [membership] = await tx
-        .insert(memberships)
-        .values({ tenantId: viewer.tenantId, userId: viewer.userId!, payerUserId: viewer.userId!, status: "pending" })
-        .returning({ id: memberships.id });
+    await withTenant(viewer.tenantId, async (db) => {
+      const now = new Date();
+      // A pending membership is the document the webhook will later activate.
+      const membershipId = randomUUID();
+      await db.insertOne<MembershipDoc>("memberships", {
+        id: membershipId,
+        tenantId: viewer.tenantId,
+        userId: viewer.userId!,
+        payerUserId: viewer.userId!,
+        status: "pending",
+        validFrom: null,
+        validUntil: null,
+        createdAt: now,
+      });
 
-      await tx
-        .insert(payments)
-        .values({
+      try {
+        await db.insertOne<PaymentDoc>("payments", {
+          id: randomUUID(),
           tenantId: viewer.tenantId,
-          membershipId: membership!.id,
+          membershipId,
           userId: viewer.userId!,
           amountPaise: order.amountPaise,
           receipt,
           razorpayOrderId: order.orderId,
+          razorpayPaymentId: null,
           status: "created",
-        })
-        .onConflictDoNothing({ target: payments.receipt });
+          createdAt: now,
+          paidAt: null,
+        });
+      } catch {
+        // The unique index on receipt rejected it, which means a concurrent
+        // request already created this order. That is the idempotency working.
+      }
 
-      await audit(tx, { tenantId: viewer.tenantId, actorUserId: viewer.userId, action: "payment.order_created", targetType: "order", targetId: order.orderId, ip, meta: { amountPaise: order.amountPaise } });
+      await audit(db, { tenantId: viewer.tenantId, actorUserId: viewer.userId, action: "payment.order_created", targetType: "order", targetId: order.orderId, ip, meta: { amountPaise: order.amountPaise } });
     });
 
     return Response.json(order);

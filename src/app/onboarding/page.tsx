@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
-import { asc } from "drizzle-orm";
 import { withTenant } from "@/lib/db/tenant";
-import { categories } from "@/lib/db/schema";
+import type { CategoryDoc } from "@/lib/db/documents";
 import { getViewer } from "@/lib/viewer";
 import { OnboardingFlow } from "./flow";
 
@@ -13,8 +12,8 @@ export default async function OnboardingPage() {
   if (!viewer.userId) redirect("/signin?next=/onboarding");
   if (viewer.onboarded) redirect("/learn");
 
-  const cats = await withTenant(viewer.tenantId, (tx) =>
-    tx.select({ id: categories.id, nameHi: categories.nameHi, nameEn: categories.nameEn }).from(categories).orderBy(asc(categories.sortOrder)).limit(4)
+  const cats = await withTenant(viewer.tenantId, (db) =>
+    db.find<CategoryDoc>("categories", {}, { sort: { sortOrder: 1 }, limit: 4 })
   );
 
   return <OnboardingFlow name={viewer.name ?? ""} categories={cats} />;

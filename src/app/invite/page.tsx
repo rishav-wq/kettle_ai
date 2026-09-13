@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { withTenant } from "@/lib/db/tenant";
-import { users } from "@/lib/db/schema";
+import type { UserDoc } from "@/lib/db/documents";
 import { getOrCreateReferralCode } from "@/lib/referral";
 import { getViewer, hasInvite } from "@/lib/viewer";
 import { ShareCode } from "./share";
@@ -19,14 +18,10 @@ export default async function InvitePage() {
   const viewer = await getViewer();
   if (!hasInvite(viewer)) redirect("/gold");
 
-  const { code, joined } = await withTenant(viewer.tenantId, async (tx) => {
-    const created = await getOrCreateReferralCode(tx, viewer.tenantId, viewer.userId!);
-    const rows = await tx
-      .select({ name: users.name, city: users.city, rewardedAt: users.referralRewardedAt })
-      .from(users)
-      .where(eq(users.referredByCode, created))
-      .limit(20);
-    return { code: created, joined: rows };
+  const { code, joined } = await withTenant(viewer.tenantId, async (db) => {
+    const created = await getOrCreateReferralCode(db, viewer.tenantId, viewer.userId!);
+    const rows = await db.find<UserDoc>("users", { referredByCode: created }, { limit: 20 });
+    return { code: created, joined: rows.map((u) => ({ name: u.name, city: u.city, rewardedAt: u.referralRewardedAt })) };
   });
 
   return (

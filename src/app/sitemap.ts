@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
-import { asc, eq } from "drizzle-orm";
 import { withPublic } from "@/lib/db/tenant";
-import { courses, lessons } from "@/lib/db/schema";
+import type { CourseDoc, LessonDoc } from "@/lib/db/documents";
 import { base } from "./robots";
 
 export const revalidate = 3600;
@@ -28,9 +27,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   try {
-    const rows = await withPublic(async (tx) => ({
-      c: await tx.select({ id: courses.id }).from(courses).where(eq(courses.isPublished, true)).orderBy(asc(courses.sortOrder)),
-      l: await tx.select({ id: lessons.id }).from(lessons).where(eq(lessons.isFree, true)),
+    const rows = await withPublic(async (db) => ({
+      c: await db.find<CourseDoc>("courses", { isPublished: true }, { sort: { sortOrder: 1 }, projection: { id: 1 } }),
+      l: await db.find<LessonDoc>("lessons", { isFree: true }, { projection: { id: 1 } }),
     }));
 
     return [

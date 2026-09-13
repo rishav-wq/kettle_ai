@@ -1,8 +1,7 @@
 import "server-only";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
-import { eq, lt } from "drizzle-orm";
-import { getDb } from "@/lib/db";
-import { otpChallenges } from "@/lib/db/schema";
+import { getDb } from "@/lib/db/mongo";
+import type { OtpChallengeDoc } from "@/lib/db/documents";
 import { getAuthSecret } from "@/lib/env";
 
 /*
@@ -41,6 +40,11 @@ function constantTimeEqual(a: string, b: string): boolean {
   return timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
+async function challenges() {
+  const db = await getDb();
+  return db.collection<OtpChallengeDoc>("otp_challenges");
+}
+
 export type IssueResult =
   | { ok: true; code: string }
   | { ok: false; reason: "too_soon"; retryAfterSec: number };
@@ -52,19 +56,14 @@ export type IssueResult =
  * recent message is always the one that works. Refuses inside the resend gap.
  */
 export async function issueCode(phone: string, referredByCode?: string): Promise<IssueResult> {
-  const db = await getDb();
+  const col = await challenges();
   const now = Date.now();
 
   // Expired challenges are dead weight and there is no cron to sweep them, so
-  // every send clears them. The table only ever holds live challenges.
-  await db.delete(otpChallenges).where(lt(otpChallenges.expiresAt, new Date(now)));
+  // every send clears them. The collection only ever holds live challenges.
+  await col.deleteMany({ expiresAt: { $lt: new Date(now) } });
 
-  const [current] = await db
-    .select({ createdAt: otpChallenges.createdAt })
-    .from(otpChallenges)
-    .where(eq(otpChallenges.phone, phone))
-    .limit(1);
-
+  const current = await col.findOne({ phone }, { projection: { createdAt: 1 } });
   if (current) {
     const age = now - current.createdAt.getTime();
     if (age < RESEND_GAP_MS) {
@@ -73,7 +72,7 @@ export async function issueCode(phone: string, referredByCode?: string): Promise
   }
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
-  const row = {
+  const doc: OtpChallengeDoc = {
     phone,
     codeHash: hashCode(phone, code),
     expiresAt: new Date(now + TTL_MS),
@@ -82,7 +81,9 @@ export async function issueCode(phone: string, referredByCode?: string): Promise
     createdAt: new Date(now),
   };
 
-  await db.insert(otpChallenges).values(row).onConflictDoUpdate({ target: otpChallenges.phone, set: row });
+  // One live challenge per phone; the unique index on phone enforces it and
+  // replaceOne makes issuing idempotent rather than additive.
+  await col.replaceOne({ phone }, doc, { upsert: true });
 
   return { ok: true, code };
 }
@@ -93,30 +94,29 @@ export type VerifyResult =
 
 /** Checks a code and consumes the challenge on success. */
 export async function verifyCode(phone: string, code: string): Promise<VerifyResult> {
-  const db = await getDb();
-  const [row] = await db.select().from(otpChallenges).where(eq(otpChallenges.phone, phone)).limit(1);
+  const col = await challenges();
+  const row = await col.findOne({ phone });
 
   if (!row) return { ok: false, reason: "no_challenge" };
 
   if (row.expiresAt.getTime() < Date.now()) {
-    await db.delete(otpChallenges).where(eq(otpChallenges.phone, phone));
+    await col.deleteOne({ phone });
     return { ok: false, reason: "expired" };
   }
 
   if (row.attempts >= MAX_ATTEMPTS) {
-    await db.delete(otpChallenges).where(eq(otpChallenges.phone, phone));
+    await col.deleteOne({ phone });
     return { ok: false, reason: "too_many_attempts" };
   }
 
   if (!constantTimeEqual(row.codeHash, hashCode(phone, code))) {
-    await db
-      .update(otpChallenges)
-      .set({ attempts: row.attempts + 1 })
-      .where(eq(otpChallenges.phone, phone));
+    // $inc rather than read-then-write: two simultaneous wrong guesses must
+    // both count, or the attempt cap can be walked past with concurrency.
+    await col.updateOne({ phone }, { $inc: { attempts: 1 } });
     return { ok: false, reason: "wrong_code" };
   }
 
   // Single use: the challenge is gone whether or not the caller finishes signing in.
-  await db.delete(otpChallenges).where(eq(otpChallenges.phone, phone));
+  await col.deleteOne({ phone });
   return { ok: true, referredByCode: row.referredByCode };
 }

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { Button, Card, LessonRow } from "@/components/ui";
 import { withTenant } from "@/lib/db/tenant";
-import { PUBLIC_TENANT, users } from "@/lib/db/schema";
+import { PUBLIC_TENANT } from "@/lib/db/scope";
+import type { UserDoc } from "@/lib/db/documents";
 import { lookupReferrer } from "@/lib/referral";
 import { getFreeLessons } from "@/lib/content/queries";
 import { Wordmark } from "@/components/logo";
@@ -27,7 +27,7 @@ export default async function ReferralLanding({ params }: { params: Promise<{ co
   const { inviter, free } = await withTenant(PUBLIC_TENANT, async (tx) => {
     const ref = await lookupReferrer(tx, clean);
     if (!ref) return { inviter: null, free: await getFreeLessons(tx) };
-    const [u] = await tx.select({ name: users.name, city: users.city }).from(users).where(eq(users.id, ref.userId)).limit(1);
+    const u = await tx.findOne<UserDoc>("users", { id: ref.userId });
     return { inviter: u ?? null, free: await getFreeLessons(tx) };
   });
 

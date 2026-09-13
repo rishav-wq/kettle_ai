@@ -1,7 +1,6 @@
 import "server-only";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { courses, freeWatchLog, lessons, progress, videoAssets } from "@/lib/db/schema";
-import type { Tx } from "@/lib/db/tenant";
+import type { CourseDoc, FreeWatchDoc, LessonDoc, ProgressDoc, VideoAssetDoc } from "@/lib/db/documents";
+import type { Scoped } from "@/lib/db/scope";
 
 /*
   Progress.
@@ -10,6 +9,11 @@ import type { Tx } from "@/lib/db/tenant";
   furthest point reached rather than the latest, so scrubbing backwards does not
   erase progress. A lesson counts as complete at ninety percent watched, because
   almost nobody sits through end credits.
+
+  Where Postgres did this with joins, MongoDB does it with a second lookup and
+  a join in memory. The catalogue is sixteen courses and sixty-seven lessons —
+  small enough that two round trips beat an aggregation pipeline nobody can
+  read six months from now.
 */
 
 export const COMPLETE_AT = 0.9;
@@ -17,22 +21,19 @@ const HEARTBEAT_SEC = 15;
 
 export type ProgressRow = { lessonId: string; watchedSec: number; completed: boolean };
 
-export async function getCourseProgress(tx: Tx, userId: string, courseId: string): Promise<Map<string, ProgressRow>> {
-  const rows = await tx
-    .select({ lessonId: progress.lessonId, watchedSec: progress.watchedSec, completedAt: progress.completedAt })
-    .from(progress)
-    .innerJoin(lessons, eq(lessons.id, progress.lessonId))
-    .where(and(eq(progress.userId, userId), eq(lessons.courseId, courseId)));
+export async function getCourseProgress(db: Scoped, userId: string, courseId: string): Promise<Map<string, ProgressRow>> {
+  const lessons = await db.find<LessonDoc>("lessons", { courseId }, { projection: { id: 1 } });
+  if (lessons.length === 0) return new Map();
 
-  return new Map(rows.map((r) => [r.lessonId, { lessonId: r.lessonId, watchedSec: r.watchedSec, completed: r.completedAt !== null }]));
+  const rows = await db.find<ProgressDoc>("progress", { userId, lessonId: { $in: lessons.map((l) => l.id) } });
+
+  return new Map(
+    rows.map((r) => [r.lessonId, { lessonId: r.lessonId, watchedSec: r.watchedSec, completed: r.completedAt !== null }])
+  );
 }
 
-export async function getLessonProgress(tx: Tx, userId: string, lessonId: string): Promise<ProgressRow | null> {
-  const [row] = await tx
-    .select({ lessonId: progress.lessonId, watchedSec: progress.watchedSec, completedAt: progress.completedAt })
-    .from(progress)
-    .where(and(eq(progress.userId, userId), eq(progress.lessonId, lessonId)))
-    .limit(1);
+export async function getLessonProgress(db: Scoped, userId: string, lessonId: string): Promise<ProgressRow | null> {
+  const row = await db.findOne<ProgressDoc>("progress", { userId, lessonId });
   return row ? { lessonId: row.lessonId, watchedSec: row.watchedSec, completed: row.completedAt !== null } : null;
 }
 
@@ -50,51 +51,77 @@ export type Continue = {
 };
 
 /** The single most recently touched unfinished lesson. Powers "pick up where you left". */
-export async function getContinue(tx: Tx, userId: string): Promise<Continue | null> {
-  const [row] = await tx
-    .select({
-      lessonId: lessons.id,
-      lessonTitleHi: lessons.titleHi,
-      lessonTitleEn: lessons.titleEn,
-      courseId: courses.id,
-      courseTitleHi: courses.titleHi,
-      courseTitleEn: courses.titleEn,
-      sortOrder: lessons.sortOrder,
-      watchedSec: progress.watchedSec,
-      durationSec: sql<number>`coalesce(${videoAssets.durationSec}, 0)`.mapWith(Number),
-    })
-    .from(progress)
-    .innerJoin(lessons, eq(lessons.id, progress.lessonId))
-    .innerJoin(courses, and(eq(courses.id, lessons.courseId), eq(courses.isPublished, true)))
-    .leftJoin(videoAssets, eq(videoAssets.id, lessons.videoAssetId))
-    .where(and(eq(progress.userId, userId), sql`${progress.completedAt} is null`))
-    .orderBy(desc(progress.updatedAt))
-    .limit(1);
+export async function getContinue(db: Scoped, userId: string): Promise<Continue | null> {
+  /*
+    Walk back through recent unfinished progress rather than taking only the
+    newest. The newest might belong to a lesson whose course was unpublished,
+    which in SQL the INNER JOIN silently skipped; here it has to be skipped
+    deliberately or the card would point at something a visitor cannot open.
+  */
+  const recent = await db.find<ProgressDoc>(
+    "progress",
+    { userId, completedAt: null },
+    { sort: { updatedAt: -1 }, limit: 10 }
+  );
 
-  if (!row) return null;
+  for (const row of recent) {
+    const lesson = await db.findOne<LessonDoc>("lessons", { id: row.lessonId });
+    if (!lesson) continue;
 
-  const [{ n }] = await tx.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(lessons).where(eq(lessons.courseId, row.courseId));
-  return { ...row, lessonCount: n };
+    const course = await db.findOne<CourseDoc>("courses", { id: lesson.courseId, isPublished: true });
+    if (!course) continue;
+
+    const asset = lesson.videoAssetId ? await db.findOne<VideoAssetDoc>("video_assets", { id: lesson.videoAssetId }) : null;
+    const lessonCount = await db.countDocuments<LessonDoc>("lessons", { courseId: course.id });
+
+    return {
+      lessonId: lesson.id,
+      lessonTitleHi: lesson.titleHi,
+      lessonTitleEn: lesson.titleEn,
+      courseId: course.id,
+      courseTitleHi: course.titleHi,
+      courseTitleEn: course.titleEn,
+      sortOrder: lesson.sortOrder,
+      lessonCount,
+      watchedSec: row.watchedSec,
+      durationSec: asset?.durationSec ?? 0,
+    };
+  }
+
+  return null;
 }
 
 export type FinishedCourse = { courseId: string; titleHi: string; titleEn: string; done: number; total: number };
 
-export async function getCourseCompletion(tx: Tx, userId: string): Promise<FinishedCourse[]> {
-  return tx
-    .select({
-      courseId: courses.id,
-      titleHi: courses.titleHi,
-      titleEn: courses.titleEn,
-      total: sql<number>`count(${lessons.id})`.mapWith(Number),
-      done: sql<number>`count(${progress.completedAt})`.mapWith(Number),
-    })
-    .from(courses)
-    .innerJoin(lessons, eq(lessons.courseId, courses.id))
-    .leftJoin(progress, and(eq(progress.lessonId, lessons.id), eq(progress.userId, userId)))
-    .where(eq(courses.isPublished, true))
-    .groupBy(courses.id)
-    .having(sql`count(${progress.completedAt}) > 0`)
-    .orderBy(asc(courses.sortOrder));
+export async function getCourseCompletion(db: Scoped, userId: string): Promise<FinishedCourse[]> {
+  const completed = await db.find<ProgressDoc>("progress", { userId, completedAt: { $ne: null } });
+  if (completed.length === 0) return [];
+
+  const lessons = await db.find<LessonDoc>("lessons", { id: { $in: completed.map((p) => p.lessonId) } });
+  const courseIds = [...new Set(lessons.map((l) => l.courseId))];
+
+  const courses = await db.find<CourseDoc>("courses", { id: { $in: courseIds }, isPublished: true }, { sort: { sortOrder: 1 } });
+  const allLessons = await db.find<LessonDoc>("lessons", { courseId: { $in: courses.map((c) => c.id) } }, { projection: { id: 1, courseId: 1 } });
+
+  const doneByCourse = new Map<string, number>();
+  const lessonToCourse = new Map(allLessons.map((l) => [l.id, l.courseId]));
+  for (const p of completed) {
+    const courseId = lessonToCourse.get(p.lessonId);
+    if (courseId) doneByCourse.set(courseId, (doneByCourse.get(courseId) ?? 0) + 1);
+  }
+
+  const totalByCourse = new Map<string, number>();
+  for (const l of allLessons) totalByCourse.set(l.courseId, (totalByCourse.get(l.courseId) ?? 0) + 1);
+
+  return courses
+    .filter((c) => (doneByCourse.get(c.id) ?? 0) > 0)
+    .map((c) => ({
+      courseId: c.id,
+      titleHi: c.titleHi,
+      titleEn: c.titleEn,
+      done: doneByCourse.get(c.id) ?? 0,
+      total: totalByCourse.get(c.id) ?? 0,
+    }));
 }
 
 export type BeatResult = { completed: boolean; freeWatched: number; hitFreeLimit: boolean };
@@ -105,7 +132,7 @@ export type BeatResult = { completed: boolean; freeWatched: number; hitFreeLimit
  * the paywall. The client never decides either of those.
  */
 export async function recordBeat(
-  tx: Tx,
+  db: Scoped,
   args: { tenantId: string; userId: string; lessonId: string; positionSec: number; durationSec: number; isFree: boolean; freeLimit: number }
 ): Promise<BeatResult> {
   const { tenantId, userId, lessonId, isFree, freeLimit } = args;
@@ -113,35 +140,45 @@ export async function recordBeat(
   const durationSec = Math.max(1, args.durationSec);
   const position = Math.min(Math.max(0, Math.floor(args.positionSec)), durationSec);
   const completed = position >= durationSec * COMPLETE_AT;
+  const now = new Date();
 
-  await tx
-    .insert(progress)
-    .values({
-      tenantId,
-      userId,
-      lessonId,
-      watchedSec: position,
-      completedAt: completed ? new Date() : null,
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: [progress.userId, progress.lessonId],
-      set: {
-        // Keep the furthest point, so scrubbing back does not lose progress.
-        watchedSec: sql`greatest(${progress.watchedSec}, ${position})`,
-        completedAt: completed ? sql`coalesce(${progress.completedAt}, now())` : progress.completedAt,
-        updatedAt: new Date(),
+  /*
+    A pipeline update, so "keep the furthest point" and "do not un-complete"
+    are evaluated server-side against the stored document. Reading first and
+    writing back would let two heartbeats racing each other move progress
+    backwards — which is exactly the bug the greatest() in the SQL prevented.
+  */
+  await db.updateOne<ProgressDoc>(
+    "progress",
+    { userId, lessonId },
+    [
+      {
+        $set: {
+          tenantId,
+          userId,
+          lessonId,
+          watchedSec: { $max: [{ $ifNull: ["$watchedSec", 0] }, position] },
+          completedAt: completed ? { $ifNull: ["$completedAt", now] } : { $ifNull: ["$completedAt", null] },
+          updatedAt: now,
+        },
       },
-    });
+    ] as never,
+    { upsert: true }
+  );
 
-  // A free lesson counts against the allowance once, on completion.
+  // A free lesson counts against the allowance once, on completion. The unique
+  // index on (userId, lessonId) is what makes "once" true under a retry.
   if (completed && isFree) {
-    await tx.insert(freeWatchLog).values({ tenantId, userId, lessonId }).onConflictDoNothing();
+    try {
+      await db.insertOne<FreeWatchDoc>("free_watch_log", { tenantId, userId, lessonId, completedAt: now });
+    } catch {
+      // Already logged. Nothing to do.
+    }
   }
 
-  const [{ n }] = await tx.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(freeWatchLog).where(eq(freeWatchLog.userId, userId));
+  const freeWatched = await db.countDocuments<FreeWatchDoc>("free_watch_log", { userId });
 
-  return { completed, freeWatched: n, hitFreeLimit: n >= freeLimit };
+  return { completed, freeWatched, hitFreeLimit: freeWatched >= freeLimit };
 }
 
 export { HEARTBEAT_SEC };

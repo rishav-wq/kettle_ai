@@ -1,5 +1,6 @@
 import "server-only";
 import { MongoClient, type Db } from "mongodb";
+import { ensureIndexes } from "./indexes";
 
 /*
   One MongoDB handle for the whole app.
@@ -49,7 +50,13 @@ function connect(): Promise<MongoClient> {
     retryWrites: true,
   });
 
-  return client.connect();
+  return client.connect().then(async (connected) => {
+    // Indexes are the only thing left of the migrations, and they carry the
+    // uniqueness constraints the app's correctness depends on. Applied once
+    // per connection, which is a no-op after the first.
+    await ensureIndexes(connected.db());
+    return connected;
+  });
 }
 
 export function getClient(): Promise<MongoClient> {

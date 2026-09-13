@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, gt, sql } from "drizzle-orm";
-import { memberships, referralCodes, users } from "@/lib/db/schema";
-import type { Tx } from "@/lib/db/tenant";
+import { randomUUID } from "node:crypto";
+import type { MembershipDoc, ReferralCodeDoc, UserDoc } from "@/lib/db/documents";
+import type { Scoped } from "@/lib/db/scope";
 import { audit } from "@/lib/audit";
 
 /*
@@ -29,79 +29,111 @@ function randomCode(): string {
 }
 
 /** Returns the member's code, creating one on first use. */
-export async function getOrCreateReferralCode(tx: Tx, tenantId: string, userId: string): Promise<string> {
-  const [existing] = await tx.select({ code: referralCodes.code }).from(referralCodes).where(eq(referralCodes.userId, userId)).limit(1);
+export async function getOrCreateReferralCode(db: Scoped, tenantId: string, userId: string): Promise<string> {
+  const existing = await db.findOne<ReferralCodeDoc>("referral_codes", { userId });
   if (existing) return existing.code;
 
-  // Collisions are vanishingly rare at this scale; retry a few times rather than loop forever.
+  // Collisions are vanishingly rare at this scale; the unique index on code is
+  // what actually decides the race, so a duplicate key just means try again.
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = randomCode();
-    const inserted = await tx.insert(referralCodes).values({ code, tenantId, userId }).onConflictDoNothing().returning({ code: referralCodes.code });
-    if (inserted.length > 0) return inserted[0]!.code;
+    try {
+      await db.insertOne<ReferralCodeDoc>("referral_codes", { code, tenantId, userId, createdAt: new Date() });
+      return code;
+    } catch {
+      // Duplicate code. Loop and draw another.
+    }
   }
   throw new Error("could_not_allocate_referral_code");
 }
 
 /** The person behind a code, if it is real. Used to greet a referred visitor by name. */
-export async function lookupReferrer(tx: Tx, code: string): Promise<{ userId: string } | null> {
-  const [row] = await tx.select({ userId: referralCodes.userId }).from(referralCodes).where(eq(referralCodes.code, code)).limit(1);
-  return row ?? null;
+export async function lookupReferrer(db: Scoped, code: string): Promise<{ userId: string } | null> {
+  const row = await db.findOne<ReferralCodeDoc>("referral_codes", { code });
+  return row ? { userId: row.userId } : null;
 }
 
-export type RewardResult = { granted: false; reason: "no_code" | "already_rewarded" | "unknown_code" | "self_referral" } | { granted: true; referrerUserId: string };
+export type RewardResult =
+  | { granted: false; reason: "no_code" | "already_rewarded" | "unknown_code" | "self_referral" }
+  | { granted: true; referrerUserId: string };
 
 /**
  * Pays out the referral bonus, once, when a referred person's membership activates.
  *
- * Both sides get REFERRAL_BONUS_MONTHS. The referred person's fresh membership is
- * extended. The referrer's active membership is extended too, or, if theirs has
- * lapsed since they shared the code, a new one-month membership is opened so the
- * promise still holds. A marker on the referred user makes this idempotent, which
- * matters because the webhook that triggers it is retried.
+ * Both sides get REFERRAL_BONUS_MONTHS. The referred person's fresh membership
+ * is extended. The referrer's active membership is extended too, or, if theirs
+ * has lapsed since they shared the code, a new one-month membership is opened
+ * so the promise still holds.
  *
- * Called only from the webhook and its local stand-in, inside their transaction.
+ * Idempotency is the whole point, because the webhook that triggers this is
+ * retried. In Postgres a transaction made the check-then-pay safe. There is no
+ * transaction here, so the marker is *claimed* first with a conditional
+ * update: only the caller whose update actually matched a document with a null
+ * marker goes on to pay. Two simultaneous retries cannot both win that, which
+ * makes this stricter than the read-then-check it replaces rather than weaker.
  */
-export async function grantReferralReward(tx: Tx, tenantId: string, referredUserId: string): Promise<RewardResult> {
-  const [referred] = await tx
-    .select({ code: users.referredByCode, rewardedAt: users.referralRewardedAt })
-    .from(users)
-    .where(eq(users.id, referredUserId))
-    .limit(1);
+export async function grantReferralReward(db: Scoped, tenantId: string, referredUserId: string): Promise<RewardResult> {
+  const referred = await db.findOne<UserDoc>("users", { id: referredUserId });
 
-  if (!referred?.code) return { granted: false, reason: "no_code" };
-  if (referred.rewardedAt) return { granted: false, reason: "already_rewarded" };
+  if (!referred?.referredByCode) return { granted: false, reason: "no_code" };
+  if (referred.referralRewardedAt) return { granted: false, reason: "already_rewarded" };
 
-  const referrer = await lookupReferrer(tx, referred.code);
+  const referrer = await lookupReferrer(db, referred.referredByCode);
   if (!referrer) return { granted: false, reason: "unknown_code" };
   if (referrer.userId === referredUserId) return { granted: false, reason: "self_referral" };
 
-  const bonus = sql`make_interval(months => ${REFERRAL_BONUS_MONTHS})`;
   const now = new Date();
 
+  // Claim the payout. Whoever flips the marker from null owns it; everyone
+  // else is told it is already done and stops here, having changed nothing.
+  const claimed = await db.updateOne<UserDoc>(
+    "users",
+    { id: referredUserId, referralRewardedAt: null },
+    { $set: { referralRewardedAt: now } }
+  );
+  if (claimed === 0) return { granted: false, reason: "already_rewarded" };
+
+  // $dateAdd rather than reading the date and writing it back, so "add a month
+  // to whatever is there" stays one atomic operation, as make_interval was.
+  const addMonth = [
+    { $set: { validUntil: { $dateAdd: { startDate: "$validUntil", unit: "month", amount: REFERRAL_BONUS_MONTHS } } } },
+  ];
+
   // The referred person: extend the membership that has just been activated.
-  await tx
-    .update(memberships)
-    .set({ validUntil: sql`${memberships.validUntil} + ${bonus}` })
-    .where(and(eq(memberships.userId, referredUserId), eq(memberships.status, "active")));
+  await db.updateMany<MembershipDoc>("memberships", { userId: referredUserId, status: "active" }, addMonth as never);
 
   // The referrer: extend if active, otherwise open a bonus membership.
-  const [active] = await tx
-    .select({ id: memberships.id })
-    .from(memberships)
-    .where(and(eq(memberships.userId, referrer.userId), eq(memberships.status, "active"), gt(memberships.validUntil, now)))
-    .limit(1);
+  const active = await db.findOne<MembershipDoc>("memberships", {
+    userId: referrer.userId,
+    status: "active",
+    validUntil: { $gt: now },
+  });
 
   if (active) {
-    await tx.update(memberships).set({ validUntil: sql`${memberships.validUntil} + ${bonus}` }).where(eq(memberships.id, active.id));
+    await db.updateOne<MembershipDoc>("memberships", { id: active.id }, addMonth as never);
   } else {
     const until = new Date(now);
     until.setMonth(until.getMonth() + REFERRAL_BONUS_MONTHS);
-    await tx.insert(memberships).values({ tenantId, userId: referrer.userId, payerUserId: null, status: "active", validFrom: now, validUntil: until });
+    await db.insertOne<MembershipDoc>("memberships", {
+      id: randomUUID(),
+      tenantId,
+      userId: referrer.userId,
+      payerUserId: null,
+      status: "active",
+      validFrom: now,
+      validUntil: until,
+      createdAt: now,
+    });
   }
 
-  await tx.update(users).set({ referralRewardedAt: now }).where(eq(users.id, referredUserId));
-
-  await audit(tx, { tenantId, actorUserId: referredUserId, action: "referral.rewarded", targetType: "user", targetId: referrer.userId, meta: { code: referred.code, months: REFERRAL_BONUS_MONTHS } });
+  await audit(db, {
+    tenantId,
+    actorUserId: referredUserId,
+    action: "referral.rewarded",
+    targetType: "user",
+    targetId: referrer.userId,
+    meta: { code: referred.referredByCode, months: REFERRAL_BONUS_MONTHS },
+  });
 
   return { granted: true, referrerUserId: referrer.userId };
 }

@@ -1,1 +1,0 @@
-ALTER TABLE "users" ADD COLUMN "referral_rewarded_at" timestamp with time zone;

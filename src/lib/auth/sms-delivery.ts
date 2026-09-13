@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, isNotNull, lt } from "drizzle-orm";
-import { getDb } from "@/lib/db";
-import { smsDeliveries } from "@/lib/db/schema";
+import { randomUUID } from "node:crypto";
+import { getDb } from "@/lib/db/mongo";
+import type { SmsDeliveryDoc } from "@/lib/db/documents";
 
 /*
   The record of what we asked the provider to send, and what became of it.
@@ -33,17 +33,21 @@ export async function recordSend(params: {
 }): Promise<void> {
   try {
     const db = await getDb();
-    await db.insert(smsDeliveries).values({
+    await db.collection<SmsDeliveryDoc>("sms_deliveries").insertOne({
+      id: randomUUID(),
       provider: params.provider,
       providerMessageId: params.providerMessageId,
       phone: params.phone,
       purpose: params.purpose ?? "otp",
       status: "queued",
+      providerStatus: null,
+      sentAt: new Date(),
+      reportedAt: null,
     });
 
     // No cron, so the sweep rides along with the writes, as it does for OTP
     // challenges. Bounded work: the table only holds thirty days of sends.
-    await db.delete(smsDeliveries).where(lt(smsDeliveries.sentAt, new Date(Date.now() - RETAIN_MS)));
+    await db.collection<SmsDeliveryDoc>("sms_deliveries").deleteMany({ sentAt: { $lt: new Date(Date.now() - RETAIN_MS) } });
   } catch (err) {
     console.error("[sms] could not record the send", err);
   }
@@ -73,15 +77,12 @@ export async function applyDeliveryReport(params: {
   providerStatus: string | null;
 }): Promise<boolean> {
   const db = await getDb();
-  const updated = await db
-    .update(smsDeliveries)
-    .set({
-      status: params.outcome,
-      providerStatus: params.providerStatus,
-      reportedAt: new Date(),
-    })
-    .where(and(isNotNull(smsDeliveries.providerMessageId), eq(smsDeliveries.providerMessageId, params.providerMessageId)))
-    .returning({ id: smsDeliveries.id });
+  const res = await db.collection<SmsDeliveryDoc>("sms_deliveries").updateOne(
+    // providerMessageId is nullable — the dev sender used to leave it unset —
+    // so match on the value rather than letting a null report match a null row.
+    { providerMessageId: params.providerMessageId },
+    { $set: { status: params.outcome, providerStatus: params.providerStatus, reportedAt: new Date() } }
+  );
 
-  return updated.length > 0;
+  return res.matchedCount > 0;
 }

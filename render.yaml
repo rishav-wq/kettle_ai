@@ -1,0 +1,64 @@
+# Render blueprint.
+#
+# A persistent Node process rather than serverless, which is the right shape
+# for this app: one MongoDB connection pool reused across requests instead of
+# a new pool per invocation, and a fixed outbound address so Atlas network
+# access and MSG91's IP security can both be narrowed to it later.
+#
+# Secrets are deliberately not here. Everything marked sync:false is entered
+# in the Render dashboard, so this file stays safe to commit.
+
+services:
+  - type: web
+    name: kettle
+    runtime: node
+    plan: starter # Not free: the free tier sleeps after ~15 minutes and takes
+      # ~50s to wake. Someone tapping a link in an SMS will not wait.
+    region: singapore # Closest to the audience. Latency to an Indian handset
+      # matters more here than anything else in this file.
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /learn # A page that reads the database, so a failed
+      # deploy is caught rather than serving a healthy shell.
+    autoDeploy: true
+
+    envVars:
+      - key: NODE_VERSION
+        value: 22 # Matches local. Next 16 needs 20+.
+      - key: NODE_ENV
+        value: production
+
+      # Sessions. Required in production — the app refuses to start without it.
+      #   openssl rand -base64 32
+      - key: AUTH_SECRET
+        sync: false
+
+      # MongoDB Atlas. Must name a database, e.g. .../kettle
+      - key: DATABASE_URL
+        sync: false
+
+      # MSG91. The auth key verifies widget tokens server-side and never
+      # reaches the browser; the two NEXT_PUBLIC_ values are public by design.
+      - key: MSG91_AUTH_KEY
+        sync: false
+      - key: NEXT_PUBLIC_MSG91_WIDGET_ID
+        sync: false
+      - key: NEXT_PUBLIC_MSG91_WIDGET_TOKEN
+        sync: false
+      # Delivery reports. Set the callback in MSG91 to
+      #   https://<this-host>/api/webhooks/msg91?token=<this value>
+      - key: MSG91_WEBHOOK_SECRET
+        sync: false
+
+      # Razorpay. Until these are set, payment is unavailable —
+      # /api/payments/simulate refuses to exist in production by design.
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+      # Canonical origin, used by robots.txt and the sitemap.
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false

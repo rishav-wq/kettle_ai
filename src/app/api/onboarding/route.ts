@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { assertSameOrigin, toErrorResponse } from "@/lib/security/request";
 import { lang as langSchema, parseBody, slug } from "@/lib/security/validators";
 import { withTenant } from "@/lib/db/tenant";
-import { categories, users } from "@/lib/db/schema";
+import type { CategoryDoc, UserDoc } from "@/lib/db/documents";
 import { getViewer } from "@/lib/viewer";
 
 const Body = z.object({
@@ -22,24 +21,27 @@ export async function POST(req: Request) {
 
     const body = await parseBody(req, Body);
 
-    await withTenant(viewer.tenantId, async (tx) => {
+    await withTenant(viewer.tenantId, async (db) => {
       // Only accept a category that actually exists, so a crafted request cannot
       // write an arbitrary string into the user row.
       let categoryId: string | null = null;
       if (body.categoryId) {
-        const [found] = await tx.select({ id: categories.id }).from(categories).where(eq(categories.id, body.categoryId)).limit(1);
+        const found = await db.findOne<CategoryDoc>("categories", { id: body.categoryId });
         categoryId = found?.id ?? null;
       }
 
-      await tx
-        .update(users)
-        .set({
-          lang: body.lang,
-          preferredCategoryId: categoryId,
-          city: body.city?.length ? body.city : null,
-          onboardedAt: new Date(),
-        })
-        .where(eq(users.id, viewer.userId!));
+      await db.updateOne<UserDoc>(
+        "users",
+        { id: viewer.userId! },
+        {
+          $set: {
+            lang: body.lang,
+            preferredCategoryId: categoryId,
+            city: body.city?.length ? body.city : null,
+            onboardedAt: new Date(),
+          },
+        }
+      );
     });
 
     return Response.json({ ok: true });

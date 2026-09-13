@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
 import { LIMITS, enforceRate } from "@/lib/security/rate-limit";
 import { assertSameOrigin, toErrorResponse } from "@/lib/security/request";
 import { parseBody, slug } from "@/lib/security/validators";
 import { withTenant } from "@/lib/db/tenant";
-import { courses, lessons, videoAssets } from "@/lib/db/schema";
+import type { CourseDoc, LessonDoc, VideoAssetDoc } from "@/lib/db/documents";
 import { recordBeat } from "@/lib/content/progress";
 import { FREE_LESSON_LIMIT, canWatch, getViewer } from "@/lib/viewer";
 
@@ -29,24 +28,25 @@ export async function POST(req: Request) {
     const body = await parseBody(req, Body);
     await enforceRate(`beat:${viewer.userId}`, LIMITS.progressBeat);
 
-    const result = await withTenant(viewer.tenantId, async (tx) => {
-      const [lesson] = await tx
-        .select({ id: lessons.id, isFree: lessons.isFree, durationSec: videoAssets.durationSec })
-        .from(lessons)
-        .innerJoin(courses, and(eq(courses.id, lessons.courseId), eq(courses.isPublished, true)))
-        .leftJoin(videoAssets, eq(videoAssets.id, lessons.videoAssetId))
-        .where(eq(lessons.id, body.lessonId))
-        .limit(1);
-
+    const result = await withTenant(viewer.tenantId, async (db) => {
+      const lesson = await db.findOne<LessonDoc>("lessons", { id: body.lessonId });
       if (!lesson) return { error: "not_found" as const };
+
+      // The lesson only exists as far as this request is concerned if its
+      // course is published and visible to this tenant. The INNER JOIN used to
+      // say that; here it has to be asked for.
+      const course = await db.findOne<CourseDoc>("courses", { id: lesson.courseId, isPublished: true });
+      if (!course) return { error: "not_found" as const };
+
+      const asset = lesson.videoAssetId ? await db.findOne<VideoAssetDoc>("video_assets", { id: lesson.videoAssetId }) : null;
       if (!canWatch(viewer, lesson)) return { error: "locked" as const };
 
-      const beat = await recordBeat(tx, {
+      const beat = await recordBeat(db, {
         tenantId: viewer.tenantId,
         userId: viewer.userId!,
         lessonId: lesson.id,
         positionSec: body.positionSec,
-        durationSec: lesson.durationSec ?? 0,
+        durationSec: asset?.durationSec ?? 0,
         isFree: lesson.isFree,
         freeLimit: FREE_LESSON_LIMIT,
       });

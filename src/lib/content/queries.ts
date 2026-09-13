@@ -1,11 +1,38 @@
-import { and, asc, count, eq, gt, sql } from "drizzle-orm";
-import { categories, courses, lessons, memberships, videoAssets } from "@/lib/db/schema";
-import type { Tx } from "@/lib/db/tenant";
+import type { CategoryDoc, CourseDoc, LessonDoc, MembershipDoc, VideoAssetDoc } from "@/lib/db/documents";
+import type { Scoped } from "@/lib/db/scope";
 
 /*
-  Read side of the catalog. Every function takes the tenant transaction, so the
-  RLS policy on courses hides another tenant's private courses automatically.
+  Read side of the catalogue.
+
+  Every function takes the scoped handle, so a private course belonging to
+  another tenant is filtered out before it is ever considered — the same
+  guarantee the RLS policy on courses used to give, now applied by
+  src/lib/db/scope.ts.
+
+  Where Postgres grouped and joined, this loads the few documents involved and
+  joins them in memory. Sixteen courses and sixty-seven lessons is small enough
+  that two or three round trips are faster than an aggregation pipeline, and
+  very much easier to read later.
 */
+
+/** A lesson is only watchable once its video reference is real. */
+function isPlayable(asset: VideoAssetDoc | undefined): boolean {
+  return Boolean(asset && asset.providerRef && !asset.providerRef.startsWith("TODO"));
+}
+
+/** Loads published courses, their lessons, and the video assets behind them. */
+async function loadCatalogue(db: Scoped) {
+  const courses = await db.find<CourseDoc>("courses", { isPublished: true }, { sort: { sortOrder: 1 } });
+  const lessons = courses.length
+    ? await db.find<LessonDoc>("lessons", { courseId: { $in: courses.map((c) => c.id) } }, { sort: { sortOrder: 1 } })
+    : [];
+
+  const assetIds = lessons.map((l) => l.videoAssetId).filter((id): id is string => Boolean(id));
+  const assets = assetIds.length ? await db.find<VideoAssetDoc>("video_assets", { id: { $in: assetIds } }) : [];
+  const assetById = new Map(assets.map((a) => [a.id, a]));
+
+  return { courses, lessons, assetById };
+}
 
 export type CourseSummary = {
   id: string;
@@ -25,45 +52,38 @@ export type CategoryWithCourses = {
   courses: CourseSummary[];
 };
 
-export async function getCatalog(tx: Tx): Promise<CategoryWithCourses[]> {
-  const cats = await tx.select().from(categories).orderBy(asc(categories.sortOrder));
+export async function getCatalog(db: Scoped): Promise<CategoryWithCourses[]> {
+  const cats = await db.find<CategoryDoc>("categories", {}, { sort: { sortOrder: 1 } });
+  const { courses, lessons, assetById } = await loadCatalogue(db);
 
-  const rows = await tx
-    .select({
-      id: courses.id,
-      categoryId: courses.categoryId,
-      titleHi: courses.titleHi,
-      titleEn: courses.titleEn,
-      imageUrl: courses.imageUrl,
-      sortOrder: courses.sortOrder,
-      lessonCount: count(lessons.id),
-      seconds: sql<number>`coalesce(sum(${videoAssets.durationSec}), 0)`.mapWith(Number),
-      freeCount: sql<number>`coalesce(sum(case when ${lessons.isFree} then 1 else 0 end), 0)`.mapWith(Number),
-    })
-    .from(courses)
-    .leftJoin(lessons, eq(lessons.courseId, courses.id))
-    .leftJoin(videoAssets, eq(lessons.videoAssetId, videoAssets.id))
-    .where(eq(courses.isPublished, true))
-    .groupBy(courses.id)
-    .orderBy(asc(courses.sortOrder));
+  const byCourse = new Map<string, LessonDoc[]>();
+  for (const l of lessons) {
+    const list = byCourse.get(l.courseId);
+    if (list) list.push(l);
+    else byCourse.set(l.courseId, [l]);
+  }
+
+  const summaries: CourseSummary[] = courses.map((c) => {
+    const own = byCourse.get(c.id) ?? [];
+    const seconds = own.reduce((n, l) => n + (l.videoAssetId ? (assetById.get(l.videoAssetId)?.durationSec ?? 0) : 0), 0);
+    return {
+      id: c.id,
+      categoryId: c.categoryId,
+      titleHi: c.titleHi,
+      titleEn: c.titleEn,
+      imageUrl: c.imageUrl,
+      lessonCount: own.length,
+      minutes: Math.round(seconds / 60),
+      hasFree: own.some((l) => l.isFree),
+    };
+  });
 
   return cats
     .map((c) => ({
       id: c.id,
       nameHi: c.nameHi,
       nameEn: c.nameEn,
-      courses: rows
-        .filter((r) => r.categoryId === c.id)
-        .map((r) => ({
-          id: r.id,
-          categoryId: r.categoryId,
-          titleHi: r.titleHi,
-          titleEn: r.titleEn,
-          imageUrl: r.imageUrl,
-          lessonCount: r.lessonCount,
-          minutes: Math.round(r.seconds / 60),
-          hasFree: r.freeCount > 0,
-        })),
+      courses: summaries.filter((s) => s.categoryId === c.id),
     }))
     .filter((c) => c.courses.length > 0);
 }
@@ -88,38 +108,35 @@ export type CourseDetail = {
   lessons: LessonRowData[];
 };
 
-export async function getCourse(tx: Tx, courseId: string): Promise<CourseDetail | null> {
-  const [course] = await tx
-    .select({
-      id: courses.id,
-      titleHi: courses.titleHi,
-      titleEn: courses.titleEn,
-      descriptionHi: courses.descriptionHi,
-      descriptionEn: courses.descriptionEn,
-      categoryNameHi: categories.nameHi,
-      categoryNameEn: categories.nameEn,
-    })
-    .from(courses)
-    .innerJoin(categories, eq(categories.id, courses.categoryId))
-    .where(and(eq(courses.id, courseId), eq(courses.isPublished, true)))
-    .limit(1);
+export async function getCourse(db: Scoped, courseId: string): Promise<CourseDetail | null> {
+  const course = await db.findOne<CourseDoc>("courses", { id: courseId, isPublished: true });
   if (!course) return null;
 
-  const rows = await tx
-    .select({
-      id: lessons.id,
-      sortOrder: lessons.sortOrder,
-      titleHi: lessons.titleHi,
-      titleEn: lessons.titleEn,
-      isFree: lessons.isFree,
-      durationSec: sql<number>`coalesce(${videoAssets.durationSec}, 0)`.mapWith(Number),
-    })
-    .from(lessons)
-    .leftJoin(videoAssets, eq(lessons.videoAssetId, videoAssets.id))
-    .where(eq(lessons.courseId, courseId))
-    .orderBy(asc(lessons.sortOrder));
+  const category = await db.findOne<CategoryDoc>("categories", { id: course.categoryId });
+  if (!category) return null;
 
-  return { ...course, lessons: rows };
+  const lessons = await db.find<LessonDoc>("lessons", { courseId }, { sort: { sortOrder: 1 } });
+  const assetIds = lessons.map((l) => l.videoAssetId).filter((id): id is string => Boolean(id));
+  const assets = assetIds.length ? await db.find<VideoAssetDoc>("video_assets", { id: { $in: assetIds } }) : [];
+  const assetById = new Map(assets.map((a) => [a.id, a]));
+
+  return {
+    id: course.id,
+    titleHi: course.titleHi,
+    titleEn: course.titleEn,
+    descriptionHi: course.descriptionHi,
+    descriptionEn: course.descriptionEn,
+    categoryNameHi: category.nameHi,
+    categoryNameEn: category.nameEn,
+    lessons: lessons.map((l) => ({
+      id: l.id,
+      sortOrder: l.sortOrder,
+      titleHi: l.titleHi,
+      titleEn: l.titleEn,
+      isFree: l.isFree,
+      durationSec: l.videoAssetId ? (assetById.get(l.videoAssetId)?.durationSec ?? 0) : 0,
+    })),
+  };
 }
 
 export type LessonDetail = {
@@ -135,69 +152,51 @@ export type LessonDetail = {
   next: { id: string; titleHi: string } | null;
 };
 
-export async function getLesson(tx: Tx, lessonId: string): Promise<LessonDetail | null> {
-  const [row] = await tx
-    .select({
-      id: lessons.id,
-      sortOrder: lessons.sortOrder,
-      titleHi: lessons.titleHi,
-      titleEn: lessons.titleEn,
-      isFree: lessons.isFree,
-      transcriptHi: lessons.transcriptHi,
-      transcriptEn: lessons.transcriptEn,
-      provider: videoAssets.provider,
-      providerRef: videoAssets.providerRef,
-      durationSec: videoAssets.durationSec,
-      courseId: courses.id,
-      courseTitleHi: courses.titleHi,
-      courseTitleEn: courses.titleEn,
-    })
-    .from(lessons)
-    .innerJoin(courses, and(eq(courses.id, lessons.courseId), eq(courses.isPublished, true)))
-    .leftJoin(videoAssets, eq(lessons.videoAssetId, videoAssets.id))
-    .where(eq(lessons.id, lessonId))
-    .limit(1);
-  if (!row) return null;
+export async function getLesson(db: Scoped, lessonId: string): Promise<LessonDetail | null> {
+  const lesson = await db.findOne<LessonDoc>("lessons", { id: lessonId });
+  if (!lesson) return null;
 
-  const siblings = await tx
-    .select({ id: lessons.id, titleHi: lessons.titleHi, sortOrder: lessons.sortOrder })
-    .from(lessons)
-    .where(eq(lessons.courseId, row.courseId))
-    .orderBy(asc(lessons.sortOrder));
+  // The course must be published, and must be one this tenant can see. The
+  // scoped handle decides the second part; this decides the first.
+  const course = await db.findOne<CourseDoc>("courses", { id: lesson.courseId, isPublished: true });
+  if (!course) return null;
 
-  const next = siblings.find((s) => s.sortOrder > row.sortOrder) ?? null;
+  const asset = lesson.videoAssetId ? await db.findOne<VideoAssetDoc>("video_assets", { id: lesson.videoAssetId }) : null;
+  const siblings = await db.find<LessonDoc>("lessons", { courseId: course.id }, { sort: { sortOrder: 1 } });
+  const next = siblings.find((s) => s.sortOrder > lesson.sortOrder) ?? null;
 
   return {
-    id: row.id,
-    sortOrder: row.sortOrder,
-    titleHi: row.titleHi,
-    titleEn: row.titleEn,
-    isFree: row.isFree,
-    transcriptHi: row.transcriptHi,
-    transcriptEn: row.transcriptEn,
-    video: row.provider && row.providerRef ? { provider: row.provider, providerRef: row.providerRef, durationSec: row.durationSec ?? 0 } : null,
-    course: { id: row.courseId, titleHi: row.courseTitleHi, titleEn: row.courseTitleEn, lessonCount: siblings.length },
+    id: lesson.id,
+    sortOrder: lesson.sortOrder,
+    titleHi: lesson.titleHi,
+    titleEn: lesson.titleEn,
+    isFree: lesson.isFree,
+    transcriptHi: lesson.transcriptHi,
+    transcriptEn: lesson.transcriptEn,
+    video: asset ? { provider: asset.provider, providerRef: asset.providerRef, durationSec: asset.durationSec } : null,
+    course: { id: course.id, titleHi: course.titleHi, titleEn: course.titleEn, lessonCount: siblings.length },
     next: next ? { id: next.id, titleHi: next.titleHi } : null,
   };
 }
 
 /** The four free lessons, for the landing page. */
-export async function getFreeLessons(tx: Tx) {
-  return tx
-    .select({
-      id: lessons.id,
-      titleHi: lessons.titleHi,
-      titleEn: lessons.titleEn,
-      courseId: courses.id,
-      courseTitleEn: courses.titleEn,
-      durationSec: sql<number>`coalesce(${videoAssets.durationSec}, 0)`.mapWith(Number),
-    })
-    .from(lessons)
-    .innerJoin(courses, and(eq(courses.id, lessons.courseId), eq(courses.isPublished, true)))
-    .leftJoin(videoAssets, eq(lessons.videoAssetId, videoAssets.id))
-    .where(eq(lessons.isFree, true))
-    .orderBy(asc(courses.sortOrder), asc(lessons.sortOrder))
-    .limit(4);
+export async function getFreeLessons(db: Scoped) {
+  const { courses, lessons, assetById } = await loadCatalogue(db);
+  const order = new Map(courses.map((c, i) => [c.id, i]));
+  const courseById = new Map(courses.map((c) => [c.id, c]));
+
+  return lessons
+    .filter((l) => l.isFree && courseById.has(l.courseId))
+    .sort((a, b) => (order.get(a.courseId)! - order.get(b.courseId)!) || a.sortOrder - b.sortOrder)
+    .slice(0, 4)
+    .map((l) => ({
+      id: l.id,
+      titleHi: l.titleHi,
+      titleEn: l.titleEn,
+      courseId: l.courseId,
+      courseTitleEn: courseById.get(l.courseId)!.titleEn,
+      durationSec: l.videoAssetId ? (assetById.get(l.videoAssetId)?.durationSec ?? 0) : 0,
+    }));
 }
 
 export type CatalogStats = {
@@ -221,34 +220,23 @@ export type CatalogStats = {
  *
  * These numbers climb on their own as videos are linked. Nothing needs editing.
  */
-export async function getCatalogStats(tx: Tx): Promise<CatalogStats> {
-  /* A lesson counts once it has a video that would actually play. Mirrors the
-     TODO check in src/lib/video/embed.ts, which is what renders the
-     "video being added" placeholder. */
-  const playable = sql`${videoAssets.providerRef} is not null and ${videoAssets.providerRef} not like 'TODO%'`;
+export async function getCatalogStats(db: Scoped): Promise<CatalogStats> {
+  const { courses, lessons, assetById } = await loadCatalogue(db);
 
-  const [row] = await tx
-    .select({
-      courses: sql<number>`count(distinct case when ${playable} then ${courses.id} end)`.mapWith(Number),
-      lessons: sql<number>`coalesce(sum(case when ${playable} then 1 else 0 end), 0)`.mapWith(Number),
-      seconds: sql<number>`coalesce(sum(case when ${playable} then ${videoAssets.durationSec} else 0 end), 0)`.mapWith(Number),
-      freeLessons: sql<number>`coalesce(sum(case when ${playable} and ${lessons.isFree} then 1 else 0 end), 0)`.mapWith(Number),
-    })
-    .from(courses)
-    .leftJoin(lessons, eq(lessons.courseId, courses.id))
-    .leftJoin(videoAssets, eq(videoAssets.id, lessons.videoAssetId))
-    .where(eq(courses.isPublished, true));
+  const playable = lessons.filter((l) => isPlayable(l.videoAssetId ? assetById.get(l.videoAssetId) : undefined));
+  const seconds = playable.reduce((n, l) => n + (assetById.get(l.videoAssetId!)?.durationSec ?? 0), 0);
+  const withVideo = new Set(playable.map((l) => l.courseId));
 
-  const [m] = await tx
-    .select({ n: sql<number>`count(*)`.mapWith(Number) })
-    .from(memberships)
-    .where(and(eq(memberships.status, "active"), gt(memberships.validUntil, new Date())));
+  const learners = await db.countDocuments<MembershipDoc>("memberships", {
+    status: "active",
+    validUntil: { $gt: new Date() },
+  });
 
   return {
-    courses: row?.courses ?? 0,
-    lessons: row?.lessons ?? 0,
-    minutes: Math.round((row?.seconds ?? 0) / 60),
-    freeLessons: row?.freeLessons ?? 0,
-    learners: m?.n ?? 0,
+    courses: courses.filter((c) => withVideo.has(c.id)).length,
+    lessons: playable.length,
+    minutes: Math.round(seconds / 60),
+    freeLessons: playable.filter((l) => l.isFree).length,
+    learners,
   };
 }

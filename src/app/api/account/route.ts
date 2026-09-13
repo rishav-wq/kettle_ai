@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { assertSameOrigin, clientIp, toErrorResponse } from "@/lib/security/request";
 import { displayName, lang as langSchema, parseBody } from "@/lib/security/validators";
 import { withTenant } from "@/lib/db/tenant";
-import { freeWatchLog, memberships, payments, progress, referralCodes, users } from "@/lib/db/schema";
+import type { FreeWatchDoc, MembershipDoc, PaymentDoc, ProgressDoc, ReferralCodeDoc, UserDoc } from "@/lib/db/documents";
 import { destroyAllSessions, destroySession } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { getViewer } from "@/lib/viewer";
@@ -24,7 +23,7 @@ export async function PATCH(req: Request) {
     const body = await parseBody(req, Patch);
     if (Object.keys(body).length === 0) return Response.json({ ok: true });
 
-    await withTenant(viewer.tenantId, (tx) => tx.update(users).set(body).where(eq(users.id, viewer.userId!)));
+    await withTenant(viewer.tenantId, (db) => db.updateOne<UserDoc>("users", { id: viewer.userId! }, { $set: body }));
     return Response.json({ ok: true });
   } catch (err) {
     return toErrorResponse(err);
@@ -39,8 +38,10 @@ export async function PATCH(req: Request) {
  * are the one thing kept: they are financial records, so the link to the person
  * is severed and an anonymous record of the transaction remains.
  *
- * Order matters, because the foreign keys point inward: unhook the payments,
- * then remove the memberships they referenced, then the rest, then the user.
+ * Order still matters, though MongoDB enforces no foreign keys: unhook the
+ * payments first so nothing points at a membership that is about to go, then
+ * remove the rest, then the user. Nothing here would stop a half-finished
+ * delete, so the audit entry is written before anything is removed.
  */
 export async function DELETE(req: Request) {
   try {
@@ -51,19 +52,21 @@ export async function DELETE(req: Request) {
     const userId = viewer.userId;
     const ip = await clientIp();
 
-    await withTenant(viewer.tenantId, async (tx) => {
+    await withTenant(viewer.tenantId, async (db) => {
       // Written first so the record of the deletion survives the deletion.
-      await audit(tx, { tenantId: viewer.tenantId, actorUserId: userId, action: "account.deleted", targetType: "user", targetId: userId, ip });
+      await audit(db, { tenantId: viewer.tenantId, actorUserId: userId, action: "account.deleted", targetType: "user", targetId: userId, ip });
 
-      await tx.update(payments).set({ userId: null, membershipId: null }).where(eq(payments.userId, userId));
-      await tx.delete(memberships).where(eq(memberships.userId, userId));
-      await tx.delete(progress).where(eq(progress.userId, userId));
-      await tx.delete(freeWatchLog).where(eq(freeWatchLog.userId, userId));
-      await tx.delete(referralCodes).where(eq(referralCodes.userId, userId));
-      await tx.delete(users).where(eq(users.id, userId));
+      // The financial record stays; only the link to the person is severed.
+      await db.updateMany<PaymentDoc>("payments", { userId }, { $set: { userId: null, membershipId: null } });
+      await db.deleteMany<MembershipDoc>("memberships", { userId });
+      await db.deleteMany<ProgressDoc>("progress", { userId });
+      await db.deleteMany<FreeWatchDoc>("free_watch_log", { userId });
+      await db.deleteMany<ReferralCodeDoc>("referral_codes", { userId });
+      await db.deleteOne<UserDoc>("users", { id: userId });
     });
 
-    // Sessions cascade on the user row, but clear the cookie too.
+    // Postgres cascaded sessions off the user row; MongoDB has no cascade, so
+    // destroyAllSessions is now load-bearing rather than belt-and-braces.
     await destroyAllSessions(userId);
     await destroySession();
     return Response.json({ ok: true });

@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { AppShell, GradHeader } from "@/components/app-shell";
 import { withTenant } from "@/lib/db/tenant";
-import { users } from "@/lib/db/schema";
+import type { UserDoc } from "@/lib/db/documents";
 import { getViewer } from "@/lib/viewer";
 import { AccountForm } from "./form";
 
@@ -13,13 +12,7 @@ export default async function AccountPage() {
   const viewer = await getViewer();
   if (!viewer.userId) redirect("/signin?next=/account");
 
-  const [me] = await withTenant(viewer.tenantId, (tx) =>
-    tx
-      .select({ name: users.name, phone: users.phone, city: users.city, whatsappOptIn: users.whatsappOptIn })
-      .from(users)
-      .where(eq(users.id, viewer.userId!))
-      .limit(1)
-  );
+  const me = await withTenant(viewer.tenantId, (db) => db.findOne<UserDoc>("users", { id: viewer.userId! }));
 
   return (
     <AppShell viewer={viewer} tab="account" header={<GradHeader title="Account" back={{ href: "/mine", label: "My classes" }} />}>
