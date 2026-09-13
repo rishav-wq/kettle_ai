@@ -1,0 +1,26 @@
+{
+  "name": "Kettle",
+  "short_name": "Kettle",
+  "description": "Everyday AI, taught in Hindi, for people over 40.",
+  "start_url": "/learn",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#00311f",
+  "lang": "hi",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

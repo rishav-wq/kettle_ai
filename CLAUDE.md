@@ -1,1 +1,53 @@
-@AGENTS.md
+# Kettle
+
+Everyday AI video courses in Hindi for Indians over 40. Mobile-first PWA. One Next.js app, Postgres on Neon via Drizzle, deployed on Vercel. Solo engineer, so every choice favors one person being able to run it.
+
+## Rules that are not obvious from the code
+
+- **Viewer state is the spine.** `src/lib/viewer.ts` resolves `anonymous | free | gold` plus the tenant once per request. Every gating decision, popup, and nav item is a function of it. No page decides access on its own.
+- **Every tenant-scoped query goes through `withTenant()`.** `src/lib/db/tenant.ts` opens a transaction and sets `app.tenant_id`; row-level security in `schema.ts` filters on it. Never query `users`, `memberships`, `payments`, `progress`, or `audit_log` outside it. Never take a tenant id from the client. `bypassRls` is for the seed script and the payment webhook only.
+- **Row-level security is FORCEd**, so it applies to the table owner too. A missing `set_config` returns zero rows rather than all rows. If a page shows nothing unexpectedly, that is usually why.
+- **Every route handler** parses input with a schema from `src/lib/security/validators.ts`, checks `assertSameOrigin` on mutations, and rate limits with `src/lib/security/rate-limit.ts`. Webhooks skip origin checks and verify a signature instead.
+- **Pine on white.** Text and controls are Pine `#00311F`; the ground is white. Milk `#F0EEE6` is a secondary surface only. Every grey is a tint of pine. Components use the semantic tokens in `globals.css` (`ink`, `paper`, `fill`, `line`, `wash`), never raw hex. No gradients. Large blocks are outlined, not filled; only controls (buttons, tabs, avatars, step numbers) are solid pine.
+- **Night mode is opt-in only.** The Night chip sets `data-theme="dark"`. The stylesheet deliberately does not follow `prefers-color-scheme`, because a dark screen in daylight on a cheap phone is the wrong default for this audience. Do not add the media query back.
+- **Devanagari leading.** Hindi never renders below `line-height: 1.34` for headings or `1.5` for body. Use the `.dv` class or `lang="hi"`. Latin leading crushes matras.
+- **Bilingual copy uses `<T hi en />`** from `src/components/bilingual.tsx`. It switches on `<html lang>` with CSS, so it works in server components with no flash.
+- **Video audio is Hinglish, text comes in two full tracks.** One shoot per lesson, no English re-record. The `*Hi` fields are written in that same spoken register: Devanagari with English loanwords left in Latin, as in "Resume बनाइए". The `*En` fields are plain English. So mixed-script lines are normal here, not an exception, which is why the type is Anek: both faces load Devanagari and Latin, so one line renders in one family instead of colliding two. Captions must be written by hand; automatic captioning fails on code-switched speech.
+- **Type floor.** Body text is 17px on phones, 20px with `data-textsize="big"`. Tap targets never drop below 44px.
+- **Lessons never store a YouTube ID.** They reference `video_assets`; `src/lib/video/embed.ts` is the only place that knows about providers. A ref starting with `TODO` renders as "video being added".
+- **Exactly four lessons are free.** The seed script refuses any other count.
+- **Social proof must be real.** The popup reads from actual memberships; the landing page stat strip counts the real catalog and real active members, and simply omits the member count while it is zero. Never fabricate a signup, a testimonial, or a number. The audience is scam-targeted and the product teaches scam avoidance.
+- **Unfilled landing content is flagged, not faked.** `content/kettle-site.json` holds the teacher, testimonials and FAQ. Any entry with `"placeholder": true` renders with a dashed border and an EXAMPLE chip so it cannot ship unnoticed. Replace with real people and real photographs, then drop the flag.
+- **No urgency, ever.** No countdown, no "offer ends", no struck-through price. Most comparable products do this; it is the visual grammar of the scams our first course warns about.
+- **Entitlement flips only from the server.** Payment success is confirmed by the Razorpay webhook writing to `memberships`. The client polls `/api/payments/status`, it never asserts. `/api/payments/simulate` stands in for the webhook locally and refuses to exist once real keys are set or in production.
+- **Sessions are rows, not signed tokens.** The cookie holds an opaque secret; the database holds only its SHA-256 hash. That makes revocation and account deletion real. `src/lib/auth/session.ts` is one of the few places that touches the database outside `withTenant()`, because the tenant is not known until the session is read.
+- **Secrets resolve on use, not on import.** `getAuthSecret()` and the SMS sender are lazy, because `next build` evaluates every route with `NODE_ENV=production` before secrets are necessarily in scope. A module-level throw breaks the build; a lazy one still refuses a real request.
+- **Swapping the SMS provider is one file.** `src/lib/auth/sms.ts` holds the interface, the dev sender that prints to the log, and the MSG91 implementation. India needs DLT registration per template per language.
+- **Local dev needs no database.** Without `DATABASE_URL` the app runs an embedded Postgres (PGlite) under `.data/`, with the same migrations and RLS. Production refuses to fall back.
+
+## Layout
+
+- `src/app` routes. `/kit` is the component kit, not linked from the product.
+- `src/components/ui` the reusable pieces. `src/components/app-shell.tsx` is the frame every signed-in screen uses: one column with a bottom bar on phones, a fixed sidebar and a content area from `lg` (1024px) up. Pass `width="wide"` for catalog-style pages, the default `"reading"` for everything else.
+- **Two layouts, one tree.** Phone first, then `lg:` overrides. Never a separate desktop route or component. A phone column centred in a desktop window reads as unfinished, so from `lg` the landing page goes two-column and the app grows a sidebar.
+- `src/lib/db/schema.ts` the whole data model including RLS policies. `drizzle/` holds generated SQL; regenerate with `npm run db:generate` after schema edits, never hand-edit a generated file. `0001_force-rls.sql` is hand-written on purpose.
+- `content/kettle-content.json` is the course source of truth in v0. `npm run db:seed` loads it. `content/kettle-site.json` is the landing page content and is read at request time, no seed needed.
+- `src/components/landing.tsx` holds the landing sections; `src/app/page.tsx` is mostly the ordering decision, which is the part that matters. The order follows verified patterns from thirteen comparable products, with two departures noted in the file.
+- `src/components/logo.tsx` is the kettle mark, inline so it inherits `currentColor`. `scripts/make-demo-art.mjs` regenerates the placeholder course and portrait art; delete it when real photographs land.
+
+## Commands
+
+```
+npm run dev          # local, embedded Postgres, migrates on first request
+npm run db:seed      # load content/kettle-content.json
+npm run db:generate  # schema.ts -> drizzle/*.sql
+npm run db:migrate   # apply drizzle/ to DATABASE_URL (Neon)
+npm run build        # what Vercel runs
+npm run typecheck && npm run lint
+npm run check:rls    # proves tenant isolation against the real database
+npm run smoke -- http://localhost:3080 <path-to-dev-log>   # walks the whole product
+```
+
+## Verifying
+
+`scripts/check-rls.ts` proves a query with no tenant set sees nothing, that one tenant cannot read or write another's rows, and that global content stays visible. `scripts/smoke.mjs` drives a running server the way a browser would, with a cookie jar and real origin headers: it signs in with the code from the dev log, onboards, completes the four free lessons, checks the fifth is refused, pays through the simulated webhook, and confirms the lock lifts. It also probes what must fail, including a forged webhook signature and a cross-origin write. Run both before any deploy.

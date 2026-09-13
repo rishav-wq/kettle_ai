@@ -1,26 +1,262 @@
 @import "tailwindcss";
 
+/*
+  Kettle, second design.
+
+  Pine with a soft green ground, white cards with soft shadows, generous radii,
+  and illustration rather than type as the visual anchor.
+
+  Two rules survive the change, because they are about the audience rather than
+  the style. Body text does not go below 16px, and steps to 19px when someone
+  chooses big text. Tap targets do not go below 44px.
+
+  The interface is English only. The videos are still Hinglish; that is a
+  content decision, not an interface one.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand — Pine on white */
+  --violet: #00311f;
+  --violet-deep: #002318;
+  --violet-soft: #5c806f;
+  --pink: #00311f;
+  --amber: #f0eee6;
+
+  /* Surfaces */
+  --ground: #e7f0eb;
+  --paper: #ffffff;
+  --raise: #ffffff;
+  --wash: #e7f0eb;
+
+  /* Ink */
+  --ink: #00311f;
+  --ink-2: #466156;
+  --ink-3: #789087;
+
+  /* Structure */
+  --line: #d5e0da;
+  --line-2: #edf1ed;
+
+  /* Fills */
+  --fill: #00311f;
+  --on-fill: #ffffff;
+
+  /* Solid Pine surfaces the headers and hero panels are built from. */
+  --grad: var(--fill);
+  --grad-deep: var(--fill);
+
+  --shadow-s: 0 2px 8px rgba(0, 49, 31, 0.06);
+  --shadow-m: 0 8px 24px rgba(0, 49, 31, 0.09);
+  --shadow-l: 0 18px 44px rgba(0, 49, 31, 0.15);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --ground: #07150f;
+  --paper: #0d2118;
+  --raise: #153526;
+  --wash: #1c3d2d;
+
+  --ink: #f5f8f5;
+  --ink-2: #c8d8cf;
+  --ink-3: #91aa9c;
+
+  --line: #2c5040;
+  --line-2: #1b392a;
+
+  --fill: #78ad91;
+  --on-fill: #ffffff;
+
+  --grad: var(--fill);
+  --grad-deep: var(--fill);
+
+  --shadow-s: 0 2px 8px rgba(0, 0, 0, 0.26);
+  --shadow-m: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-l: 0 18px 44px rgba(0, 0, 0, 0.36);
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-violet: var(--violet);
+  --color-violet-deep: var(--violet-deep);
+  --color-violet-soft: var(--violet-soft);
+  --color-pink: var(--pink);
+  --color-amber: var(--amber);
+
+  --color-ground: var(--ground);
+  --color-paper: var(--paper);
+  --color-raise: var(--raise);
+  --color-wash: var(--wash);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+
+  --color-fill: var(--fill);
+  --color-on-fill: var(--on-fill);
+
+  /*
+    Device chrome for the hero mockups. Deliberately outside the ink/paper
+    scale: this is the colour of a physical object in a photograph, not a
+    surface of the interface, so it does not invert with night mode.
+  */
+  --color-device: #06180f;
+  --color-device-edge: #244634;
+
+  --font-display: var(--font-poppins), system-ui, sans-serif;
+  --font-body: var(--font-poppins), system-ui, sans-serif;
+
+  --shadow-s: var(--shadow-s);
+  --shadow-m: var(--shadow-m);
+  --shadow-l: var(--shadow-l);
+
+  --radius-card: 22px;
+  --radius-tile: 18px;
+  --radius-pill: 999px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/*
+  Base type. 16px floor on phones, stepping to 19px when someone asks for big
+  text. This audience is over 40 and often on a small, bright screen.
+*/
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+html[data-textsize="big"] {
+  font-size: 19px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+/* Keyboard focus stays obvious. */
+:focus-visible {
+  outline: 3px solid var(--violet);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* The gradient surfaces, as utilities, so no component reaches for raw hex. */
+.grad {
+  background: var(--grad);
+}
+.grad-deep {
+  background: var(--grad-deep);
+}
+
+/* A hairline that reads on both themes. */
+.hair {
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+/*
+  Motion.
+
+  Two mechanisms, deliberately. Anything above the fold uses a plain CSS
+  entrance, because a scroll observer cannot run until React has hydrated and
+  the hero would sit blank until it did. Anything below the fold reveals on
+  scroll, driven by src/components/reveal.tsx.
+
+  The easing is a single overshoot-free curve. Nothing bounces, nothing spins,
+  nothing moves further than about a centimetre: this audience includes people
+  who find motion on a screen hard to track, and the reduced-motion block above
+  already collapses every duration to nothing for those who have said so.
+*/
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* `both` matters: it holds the end state after a reduced-motion instant run. */
+.enter {
+  animation: enter-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+/* Revealed on scroll. Hidden until the observer marks it, so it is only ever
+   applied by a client component that is certain to hydrate. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--d, 0s);
+}
+[data-reveal][data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+/* If scripting is off the observer never fires, so show everything. */
+@media (scripting: none) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The soft light behind the hero, drifting slowly enough to read as light
+   rather than as an object. */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-24px, 26px, 0) scale(1.12);
+  }
+}
+.drift {
+  animation: drift 18s ease-in-out infinite;
+}
+
+/* Hide scrollbars on the horizontal shelves without losing the scroll. */
+.no-bar {
+  scrollbar-width: none;
+}
+.no-bar::-webkit-scrollbar {
+  display: none;
 }

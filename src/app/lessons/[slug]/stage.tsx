@@ -1,0 +1,73 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui";
+import { Player } from "@/components/player";
+import { Paywall } from "@/components/paywall";
+import type { Playable } from "@/lib/video/embed";
+import type { LockReason } from "@/lib/viewer";
+
+type Props = {
+  lessonId: string;
+  locked: LockReason | null;
+  playable: Playable;
+  durationSec: number;
+  startAtSec: number;
+  tracking: boolean;
+  signedIn: boolean;
+  price: string;
+  months: number;
+};
+
+/**
+ * Owns the one piece of client state the lesson page needs: whether the
+ * paywall is open. It opens on arrival for a locked lesson, and mid-lesson
+ * when the server says the fourth free lesson has just been finished.
+ */
+export function LessonStage({ lessonId, locked, playable, durationSec, startAtSec, tracking, signedIn, price, months }: Props) {
+  const [paywall, setPaywall] = useState<LockReason | null>(locked);
+
+  if (locked) {
+    return (
+      <>
+        <div className="relative grid aspect-video place-items-center overflow-hidden rounded-card bg-violet-deep px-6 text-center shadow-l">
+          <div className="flex flex-col items-center gap-3">
+            <span aria-hidden className="grid h-14 w-14 place-items-center rounded-full bg-white/18 text-[1.4rem] backdrop-blur-sm">
+              🔒
+            </span>
+            <p className="text-[0.95rem] font-medium text-white/90">
+              {locked === "free_limit_reached" ? "You have used the four free lessons" : "This lesson is for Gold members"}
+            </p>
+          </div>
+        </div>
+        <div className="pt-4">
+          <Button full size="lg" variant="onGrad" onClick={() => setPaywall(locked)}>
+            Become a Gold member
+          </Button>
+        </div>
+        <Paywall open={paywall !== null} onClose={() => setPaywall(null)} reason={paywall ?? locked} price={price} months={months} signedIn={signedIn} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Player
+        lessonId={lessonId}
+        playable={playable}
+        durationSec={durationSec}
+        startAtSec={startAtSec}
+        tracking={tracking}
+        onFreeLimit={() => setPaywall("free_limit_reached")}
+      />
+      <Paywall
+        open={paywall !== null}
+        onClose={() => setPaywall(null)}
+        reason={paywall ?? "free_limit_reached"}
+        price={price}
+        months={months}
+        signedIn={signedIn}
+      />
+    </>
+  );
+}

@@ -1,0 +1,35 @@
+{
+  "_readme": "Landing page content that is not course data. Teacher and testimonial blocks were removed rather than shipped as placeholders; add them back only when there are real people and real photographs. Never invent a testimonial: the audience is scam-targeted and the product teaches scam avoidance.",
+
+  "contact": {
+    "whatsapp": "910000000000",
+    "hours": "Mon to Sat, 10am to 6pm"
+  },
+
+  "faq": [
+    {
+      "q": "What will I learn here?",
+      "a": "You will learn practical ways to use AI in daily life: asking better questions, writing messages and letters, planning tasks, and checking information safely."
+    },
+    {
+      "q": "Do I need to know English or technology?",
+      "a": "No. You can start with the words you already use. The lessons use simple language and show each step on a phone."
+    },
+    {
+      "q": "Do I need experience with AI?",
+      "a": "No. We start with the basics, explain what AI can and cannot do, and build one small skill at a time."
+    },
+    {
+      "q": "How long is each lesson?",
+      "a": "Most lessons take about five or six minutes. Each one teaches one useful idea that you can try on your own phone."
+    },
+    {
+      "q": "Is it safe to use AI?",
+      "a": "AI can be useful, but it can also make mistakes. We show you what to check and remind you never to share an OTP, UPI PIN, password, or private document."
+    },
+    {
+      "q": "Do I need an account to begin?",
+      "a": "No. Start with the free lessons without an account. Sign in only when you want Kettle to remember where you stopped."
+    }
+  ]
+}

@@ -1,69 +1,219 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { Button, Tile } from "@/components/ui";
+import {
+  ClosingCta,
+  FaqBlock,
+  Footer,
+  HowItWorks,
+  SafetyPromise,
+  Section,
+  Stats,
+  WhatYouCanDo,
+} from "@/components/landing";
+import { withTenant } from "@/lib/db/tenant";
+import { getCatalog, getCatalogStats, getFreeLessons } from "@/lib/content/queries";
+import { getSiteContent } from "@/lib/content/site";
+import { getViewer } from "@/lib/viewer";
+import { HeroTypingDemo } from "@/components/hero-typing-demo";
+import { LaptopFrame, PhoneFrame } from "@/components/device-frame";
+import { Reveal } from "@/components/reveal";
+import { SiteNav } from "@/components/site-nav";
+import { SITE_NAME, pageMetadata, siteUrl } from "@/lib/seo";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Practical AI lessons for people over 40",
+  description: "Learn how to use AI for everyday tasks, messages, letters, planning, and online safety in simple short videos.",
+  pathname: "/",
+});
+
+/*
+  One container recipe for the whole page.
+
+  Every band, the full-bleed gradient hero included, puts its content inside
+  this and nothing else carries a horizontal gutter. Padding on a band plus a
+  max-width on its child resolves to a different left edge than a max-width on
+  a wrapper plus padding on the same element, which is how the hero and the
+  sections below it drifted out of line.
+*/
+const SHELL = "mx-auto w-full max-w-[1440px] px-5 lg:px-12";
+
+/*
+  The landing page.
+
+  A full marketing page rather than a welcome screen: hero, proof, what you
+  learn, the catalog, how it works, the safety promise, questions, and a
+  closing call to action.
+
+  Two things this page will not do. It never shows a countdown or a struck
+  through price, because that is the visual grammar of the scams the first
+  course warns about. And it never states a number it cannot count: the member
+  figure appears only once real memberships exist.
+
+  A signed-in visitor never sees this; they go straight into the app.
+*/
+export default async function Home() {
+  const viewer = await getViewer();
+  if (viewer.userId) redirect(viewer.onboarded ? "/learn" : "/onboarding");
+
+  const site = getSiteContent();
+  const { free, stats, catalog } = await withTenant(viewer.tenantId, async (tx) => ({
+    free: await getFreeLessons(tx),
+    stats: await getCatalogStats(tx),
+    catalog: await getCatalog(tx),
+  }));
+
+  const firstLesson = free[0] ? `/lessons/${free[0].id}` : "/learn";
+  const courses = catalog.flatMap((c) => c.courses).slice(0, 6);
+  const whatsapp = site.contact.whatsapp || null;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "EducationalOrganization",
+        "@id": `${siteUrl("/").toString()}#organization`,
+        name: SITE_NAME,
+        url: siteUrl("/").toString(),
+        description: "Practical AI lessons for people over 40.",
+        areaServed: "IN",
+        audience: { "@type": "PeopleAudience", suggestedMinAge: 40 },
+        knowsAbout: ["artificial intelligence", "AI for beginners", "online safety", "everyday technology"],
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl("/").toString()}#website`,
+        name: SITE_NAME,
+        url: siteUrl("/").toString(),
+        description: "Learn practical AI skills in short, simple videos.",
+        inLanguage: "en-IN",
+        publisher: { "@id": `${siteUrl("/").toString()}#organization` },
+      },
+    ],
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="mx-auto w-full max-w-[520px] bg-ground lg:max-w-none">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      {/* Hero: one calm promise, one clear action, and a real preview of the product. */}
+      {/* The band is full bleed; the gutter lives on the inner container only, so
+          the hero's left edge lines up exactly with every section below it. */}
+      <header className="grad relative overflow-hidden rounded-b-[38px] pb-10 pt-[calc(16px+env(safe-area-inset-top))] text-white lg:rounded-b-[56px] lg:pb-20 lg:pt-8">
+        <div aria-hidden className="drift pointer-events-none absolute -right-20 top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div className={SHELL}>
+          <SiteNav firstLessonHref={firstLesson} />
+
+          {/* Words left, illustration right, once there is room for both.
+              The right column is wide enough to hold a laptop at a believable
+              size; below lg the same demo appears in a phone instead. */}
+          <div className="lg:mt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,620px)] lg:items-center lg:gap-16">
+            <div className="flex flex-col">
+              {/* The hero arrives in reading order, a beat apart. Plain CSS, so
+                  it plays before React hydrates rather than after. */}
+              <div className="mt-7 flex flex-col gap-4 lg:mt-0">
+                <span
+                  style={{ "--d": "0.05s" } as React.CSSProperties}
+                  className="enter flex w-fit items-center gap-2 rounded-pill bg-white/12 px-3 py-1.5 text-[0.74rem] font-semibold uppercase tracking-[0.13em] text-white/85"
+                >
+                  <span className="h-2 w-2 rounded-full bg-amber" /> Made for real life
+                </span>
+                <h1
+                  style={{ "--d": "0.13s" } as React.CSSProperties}
+                  className="enter max-w-[11ch] text-[2.55rem] font-bold leading-[1.08] lg:text-[4.25rem]"
+                >
+                  Learn AI for your everyday life.
+                </h1>
+                <p
+                  style={{ "--d": "0.22s" } as React.CSSProperties}
+                  className="enter max-w-[34ch] text-[1rem] leading-relaxed text-white/85 lg:max-w-[40ch] lg:text-[1.12rem]"
+                >
+                  Simple 5–6 minute videos for people over 40. Learn what AI can do, how to use it, and how to stay safe.
+                </p>
+              </div>
+
+              <div style={{ "--d": "0.38s" } as React.CSSProperties} className="enter mt-8 lg:hidden">
+                <PhoneFrame>
+                  <HeroTypingDemo variant="phone" />
+                </PhoneFrame>
+              </div>
+
+              <div
+                style={{ "--d": "0.3s" } as React.CSSProperties}
+                className="enter mt-7 flex flex-col gap-3 lg:mt-9 lg:max-w-[400px]"
+              >
+                <Button href={firstLesson} variant="onGrad" size="lg" full>
+                  Start a short lesson <span aria-hidden>→</span>
+                </Button>
+                <p className="flex items-center justify-center gap-2 text-center text-[0.86rem] font-medium text-white/85 lg:justify-start lg:text-left">
+                  <span aria-hidden className="grid h-5 w-5 place-items-center rounded-full bg-white/15 text-[0.7rem]">✓</span>
+                  No account or card needed
+                </p>
+              </div>
+            </div>
+
+            <div style={{ "--d": "0.28s" } as React.CSSProperties} className="enter hidden lg:block">
+              <LaptopFrame>
+                <HeroTypingDemo variant="laptop" />
+              </LaptopFrame>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </header>
+
+      {/* Each band below the fold rises into place as it is scrolled to. The
+          wrapper is a plain block, so the flex column above is unchanged. */}
+      <div className={`${SHELL} flex flex-col gap-12 pt-8 lg:gap-20 lg:pt-16`}>
+        <Reveal>
+          <Stats stats={stats} />
+        </Reveal>
+
+        <Reveal>
+          <SafetyPromise />
+        </Reveal>
+
+        <Reveal>
+          <WhatYouCanDo />
+        </Reveal>
+
+        {/* The catalog, as a horizontal shelf so breadth is felt rather than claimed. */}
+        <Reveal>
+        <Section id="courses" eyebrow="The courses" title="Start with a course that fits your day">
+          <div className="no-bar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">
+            {courses.map((c) => (
+              <Tile
+                key={c.id}
+                href={`/courses/${c.id}`}
+                image={c.imageUrl ?? undefined}
+                title={c.titleEn}
+                meta={`${c.lessonCount} lessons · ${c.minutes} min`}
+                badge={c.hasFree ? "Free" : undefined}
+                className="w-[190px] flex-none snap-start lg:w-auto"
+              />
+            ))}
+          </div>
+          <Button href="/learn" variant="soft" full className="lg:mx-auto lg:w-auto lg:min-w-[260px]">
+            Browse all courses
+          </Button>
+        </Section>
+        </Reveal>
+
+        <Reveal>
+          <HowItWorks id="how" />
+        </Reveal>
+
+        <Reveal>
+          <FaqBlock id="questions" items={site.faq} />
+        </Reveal>
+
+        <Reveal>
+          <ClosingCta href={firstLesson} whatsapp={whatsapp} />
+        </Reveal>
+
+        <Reveal>
+          <Footer whatsapp={whatsapp} hours={site.contact.hours} />
+        </Reveal>
+      </div>
     </div>
   );
 }
