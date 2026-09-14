@@ -4,6 +4,7 @@ import { Button, Card, LessonRow } from "@/components/ui";
 import { withTenant } from "@/lib/db/tenant";
 import { getContinue, getCourseCompletion } from "@/lib/content/progress";
 import { getViewer } from "@/lib/viewer";
+import { T } from "@/components/bilingual";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My classes" };
@@ -13,8 +14,17 @@ export default async function MinePage() {
 
   if (!viewer.userId) {
     return (
-      <AppShell viewer={viewer} tab="mine" header={<GradHeader title="My classes" subtitle="Sign in and we remember where you stopped." />}>
-        <div className="pt-6">
+      <AppShell
+        viewer={viewer}
+        tab="mine"
+        header={
+          <GradHeader
+            title={<T hi="मेरी क्लास" en="My classes" />}
+            subtitle={<T hi="साइन इन कीजिए, हम याद रखेंगे कि आप कहाँ रुके थे।" en="Sign in and we remember where you stopped." />}
+          />
+        }
+      >
+        <div>
           <Empty />
         </div>
       </AppShell>
@@ -33,16 +43,34 @@ export default async function MinePage() {
     <AppShell
       viewer={viewer}
       tab="mine"
-      header={<GradHeader title={viewer.name ? `Hello, ${viewer.name}` : "My classes"} subtitle="Everything you have started." />}
+      header={
+        <GradHeader
+          title={
+            viewer.name ? (
+              <T hi={`नमस्ते, ${viewer.name} जी`} en={`Namaste, ${viewer.name} ji`} />
+            ) : (
+              <T hi="मेरी क्लास" en="My classes" />
+            )
+          }
+          subtitle={<T hi="जो कुछ आपने शुरू किया है।" en="Everything you have started." />}
+        />
+      }
     >
-      <div className="flex flex-col gap-7 pt-6">
+      <div className="flex flex-col gap-7">
         {current ? (
           <section className="flex flex-col gap-3">
-            <h2 className="text-[1.05rem] font-bold">Pick up where you left</h2>
+            <h2 className="text-[1.05rem] font-bold">
+              <T hi="जहाँ छोड़ा था, वहीं से" en="Pick up where you left" />
+            </h2>
             <LessonRow
               index={current.sortOrder}
-              title={current.lessonTitleEn}
-              meta={`${current.courseTitleEn} · ${current.sortOrder} of ${current.lessonCount}`}
+              title={<T hi={current.lessonTitleHi} en={current.lessonTitleEn} />}
+              meta={
+                <T
+                  hi={`${current.courseTitleHi} · ${current.lessonCount} में से ${current.sortOrder}`}
+                  en={`${current.courseTitleEn} · ${current.sortOrder} of ${current.lessonCount}`}
+                />
+              }
               progress={current.durationSec > 0 ? current.watchedSec / current.durationSec : 0}
               current
               href={`/lessons/${current.lessonId}`}
@@ -52,7 +80,9 @@ export default async function MinePage() {
 
         {started.length > 0 ? (
           <section className="flex flex-col gap-3">
-            <h2 className="text-[1.05rem] font-bold">In progress</h2>
+            <h2 className="text-[1.05rem] font-bold">
+              <T hi="चल रहे हैं" en="In progress" />
+            </h2>
             <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
               {started.map((c) => (
                 <CourseProgress key={c.courseId} {...c} />
@@ -64,7 +94,9 @@ export default async function MinePage() {
         {finished.length > 0 ? (
           <section className="flex flex-col gap-3">
             <div className="flex items-baseline gap-3">
-              <h2 className="text-[1.05rem] font-bold">Finished</h2>
+              <h2 className="text-[1.05rem] font-bold">
+                <T hi="पूरे हो गए" en="Finished" />
+              </h2>
               <span className="ml-auto text-[0.85rem] font-medium tabular-nums text-ink-3">{finished.length}</span>
             </div>
             <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
@@ -81,12 +113,26 @@ export default async function MinePage() {
   );
 }
 
-function CourseProgress({ courseId, titleEn, done, total }: { courseId: string; titleEn: string; done: number; total: number }) {
+function CourseProgress({
+  courseId,
+  titleHi,
+  titleEn,
+  done,
+  total,
+}: {
+  courseId: string;
+  titleHi: string;
+  titleEn: string;
+  done: number;
+  total: number;
+}) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
     <Link href={`/courses/${courseId}`} className="flex flex-col gap-3 rounded-tile bg-paper p-4 shadow-s transition-shadow hover:shadow-m">
       <div className="flex items-baseline gap-3">
-        <span className="min-w-0 flex-1 truncate text-[0.98rem] font-semibold">{titleEn}</span>
+        <span className="min-w-0 flex-1 truncate text-[0.98rem] font-semibold">
+          <T hi={titleHi} en={titleEn} />
+        </span>
         <span className="flex-none text-[0.82rem] font-medium tabular-nums text-ink-3">
           {done} / {total}
         </span>
@@ -103,12 +149,18 @@ function Empty({ signedIn }: { signedIn?: boolean }) {
     /* An empty state has one short sentence in it, so it takes a card the size
        of its content rather than the full canvas. */
     <Card className="mx-auto flex w-full max-w-[520px] flex-col items-center gap-4 px-6 py-10 text-center">
-      <h2 className="text-[1.2rem] font-bold">Nothing started yet</h2>
+      <h2 className="text-[1.2rem] font-bold">
+        <T hi="अभी कुछ शुरू नहीं किया" en="Nothing started yet" />
+      </h2>
       <p className="max-w-[32ch] text-[0.94rem] leading-relaxed text-ink-2">
-        {signedIn ? "Play any lesson and we will remember where you stopped." : "Sign in and we remember where you stopped."}
+        {signedIn ? (
+          <T hi="कोई भी lesson चलाइए, हम याद रखेंगे कि आप कहाँ रुके थे।" en="Play any lesson and we will remember where you stopped." />
+        ) : (
+          <T hi="साइन इन कीजिए, हम याद रखेंगे कि आप कहाँ रुके थे।" en="Sign in and we remember where you stopped." />
+        )}
       </p>
       <Button href={signedIn ? "/learn" : "/signin?next=/mine"} full>
-        {signedIn ? "See courses" : "Sign in"}
+        {signedIn ? <T hi="कोर्स देखिए" en="See courses" /> : <T hi="साइन इन कीजिए" en="Sign in" />}
       </Button>
     </Card>
   );

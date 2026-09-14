@@ -53,8 +53,8 @@ const schema = z.object({
   NEXT_PUBLIC_MSG91_WIDGET_TOKEN: z.string().min(1).optional(),
 
   /* Gold plan. Price is a product decision; these are the knobs, not the answer. */
-  GOLD_PRICE_PAISE: z.coerce.number().int().positive().default(14900),
-  GOLD_MONTHS: z.coerce.number().int().positive().default(3),
+  GOLD_PRICE_PAISE: z.coerce.number().int().positive().default(349900),
+  GOLD_MONTHS: z.coerce.number().int().positive().default(12),
 
   RAZORPAY_KEY_ID: z.string().min(1).optional(),
   RAZORPAY_KEY_SECRET: z.string().min(1).optional(),

@@ -2,21 +2,50 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
+import { T } from "@/components/bilingual";
+import { useLang } from "@/components/lang-provider";
+import { pick } from "@/lib/pick";
 
-const examples = [
-  {
-    question: "Can AI help me write a letter?",
-    answer: "Yes. Tell me who it is for and I’ll make a clear draft you can check.",
-  },
-  {
-    question: "Can AI help plan a family function?",
-    answer: "Yes. I can make a simple list, budget, and plan using what you already have.",
-  },
-  {
-    question: "Is this message safe to open?",
-    answer: "Let’s check it together. Never share an OTP, PIN, or password.",
-  },
-];
+/*
+  This is the one place bilingual copy cannot be two hidden spans.
+
+  The question is typed out a character at a time, so it is state, not markup —
+  CSS cannot hide the language that is not being typed. So the demo picks its
+  script up front and types in that one.
+
+  The Hindi set is written the way the lessons are spoken: Devanagari with the
+  English words left in Latin, because that is how somebody actually asks this.
+*/
+const EXAMPLES = {
+  en: [
+    {
+      question: "Can AI help me write a letter?",
+      answer: "Yes. Tell me who it is for and I’ll make a clear draft you can check.",
+    },
+    {
+      question: "Can AI help plan a family function?",
+      answer: "Yes. I can make a simple list, budget, and plan using what you already have.",
+    },
+    {
+      question: "Is this message safe to open?",
+      answer: "Let’s check it together. Never share an OTP, PIN, or password.",
+    },
+  ],
+  hi: [
+    {
+      question: "क्या AI चिट्ठी लिखने में मदद करेगा?",
+      answer: "जी हाँ। बताइए किसके लिए है, मैं एक साफ़ draft बना देता हूँ जिसे आप जाँच सकें।",
+    },
+    {
+      question: "क्या AI घर के समारोह की योजना बना सकता है?",
+      answer: "जी हाँ। जो आपके पास पहले से है, उसी से मैं आसान सूची, बजट और योजना बना दूँगा।",
+    },
+    {
+      question: "क्या यह message खोलना सुरक्षित है?",
+      answer: "चलिए साथ मिलकर जाँचते हैं। OTP, PIN या password कभी किसी को न बताइए।",
+    },
+  ],
+} as const;
 
 /*
   The product, shown rather than described.
@@ -26,6 +55,8 @@ const examples = [
   a laptop gets a browser bar. The conversation itself is one piece of markup.
 */
 export function HeroTypingDemo({ variant = "phone" }: { variant?: "phone" | "laptop" }) {
+  const lang = useLang();
+  const examples = EXAMPLES[lang];
   const [exampleIndex, setExampleIndex] = useState(0);
   const [question, setQuestion] = useState("");
   const [answerVisible, setAnswerVisible] = useState(false);
@@ -80,7 +111,7 @@ export function HeroTypingDemo({ variant = "phone" }: { variant?: "phone" | "lap
         window.clearInterval(t);
       }
     };
-  }, [exampleIndex]);
+  }, [exampleIndex, examples]);
 
   const example = examples[exampleIndex];
   const laptop = variant === "laptop";
@@ -92,10 +123,16 @@ export function HeroTypingDemo({ variant = "phone" }: { variant?: "phone" | "lap
       <div className="flex min-h-0 flex-1 flex-col justify-center">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <span className={cn("block font-bold", laptop ? "text-[1.05rem]" : "text-[0.94rem]")}>Ask Kettle</span>
-            <span className="block text-[0.72rem] text-ink-3">Your simple AI guide</span>
+            <span className={cn("block font-bold", laptop ? "text-[1.05rem]" : "text-[0.94rem]")}>
+              <T hi="Kettle से पूछिए" en="Ask Kettle" />
+            </span>
+            <span className="block text-[0.72rem] text-ink-3">
+              <T hi="आपका आसान AI साथी" en="Your simple AI guide" />
+            </span>
           </div>
-          <span className="rounded-pill bg-paper px-3 py-1 text-[0.68rem] font-semibold text-violet shadow-s">Ready to help</span>
+          <span className="rounded-pill bg-paper px-3 py-1 text-[0.68rem] font-semibold text-violet shadow-s">
+            <T hi="मदद के लिए तैयार" en="Ready to help" />
+          </span>
         </div>
 
         <div className={cn("flex flex-col gap-3", laptop ? "mt-6" : "mt-5")}>
@@ -128,7 +165,7 @@ export function HeroTypingDemo({ variant = "phone" }: { variant?: "phone" | "lap
               {answerVisible ? (
                 example.answer
               ) : (
-                <span className="inline-flex gap-1 pt-1" aria-label="Kettle is thinking">
+                <span className="inline-flex gap-1 pt-1" aria-label={pick(lang, "Kettle सोच रहा है", "Kettle is thinking")}>
                   <i className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet [animation-delay:-0.2s]" />
                   <i className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet [animation-delay:-0.1s]" />
                   <i className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet" />
@@ -147,7 +184,9 @@ export function HeroTypingDemo({ variant = "phone" }: { variant?: "phone" | "lap
         {/* A composer, so the screen reads as an app rather than a transcript.
             Inert on purpose: the real thing is one tap away in the hero button. */}
         <div className="flex items-center gap-2 rounded-pill bg-paper py-2 pl-4 pr-2 shadow-s">
-          <span className="flex-1 truncate text-[0.8rem] text-ink-3">Type your question…</span>
+          <span className="flex-1 truncate text-[0.8rem] text-ink-3">
+            <T hi="अपना सवाल लिखिए…" en="Type your question…" />
+          </span>
           <span aria-hidden className="grid h-8 w-8 flex-none place-items-center rounded-full bg-fill text-[0.85rem] text-on-fill">
             ↑
           </span>

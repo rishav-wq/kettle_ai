@@ -47,9 +47,12 @@ export function Tile({
 }: {
   href: string;
   image?: string;
-  title: string;
-  meta: string;
-  badge?: string;
+  /* ReactNode, so a caller can pass <T hi en /> and let CSS pick. The course
+     titles are bilingual in the database; rendering only titleEn threw half of
+     that away. */
+  title: ReactNode;
+  meta: ReactNode;
+  badge?: ReactNode;
   className?: string;
 }) {
   return (

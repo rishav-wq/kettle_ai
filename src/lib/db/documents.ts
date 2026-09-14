@@ -38,6 +38,13 @@ export type CategoryDoc = {
   id: string; // slug
   nameHi: string;
   nameEn: string;
+  /**
+   * One line under the heading, where the name alone does not say who the
+   * category is for. Optional on purpose: most categories are self-evident and
+   * a line of explanation under every one of seventeen headings is noise.
+   */
+  blurbHi?: string | null;
+  blurbEn?: string | null;
   sortOrder: number;
 };
 

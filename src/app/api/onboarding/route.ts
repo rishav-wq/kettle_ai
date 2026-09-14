@@ -4,6 +4,7 @@ import { lang as langSchema, parseBody, slug } from "@/lib/security/validators";
 import { withTenant } from "@/lib/db/tenant";
 import type { CategoryDoc, UserDoc } from "@/lib/db/documents";
 import { getViewer } from "@/lib/viewer";
+import { setLangCookie } from "@/lib/lang";
 
 const Body = z.object({
   lang: langSchema,
@@ -43,6 +44,13 @@ export async function POST(req: Request) {
         }
       );
     });
+
+    /*
+      The cookie is what every page actually renders from, so the answer given
+      here has to land there too. Without this the person picks Hindi, the row
+      says Hindi, and the next screen is still in English.
+    */
+    await setLangCookie(body.lang);
 
     return Response.json({ ok: true });
   } catch (err) {

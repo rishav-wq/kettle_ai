@@ -3,9 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Sheet } from "@/components/ui";
+import { ShieldIcon } from "@/components/icons";
 import { post } from "@/lib/http";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
 import type { LockReason } from "@/lib/viewer";
+import { T } from "@/components/bilingual";
+import { useLang } from "@/components/lang-provider";
+import { pick } from "@/lib/pick";
 
 declare global {
   interface Window {
@@ -17,9 +21,15 @@ declare global {
  * The paywall.
  *
  * Raised by a locked lesson, by the Gold tab, and by the fourth free lesson
- * finishing. It states the price plainly, says who handles the money, and says
- * cancelling needs no phone call, because for this audience those three
- * sentences are the actual objection.
+ * finishing. It states the price plainly and says who handles the money,
+ * because for this audience those are the actual objections.
+ *
+ * It asks for money only from someone who has an account. A signed-out
+ * visitor tapping a locked lesson used to get the full price pitch and was
+ * bounced to sign-in only after pressing Pay — being quoted a price by a
+ * product you have not joined is the wrong first conversation, particularly
+ * with an audience this wary. They now get an invitation to sign in, and meet
+ * Gold afterwards, once they have four free lessons behind them.
  */
 export function Paywall({
   open,
@@ -37,6 +47,7 @@ export function Paywall({
   signedIn: boolean;
 }) {
   const router = useRouter();
+  const lang = useLang();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
 
@@ -85,42 +96,92 @@ export function Paywall({
     document.body.appendChild(script);
   }
 
+  /*
+    Signed out: invite, do not sell. The lesson they tapped is the reason they
+    are here, so the copy names that rather than the plan.
+  */
+  if (!signedIn) {
+    return (
+      <Sheet open={open} onClose={onClose} title={pick(lang, "आगे बढ़ने के लिए साइन इन", "Sign in to continue")}>
+        <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-violet">
+          <T hi="शुरू करना मुफ़्त है" en="Free to start" />
+        </span>
+        <h2 className="text-[1.35rem] font-bold leading-tight">
+          <T hi="यह lesson देखने के लिए साइन इन कीजिए" en="Sign in to watch this lesson" />
+        </h2>
+        <p className="text-[0.95rem] leading-relaxed text-ink-2">
+          <T
+            hi="चार lessons मुफ़्त हैं, और हम याद रखते हैं कि आप कहाँ रुके थे। कार्ड की ज़रूरत नहीं।"
+            en="Four lessons are free, and we remember where you stopped. No card needed."
+          />
+        </p>
+
+        <Button full size="lg" onClick={() => router.push("/signin?next=/learn")}>
+          <T hi="साइन इन कीजिए" en="Sign in" />
+        </Button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mx-auto pb-1 text-[0.9rem] text-ink-3 underline underline-offset-4"
+        >
+          <T hi="अभी नहीं" en="Not now" />
+        </button>
+      </Sheet>
+    );
+  }
+
   return (
     <Sheet open={open} onClose={onClose} title="Kettle Gold">
-      <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-violet">Kettle Gold</span>
-      <h2 className="text-[1.35rem] font-bold leading-tight">
-        {reason === "free_limit_reached" ? "You finished the four free lessons. Keep going." : "Open every course"}
-      </h2>
-
-      <div className="flex items-baseline gap-2">
-        <span className="text-[2.3rem] font-bold leading-none tabular-nums text-violet">{price}</span>
-        <span className="text-[0.9rem] font-medium text-ink-3">for {months} months</span>
+      {/* The one gold surface in the product. It marks the paid plan and
+          nothing else, which is what stops it becoming decoration. */}
+      <div className="-mx-5 -mt-4 flex flex-col gap-3 bg-gold px-6 py-6 text-on-gold sm:-mx-7 sm:-mt-6 sm:px-7 sm:pt-7">
+        <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-on-gold/70">Kettle Gold</span>
+        <h2 className="text-[1.35rem] font-bold leading-tight">
+          {reason === "free_limit_reached" ? (
+            <T hi="आपने चारों मुफ़्त lessons पूरे कर लिए। आगे बढ़ते रहिए।" en="You finished the four free lessons. Keep going." />
+          ) : (
+            <T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />
+          )}
+        </h2>
+        <div className="flex items-baseline gap-2">
+          <span className="text-[2.3rem] font-bold leading-none tabular-nums">{price}</span>
+          <span className="text-[0.9rem] font-medium text-on-gold/75">
+            <T hi={`${months} महीने के लिए`} en={`for ${months} months`} />
+          </span>
+        </div>
       </div>
 
-      <ul className="flex flex-col gap-2.5">
+      <ul className="flex flex-col gap-2.5 pt-1">
         {GOLD_INCLUDES.map((r) => (
-          <li key={r} className="flex gap-3 text-[0.92rem] leading-snug text-ink-2">
-            <span aria-hidden className="flex-none font-bold text-violet">
+          <li key={r.en} className="flex gap-3 text-[0.92rem] leading-snug text-ink-2">
+            <span aria-hidden className="flex-none font-bold text-gold-deep">
               ✓
             </span>
-            {r}
+            <T hi={r.hi} en={r.en} />
           </li>
         ))}
       </ul>
 
       {error ? (
         <p role="alert" className="rounded-tile bg-pink/10 px-4 py-3 text-[0.9rem] font-medium text-pink">
-          The payment could not start. Please try again in a moment.
+          <T hi="Payment शुरू नहीं हो सका। थोड़ी देर बाद फिर कोशिश कीजिए।" en="The payment could not start. Please try again in a moment." />
         </p>
       ) : null}
 
       <Button full size="lg" disabled={busy} onClick={() => void pay()}>
-        {busy ? "Opening…" : "Pay with UPI"}
+        {busy ? <T hi="खुल रहा है…" en="Opening…" /> : <T hi="Gold सदस्य बनिए" en="Become a Gold member" />}
       </Button>
-      <Button full variant="soft" onClick={onClose}>
-        Not now
-      </Button>
-      <p className="pb-1 text-center text-[0.8rem] text-ink-3">Razorpay handles the payment. Kettle never sees your card.</p>
+      {/* Declining is not a second call to action. A full-width button beside
+          the real one asks the reader to choose between two equals, which is
+          not what this moment is. */}
+      <button type="button" onClick={onClose} className="mx-auto text-[0.9rem] text-ink-3 underline underline-offset-4">
+        <T hi="अभी नहीं" en="Not now" />
+      </button>
+
+      <p className="flex items-center justify-center gap-1.5 pb-1 text-center text-[0.8rem] text-ink-3">
+        <ShieldIcon className="h-4 w-4 flex-none text-violet" />
+        <T hi="Payment Razorpay के ज़रिए होता है।" en="Payment processed by Razorpay." />
+      </p>
     </Sheet>
   );
 }

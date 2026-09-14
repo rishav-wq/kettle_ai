@@ -9,6 +9,9 @@ import Script from "next/script";
 import { post } from "@/lib/http";
 import { Wordmark } from "@/components/logo";
 import { WIDGET_SCRIPT, initWidget, toIdentifier, widgetRetry, widgetSend, widgetVerify } from "@/lib/auth/widget-client";
+import type { Lang } from "@/lib/lang";
+import { T, TN } from "@/components/bilingual";
+import { pick } from "@/lib/pick";
 
 type Step = "phone" | "code";
 
@@ -24,10 +27,13 @@ export function SignInFlow({
   referralCode,
   devMode,
   widget,
+  lang,
 }: {
   next: string | null;
   referralCode: string | null;
   devMode: boolean;
+  /** What they were already reading in, saved onto the new account. */
+  lang: Lang;
   /** Null when no widget is configured, in which case our own OTP endpoints are used. */
   widget: { id: string; token: string } | null;
 }) {
@@ -36,7 +42,8 @@ export function SignInFlow({
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [ref, setRef] = useState(referralCode ?? "");
-  const [optIn, setOptIn] = useState(false);
+  // WhatsApp reminders are opted into on the account screen, not here.
+  const optIn = false;
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +85,7 @@ export function SignInFlow({
       return;
     }
 
-    const res = await post("/api/auth/otp/send", { phone, lang: "en", referralCode: ref || undefined });
+    const res = await post("/api/auth/otp/send", { phone, lang, referralCode: ref || undefined });
     setBusy(false);
     if (!res.ok) return setError(res.status === 429 ? "too_many" : "send_failed");
     setStep("code");
@@ -117,7 +124,7 @@ export function SignInFlow({
       const res = await post("/api/auth/widget/verify", {
         accessToken,
         name: name.trim(),
-        lang: "en",
+        lang,
         whatsappOptIn: optIn,
         referralCode: ref || undefined,
       });
@@ -132,7 +139,7 @@ export function SignInFlow({
       return;
     }
 
-    const res = await post("/api/auth/otp/verify", { phone, code: value, name: name.trim(), lang: "en", whatsappOptIn: optIn });
+    const res = await post("/api/auth/otp/verify", { phone, code: value, name: name.trim(), lang, whatsappOptIn: optIn });
     setBusy(false);
     if (!res.ok) {
       setError(res.status === 429 ? "too_many" : "bad_code");
@@ -144,7 +151,11 @@ export function SignInFlow({
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col bg-ground lg:max-w-none lg:items-center lg:justify-center lg:bg-wash lg:px-6 lg:py-10">
+    /* A card inside the app frame rather than a page of its own. Signing in
+       used to replace the whole screen, so the bottom bar vanished and the app
+       appeared to have been exited — unsettling for an audience who are not
+       sure what they just tapped. The frame stays; only the panel changes. */
+    <div className="mx-auto w-full max-w-[460px] pt-2">
       {widget ? (
         <Script
           src={WIDGET_SCRIPT}
@@ -153,8 +164,8 @@ export function SignInFlow({
           onError={() => setError("send_failed")}
         />
       ) : null}
-      <div className="flex flex-col lg:pointer-events-auto lg:relative lg:z-10 lg:w-full lg:max-w-[460px] lg:overflow-hidden lg:rounded-[28px] lg:bg-paper lg:shadow-l">
-      <header className="grad rounded-b-[34px] px-5 pb-9 pt-[calc(16px+env(safe-area-inset-top))] text-white lg:rounded-none lg:px-8 lg:pb-8 lg:pt-7">
+      <div className="flex flex-col overflow-hidden rounded-[28px] bg-paper shadow-m">
+      <header className="grad px-6 pb-8 pt-6 text-white lg:px-8 lg:pb-8 lg:pt-7">
         <div className="flex min-h-[44px] items-center">
           {step === "code" ? (
             <button
@@ -164,36 +175,49 @@ export function SignInFlow({
                 setCode("");
                 setError(null);
               }}
-              aria-label="Back"
+              aria-label={pick(lang, "पीछे", "Back")}
               className="grid h-11 w-11 place-items-center rounded-pill bg-white/18 text-lg backdrop-blur-sm hover:bg-white/28"
             >
               ←
             </button>
           ) : (
-            <Wordmark href="/" className="text-white" size="sm" />
+            <Wordmark href="/" className="text-white" size="sm" tone="milk" />
           )}
         </div>
-        <h1 className="mt-4 text-[1.8rem] font-bold leading-tight">{step === "phone" ? "Keep your place" : "Enter the code"}</h1>
+        <h1 className="mt-4 text-[1.8rem] font-bold leading-tight">
+          {step === "phone" ? (
+            <T hi="अपनी प्रगति सहेजने के लिए साइन इन कीजिए" en="Sign in to save your progress" />
+          ) : (
+            <T hi="कोड डालिए" en="Enter the code" />
+          )}
+        </h1>
         <p className="mt-2 text-[0.95rem] leading-relaxed text-white/85">
-          {step === "phone" ? "Your name and mobile number. We send a 6 digit code by SMS." : `Sent to +91 ${digits.slice(-10)}`}
+          {step === "phone" ? (
+            <T
+              hi="अपनी जानकारी भरिए। हम आपके mobile पर 6 अंकों का code भेजेंगे। कोई password नहीं चाहिए।"
+              en="Enter your details. We’ll send a 6-digit code to your mobile. No password needed."
+            />
+          ) : (
+            <T hi={`+91 ${digits.slice(-10)} पर भेजा गया`} en={`Sent to +91 ${digits.slice(-10)}`} />
+          )}
         </p>
       </header>
 
-      <main className="flex flex-1 flex-col gap-4 px-5 pb-[calc(28px+env(safe-area-inset-bottom))] pt-6 lg:flex-none lg:px-8 lg:pb-9">
+      <div className="flex flex-col gap-4 px-6 pb-8 pt-6 lg:px-8 lg:pb-9">
         {step === "phone" ? (
           <>
-            <Field label="Your name">
+            <Field label={<T hi="आपका नाम" en="Your name" />}>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
                 enterKeyHint="next"
-                placeholder="Sunita"
+                placeholder={pick(lang, "सुनीता", "Sunita")}
                 className="min-h-[44px] w-full bg-transparent text-[1.05rem] font-medium outline-none placeholder:text-ink-3"
               />
             </Field>
 
-            <Field label="Mobile number">
+            <Field label={<T hi="मोबाइल नंबर" en="Mobile number" />}>
               <span className="border-r border-line pr-3 text-[1rem] font-semibold text-ink-3">+91</span>
               <input
                 value={phone}
@@ -207,38 +231,53 @@ export function SignInFlow({
               />
             </Field>
 
-            <Field label="Referral code, if a friend sent you">
+            <Field label={<T hi="कोई referral code है?" en="Have a referral code?" />}>
               <input
                 value={ref}
                 onChange={(e) => setRef(e.target.value.toUpperCase())}
                 autoCapitalize="characters"
-                placeholder="Optional"
+                placeholder={pick(lang, "ज़रूरी नहीं", "Optional")}
                 className="min-h-[44px] w-full bg-transparent text-[1.05rem] font-semibold tracking-[0.12em] outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-ink-3"
               />
             </Field>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-tile bg-paper p-4 shadow-s">
-              <input type="checkbox" checked={optIn} onChange={(e) => setOptIn(e.target.checked)} className="mt-0.5 h-6 w-6 flex-none accent-[var(--violet)]" />
-              <span className="text-[0.92rem] leading-snug text-ink-2">Remind me on WhatsApp when a lesson is waiting. You can turn this off any time.</span>
-            </label>
-
             {error ? <ErrorNote code={error} /> : null}
 
             <Button full size="lg" disabled={!ready || busy} onClick={() => void send()}>
-              {busy ? "Sending…" : "Send the code"}
+              {busy ? <T hi="भेजा जा रहा है…" en="Sending…" /> : <T hi="SMS code भेजिए" en="Send SMS code" />}
             </Button>
 
-            <p className="text-center text-[0.82rem] leading-relaxed text-ink-3">
-              By signing in you accept our{" "}
-              <Link href="/legal/terms" className="underline underline-offset-4">
-                terms
-              </Link>{" "}
-              and{" "}
-              <Link href="/legal/privacy" className="underline underline-offset-4">
-                privacy policy
-              </Link>
-              .
-            </p>
+            {/* Two sentences, not one template: the links sit in different
+                places in the two languages. */}
+            <TN
+              className="text-center text-[0.82rem] leading-relaxed text-ink-3"
+              hi={
+                <>
+                  साइन इन करके आप हमारी{" "}
+                  <Link href="/legal/terms" className="underline underline-offset-4">
+                    शर्तें
+                  </Link>{" "}
+                  और{" "}
+                  <Link href="/legal/privacy" className="underline underline-offset-4">
+                    निजता नीति
+                  </Link>{" "}
+                  स्वीकार करते हैं।
+                </>
+              }
+              en={
+                <>
+                  By signing in you accept our{" "}
+                  <Link href="/legal/terms" className="underline underline-offset-4">
+                    terms
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/legal/privacy" className="underline underline-offset-4">
+                    privacy policy
+                  </Link>
+                  .
+                </>
+              }
+            />
           </>
         ) : (
           <>
@@ -262,42 +301,71 @@ export function SignInFlow({
             <Card className="flex gap-3 p-4">
               <ShieldIcon className="h-6 w-6 flex-none text-violet" />
               <p className="text-[0.9rem] leading-snug text-ink-2">
-                <strong className="font-semibold text-ink">Kettle will never call you</strong> or ask for this code. If someone calls asking for it, that is a scam.
+                <TN
+                  hi={
+                    <>
+                      <strong className="font-semibold text-ink">Kettle आपको कभी फ़ोन नहीं करेगा</strong> और यह code कभी नहीं पूछेगा। अगर कोई फ़ोन
+                      करके यह code माँगे, तो वह धोखा है।
+                    </>
+                  }
+                  en={
+                    <>
+                      <strong className="font-semibold text-ink">Kettle will never call you</strong> or ask for this code. If someone calls asking
+                      for it, that is a scam.
+                    </>
+                  }
+                />
               </p>
             </Card>
 
             <Button full size="lg" disabled={code.length !== 6 || busy} onClick={() => void verify(code)}>
-              {busy ? "Checking…" : "Sign in"}
+              {busy ? <T hi="जाँच रहे हैं…" en="Checking…" /> : <T hi="साइन इन कीजिए" en="Sign in" />}
             </Button>
             <Button full variant="soft" disabled={resendIn > 0 || busy} onClick={() => void resend()}>
-              {resendIn > 0 ? `Resend in 0:${String(resendIn).padStart(2, "0")}` : "Resend the code"}
+              {resendIn > 0 ? (
+                <T
+                  hi={`0:${String(resendIn).padStart(2, "0")} में दोबारा`}
+                  en={`Resend in 0:${String(resendIn).padStart(2, "0")}`}
+                />
+              ) : (
+                <T hi="code दोबारा भेजिए" en="Resend the code" />
+              )}
             </Button>
           </>
         )}
-      </main>
+      </div>
       </div>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-2">
       <span className="text-[0.82rem] font-medium text-ink-3">{label}</span>
-      <span className="flex min-h-[60px] items-center gap-3 rounded-tile bg-paper px-4 shadow-s focus-within:ring-2 focus-within:ring-violet">{children}</span>
+      <span className="flex min-h-[60px] items-center gap-3 rounded-tile border border-line bg-paper px-4 transition-colors focus-within:border-violet focus-within:ring-2 focus-within:ring-violet/25">
+        {children}
+      </span>
     </label>
   );
 }
 
 function ErrorNote({ code }: { code: string }) {
-  const map: Record<string, string> = {
-    too_many: "Too many tries. Please wait a little and try again.",
-    send_failed: "The code could not be sent. Check the number and try again.",
-    bad_code: "That code is not right. Please enter it again.",
+  const map: Record<string, { hi: string; en: string }> = {
+    too_many: {
+      hi: "बहुत बार कोशिश हो गई। थोड़ी देर रुककर फिर कोशिश कीजिए।",
+      en: "Too many tries. Please wait a little and try again.",
+    },
+    send_failed: {
+      hi: "Code भेजा नहीं जा सका। नंबर जाँचकर फिर कोशिश कीजिए।",
+      en: "The code could not be sent. Check the number and try again.",
+    },
+    bad_code: { hi: "यह code सही नहीं है। दोबारा डालिए।", en: "That code is not right. Please enter it again." },
   };
+  const m = map[code] ?? map.send_failed;
   return (
     <p role="alert" className="rounded-tile bg-pink/10 px-4 py-3 text-[0.9rem] font-medium text-pink">
-      {map[code] ?? map.send_failed}
+      <T hi={m.hi} en={m.en} />
     </p>
   );
 }

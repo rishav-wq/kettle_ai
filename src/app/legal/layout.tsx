@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Wordmark } from "@/components/logo";
+import { T } from "@/components/bilingual";
 
 /*
   Policy pages.
@@ -13,19 +14,19 @@ import { Wordmark } from "@/components/logo";
 */
 export default function LegalLayout({ children }: { children: ReactNode }) {
   const links = [
-    { href: "/legal/privacy", label: "Privacy" },
-    { href: "/legal/terms", label: "Terms" },
-    { href: "/legal/refunds", label: "Refunds" },
-    { href: "/legal/contact", label: "Contact" },
+    { href: "/legal/privacy", hi: "निजता", en: "Privacy" },
+    { href: "/legal/terms", hi: "शर्तें", en: "Terms" },
+    { href: "/legal/refunds", hi: "वापसी", en: "Refunds" },
+    { href: "/legal/contact", hi: "संपर्क", en: "Contact" },
   ];
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[560px] flex-col bg-ground lg:max-w-[820px]">
       <header className="grad rounded-b-[34px] px-5 pb-8 pt-[calc(16px+env(safe-area-inset-top))] text-white lg:mt-8 lg:rounded-[26px] lg:px-9 lg:pt-7">
         <div className="flex min-h-[44px] items-center">
-          <Wordmark href="/" className="text-white" size="sm" />
+          <Wordmark href="/" className="text-white" size="sm" tone="milk" />
           <Link href="/help" className="ml-auto min-h-[44px] rounded-pill bg-white/18 px-4 py-2.5 text-[0.85rem] font-semibold backdrop-blur-sm hover:bg-white/28">
-            Help
+            <T hi="मदद" en="Help" />
           </Link>
         </div>
       </header>
@@ -36,7 +37,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
         <nav className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className="min-h-[36px] text-[0.86rem] font-medium text-ink-3 underline underline-offset-4 hover:text-violet">
-              {l.label}
+              <T hi={l.hi} en={l.en} />
             </Link>
           ))}
         </nav>

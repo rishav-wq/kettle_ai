@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button, LessonRow } from "@/components/ui";
 import { Paywall } from "@/components/paywall";
 import type { LockReason } from "@/lib/viewer";
@@ -9,8 +9,8 @@ import type { LockReason } from "@/lib/viewer";
 export type LessonRowData = {
   id: string;
   index: number;
-  title: string;
-  meta: string;
+  title: ReactNode;
+  meta: ReactNode;
   progress: number;
   done: boolean;
   current: boolean;
@@ -92,7 +92,8 @@ export function StartLessonCta({
   className,
 }: {
   href: string;
-  label: string;
+  /* Visible text, so it arrives as <T hi en /> and CSS picks. */
+  label: ReactNode;
   lockedBecause: LockReason | null;
   price: string;
   months: number;

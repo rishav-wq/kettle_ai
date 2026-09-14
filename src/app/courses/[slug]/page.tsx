@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card, Rule } from "@/components/ui";
@@ -10,6 +11,9 @@ import { slug as slugSchema } from "@/lib/security/validators";
 import { getViewer, lockReason } from "@/lib/viewer";
 import { GOLD, formatRupees } from "@/lib/payments/plan";
 import { pageMetadata, SITE_NAME, siteUrl } from "@/lib/seo";
+import { T } from "@/components/bilingual";
+import { getLang } from "@/lib/lang";
+import { pick } from "@/lib/pick";
 import { CourseLessons, ResumePlayButton, StartLessonCta } from "./lessons";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +62,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const resume = course.lessons.find((l) => !progress.get(l.id)?.completed) ?? course.lessons[0];
   const pct = course.lessons.length ? Math.round((done / course.lessons.length) * 100) : 0;
   const resumeLocked = resume ? lockReason(viewer, resume) : null;
+  const lang = await getLang();
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -80,12 +85,12 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
       viewer={viewer}
       tab="learn"
       header={
-        <GradHeader back={{ href: "/learn", label: "All courses" }} tall>
+        <GradHeader back={{ href: "/learn", label: pick(lang, "सभी कोर्स", "All courses") }} tall>
           <div className="grid place-items-center py-6">
             {resume ? (
               <ResumePlayButton
                 href={`/lessons/${resume.id}`}
-                label={`Play lesson ${resume.sortOrder}`}
+                label={pick(lang, `lesson ${resume.sortOrder} चलाइए`, `Play lesson ${resume.sortOrder}`)}
                 lockedBecause={resumeLocked}
                 price={formatRupees(GOLD.amountPaise)}
                 months={GOLD.months}
@@ -100,20 +105,28 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
       }
     >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-7">
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-7">
         <Card className="flex flex-col gap-3 p-5 lg:order-2 lg:sticky lg:top-8 lg:p-6">
           <Rule />
           <div>
-            <h1 className="text-[1.4rem] font-bold leading-tight">{course.titleEn}</h1>
-            <p className="mt-1 text-[0.9rem] text-ink-3">{course.categoryNameEn}</p>
+            <h1 className="text-[1.4rem] font-bold leading-tight">
+              <T hi={course.titleHi} en={course.titleEn} />
+            </h1>
+            <p className="mt-1 text-[0.9rem] text-ink-3">
+              <T hi={course.categoryNameHi} en={course.categoryNameEn} />
+            </p>
           </div>
 
-          {course.descriptionEn ? <p className="text-[0.95rem] leading-relaxed text-ink-2">{course.descriptionEn}</p> : null}
+          {course.descriptionEn ? (
+            <p className="text-[0.95rem] leading-relaxed text-ink-2">
+              <T hi={course.descriptionHi ?? course.descriptionEn} en={course.descriptionEn} />
+            </p>
+          ) : null}
 
           <dl className="mt-1 flex items-center gap-6">
-            <Fact v={String(course.lessons.length)} label="Lessons" />
-            <Fact v={`${totalMin}`} label="Minutes" />
-            <Fact v={done > 0 ? `${pct}%` : "—"} label="Done" />
+            <Fact v={String(course.lessons.length)} label={<T hi="Lessons" en="Lessons" />} />
+            <Fact v={`${totalMin}`} label={<T hi="मिनट" en="Minutes" />} />
+            <Fact v={done > 0 ? `${pct}%` : "—"} label={<T hi="पूरा" en="Done" />} />
           </dl>
 
           {done > 0 ? (
@@ -124,14 +137,16 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         </Card>
 
         <section className="flex flex-col gap-3 lg:order-1">
-          <h2 className="text-[1.05rem] font-bold">Short lessons</h2>
+          <h2 className="text-[1.05rem] font-bold">
+            <T hi="छोटे lessons" en="Short lessons" />
+          </h2>
           <CourseLessons
             rows={course.lessons.map((l) => {
               const p = progress.get(l.id);
               return {
                 id: l.id,
                 index: l.sortOrder,
-                title: l.titleEn,
+                title: <T hi={l.titleHi} en={l.titleEn} />,
                 meta: metaFor(l.durationSec, l.isFree, p?.watchedSec ?? 0, Boolean(p?.completed)),
                 progress: l.durationSec > 0 ? (p?.watchedSec ?? 0) / l.durationSec : 0,
                 done: Boolean(p?.completed),
@@ -150,7 +165,13 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
              button on desktop, where a 1000px-wide button reads as a banner. */
           <StartLessonCta
             href={`/lessons/${resume.id}`}
-            label={done > 0 ? `Continue lesson ${resume.sortOrder}` : "Start lesson 1"}
+            label={
+              done > 0 ? (
+                <T hi={`lesson ${resume.sortOrder} जारी रखिए`} en={`Continue lesson ${resume.sortOrder}`} />
+              ) : (
+                <T hi="lesson 1 शुरू कीजिए" en="Start lesson 1" />
+              )
+            }
             lockedBecause={lockReason(viewer, resume)}
             price={formatRupees(GOLD.amountPaise)}
             months={GOLD.months}
@@ -163,16 +184,19 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   );
 }
 
-function metaFor(durationSec: number, isFree: boolean, watchedSec: number, completed: boolean): string {
+/* Returns an element rather than a string: this line is assembled from a
+   number and a word, and the word is what changes. */
+function metaFor(durationSec: number, isFree: boolean, watchedSec: number, completed: boolean) {
   const min = Math.max(1, Math.round(durationSec / 60));
-  if (completed) return `${min} min · Watched`;
+  if (completed) return <T hi={`${min} मिनट · देख लिया`} en={`${min} min · Watched`} />;
   if (watchedSec > 0 && durationSec > 0) {
-    return `${min} min · ${Math.max(1, Math.round((durationSec - watchedSec) / 60))} min left`;
+    const left = Math.max(1, Math.round((durationSec - watchedSec) / 60));
+    return <T hi={`${min} मिनट · ${left} मिनट बाकी`} en={`${min} min · ${left} min left`} />;
   }
-  return isFree ? `${min} min · Free` : `${min} min`;
+  return isFree ? <T hi={`${min} मिनट · मुफ़्त`} en={`${min} min · Free`} /> : <T hi={`${min} मिनट`} en={`${min} min`} />;
 }
 
-function Fact({ v, label }: { v: string; label: string }) {
+function Fact({ v, label }: { v: string; label: ReactNode }) {
   return (
     <div className="flex flex-col">
       <dd className="text-[1.15rem] font-bold leading-none tabular-nums text-violet">{v}</dd>

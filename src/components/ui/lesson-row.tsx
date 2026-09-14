@@ -1,10 +1,13 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 type Props = {
   index: number;
-  title: string;
-  meta: string;
+  /* ReactNode so the caller can hand over <T hi en />; lesson titles exist in
+     both languages and used to render only in English. */
+  title: ReactNode;
+  meta: ReactNode;
   /** 0 to 1. Drawn as a thin bar under the title rather than filling the row. */
   progress?: number;
   done?: boolean;

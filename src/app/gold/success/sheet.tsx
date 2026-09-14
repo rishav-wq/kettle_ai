@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
+import { T } from "@/components/bilingual";
 
 /**
  * The moment after paying.
@@ -53,27 +54,41 @@ export function SuccessSheet({ name, alreadyGold }: { name: string | null; alrea
           <>
             <span aria-hidden className="text-[2.4rem] leading-none">🎉</span>
             <h1 className="text-[1.5rem] font-bold leading-tight">
-              {name ? `${name}, you are` : "You are"} a Kettle Gold member
+              <T
+                hi={name ? `${name} जी, अब आप Kettle Gold सदस्य हैं` : "अब आप Kettle Gold सदस्य हैं"}
+                en={name ? `${name}, you are a Kettle Gold member` : "You are a Kettle Gold member"}
+              />
             </h1>
-            <p className="leading-relaxed text-ink-2">Every course is open. Carry on from where you stopped.</p>
+            <p className="leading-relaxed text-ink-2">
+              <T hi="हर कोर्स खुल गया है। जहाँ रुके थे वहीं से आगे बढ़िए।" en="Every course is open. Carry on from where you stopped." />
+            </p>
             <Button href="/learn" full size="lg">
-              Start learning
+              <T hi="सीखना शुरू कीजिए" en="Start learning" />
             </Button>
           </>
         ) : slow ? (
           <>
-            <h1 className="text-[1.35rem] font-bold">Confirming your payment</h1>
+            <h1 className="text-[1.35rem] font-bold">
+              <T hi="आपका payment जाँचा जा रहा है" en="Confirming your payment" />
+            </h1>
             <p className="leading-relaxed text-ink-2">
-              If the money has left your account, membership opens within a few minutes. You can close this page.
+              <T
+                hi="अगर पैसे आपके खाते से कट गए हैं, तो कुछ ही मिनटों में सदस्यता खुल जाएगी। आप यह पेज बंद कर सकते हैं।"
+                en="If the money has left your account, membership opens within a few minutes. You can close this page."
+              />
             </p>
             <Button href="/learn" full variant="soft">
-              All right
+              <T hi="ठीक है" en="All right" />
             </Button>
           </>
         ) : (
           <>
-            <h1 className="text-[1.35rem] font-bold">One moment…</h1>
-            <p className="leading-relaxed text-ink-2">We are confirming the payment.</p>
+            <h1 className="text-[1.35rem] font-bold">
+              <T hi="एक पल…" en="One moment…" />
+            </h1>
+            <p className="leading-relaxed text-ink-2">
+              <T hi="हम payment जाँच रहे हैं।" en="We are confirming the payment." />
+            </p>
             <div aria-hidden className="h-2 overflow-hidden rounded-full bg-wash">
               <div className="h-full w-1/3 animate-pulse rounded-full bg-violet" />
             </div>

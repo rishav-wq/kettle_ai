@@ -1,18 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import { Anek_Devanagari, Poppins } from "next/font/google";
 import "./globals.css";
 import { ServiceWorker } from "@/components/service-worker";
 import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/seo";
+import { getLang } from "@/lib/lang";
+import { LangProvider } from "@/components/lang-provider";
 
 /*
-  Poppins throughout. The interface is English only, so the Devanagari faces
-  the earlier design carried are gone. Lesson titles and transcripts may still
-  contain Hindi words, and Poppins has no Devanagari, so the fallback stack
-  ends at the platform's own Indic face rather than at a box.
+  Two faces, because the interface is bilingual again.
+
+  Poppins has no Devanagari at all, so Hindi set in it falls through to
+  whatever Indic face the phone happens to carry — which on a cheap Android is
+  a different weight, a different x-height, and visibly a different typeface
+  mid-sentence. Anek Devanagari carries both scripts, so a Hinglish line like
+  "Resume बनाइए" renders in one family instead of colliding two.
+
+  Anek is loaded for both scripts and applied when the interface is Hindi;
+  Poppins stays the Latin face for English.
 */
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const anek = Anek_Devanagari({
+  variable: "--font-devanagari",
+  subsets: ["latin", "devanagari"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
@@ -59,14 +74,23 @@ try {
 } catch (e) {}
 `;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  /*
+    The lang attribute is the switch. Every bilingual string renders both
+    languages and CSS hides one based on this, so the page arrives already in
+    the right language rather than being corrected after hydration.
+  */
+  const lang = await getLang();
+
   return (
-    <html lang="en" suppressHydrationWarning className={`${poppins.variable} h-full`}>
+    <html lang={lang} suppressHydrationWarning className={`${poppins.variable} ${anek.variable} h-full`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: prefsScript }} />
       </head>
       <body className="min-h-full">
-        {children}
+        {/* Only the handful of attribute strings need this; everything else
+            switches in CSS off the lang above. */}
+        <LangProvider lang={lang}>{children}</LangProvider>
         <ServiceWorker />
       </body>
     </html>

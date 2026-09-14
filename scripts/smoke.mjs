@@ -17,6 +17,31 @@ const jar = new Map();
 const snapshot = () => new Map(jar);
 const restore = (m) => { jar.clear(); for (const [k, v] of m) jar.set(k, v); };
 const monthsFromNow = (iso) => (new Date(iso).getTime() - Date.now()) / (30.4 * 864e5);
+
+/*
+  Both of these used to be typed into this file, and both went stale the moment
+  the product changed: the free lessons moved when the categories were
+  restructured, and the term changed when the price did. Neither failure was a
+  bug in the product, which is the worst kind of failing check. Read them from
+  the same places the product reads them.
+*/
+const content = JSON.parse(readFileSync(new URL("../content/kettle-content.json", import.meta.url), "utf8"));
+const allLessons = content.courses.flatMap((c) => c.lessons.map((l) => ({ ...l, courseId: c.id })));
+const freeIds = allLessons.filter((l) => l.isFree).map((l) => l.id);
+const lockedLesson = allLessons.find((l) => !l.isFree);
+
+/** GOLD_MONTHS, from the environment or the default in src/lib/env.ts. */
+const goldMonths = (() => {
+  for (const file of [".env.local", ".env"]) {
+    try {
+      const m = readFileSync(new URL(`../${file}`, import.meta.url), "utf8").match(/^GOLD_MONTHS\s*=\s*(\d+)/m);
+      if (m) return Number(m[1]);
+    } catch {
+      /* not present */
+    }
+  }
+  return 12;
+})();
 let pass = 0;
 let fail = 0;
 
@@ -139,19 +164,33 @@ const afterOnboard = await req("/");
 check(afterOnboard.status === 307 && afterOnboard.location?.endsWith("/learn"), "landing now redirects a signed-in user to Learn");
 
 console.log(`\n— the four free lessons —`);
-const freeIds = ["talk-to-ai-1", "talk-to-ai-2", "spot-a-scam-1", "ai-in-whatsapp-1"];
+check(freeIds.length === 4, "exactly four lessons are free", `→ ${freeIds.length}`);
 for (const [i, id] of freeIds.entries()) {
   const r = await req("/api/progress", { method: "POST", body: { lessonId: id, positionSec: 9999 } });
   const hit = r.json?.hitFreeLimit;
   check(r.status === 200 && r.json?.completed === true, `lesson ${i + 1} completes`, `watched=${r.json?.freeWatched}`);
-  if (i === 3) check(hit === true, "the fourth completion trips the free limit");
+  if (i === freeIds.length - 1) check(hit === true, "the last free completion trips the free limit");
   else check(hit === false, `limit not tripped after ${i + 1}`);
 }
-check((await req("/api/progress", { method: "POST", body: { lessonId: "talk-to-ai-3", positionSec: 60 } })).status === 403, "a paid lesson is refused after the limit");
-const lockedPage = await req("/lessons/talk-to-ai-3");
+check(
+  (await req("/api/progress", { method: "POST", body: { lessonId: lockedLesson.id, positionSec: 60 } })).status === 403,
+  "a paid lesson is refused after the limit",
+  `→ ${lockedLesson.id}`
+);
+const lockedPage = await req(`/lessons/${lockedLesson.id}`);
 check(lockedPage.status === 200 && !lockedPage.text.includes("youtube-nocookie"), "the locked page never ships the video reference");
-// The lesson has a transcript, which is lesson content, so a locked viewer must not receive it either.
-check(!lockedPage.text.includes("साथ पढ़ें") && !lockedPage.text.includes("Read along"), "the locked page withholds the transcript");
+/*
+  A transcript is lesson content, so a locked viewer must not receive it
+  either. Asserted against this lesson's own words rather than the heading, so
+  it can only pass for the right reason — and loudly skipped rather than
+  quietly passed when no paid lesson has one to withhold.
+*/
+if (lockedLesson.transcriptHi || lockedLesson.transcriptEn) {
+  const words = (lockedLesson.transcriptHi ?? lockedLesson.transcriptEn).slice(0, 24);
+  check(!lockedPage.text.includes(words), "the locked page withholds the transcript");
+} else {
+  console.log(`WARN: no paid lesson has a transcript, so the withholding check is not exercised (${lockedLesson.id})`);
+}
 check(lockedPage.text.includes("Gold"), "the locked page offers Gold");
 
 console.log(`\n— payment —`);
@@ -172,7 +211,11 @@ check((await req("/api/payments/order", { method: "POST" })).status === 409, "a 
 console.log(`\n— referral —`);
 const jarA = snapshot();
 const goldA0 = status.json?.goldUntil;
-check(monthsFromNow(goldA0) > 2.5 && monthsFromNow(goldA0) < 3.5, "member A holds the plain 3 month term", `(${monthsFromNow(goldA0).toFixed(1)} mo)`);
+check(
+  Math.abs(monthsFromNow(goldA0) - goldMonths) < 0.5,
+  `member A holds the plain ${goldMonths} month term`,
+  `(${monthsFromNow(goldA0).toFixed(1)} mo)`
+);
 const invitePage = await req("/invite");
 const refCode = invitePage.text.match(/data-referral-code="([A-Z0-9]{4,12})"/)?.[1] ?? null;
 if (!check(Boolean(refCode), "member A has a referral code", refCode ?? "")) process.exit(1);
@@ -193,8 +236,25 @@ const learnB = await req("/learn");
 const firstCategory = learnB.text.match(/data-category="([a-z0-9-]+)"/)?.[1] ?? null;
 check(firstCategory === "safety", "B's Learn page puts the chosen category first", `→ ${firstCategory}`);
 check(learnB.text.includes("Your pick"), "the chosen category is marked as theirs");
-// The interface is English only. Nothing rendered should carry Devanagari.
-check(!/[ऀ-ॿ]/.test(learnB.text), "B's Learn page renders no Devanagari");
+/*
+  The interface is bilingual, so both scripts are in the HTML and CSS hides one.
+  The old check here asserted no Devanagari at all, which was right when there
+  was one language and became a false alarm the moment there were two.
+
+  What still needs proving is that every Devanagari string went through the
+  bilingual mechanism rather than being typed straight into a page — hardcoded
+  Hindi would show to an English reader, which is the actual regression. So:
+  the page declares English, and stripping every <span data-lang="hi"> leaves
+  no Devanagari behind.
+*/
+check(/<html[^>]+lang="en"/.test(learnB.text), "B's Learn page declares English");
+const visible = learnB.text
+  // The RSC payload repeats every string of both languages inside a script
+  // tag. That is the transport, not the page, and Devanagari there is right.
+  .replace(/<script[\s\S]*?<\/script>/g, "")
+  .replace(/<span lang="hi" data-lang="hi">[\s\S]*?<\/span>/g, "");
+const leaked = visible.match(/[ऀ-ॿ]+/)?.[0] ?? null;
+check(leaked === null, "no Devanagari outside a hi span on B's Learn page", leaked ? `→ "${leaked}"` : "");
 // The popup renders on a timer, so the server HTML carries the joiner as props, not as text.
 check(learnB.text.includes("daysAgo") && learnB.text.includes("Sunita"), "B, a free viewer, is served A as real social proof");
 
@@ -203,7 +263,7 @@ const simB1 = await req("/api/payments/simulate", { method: "POST" });
 check(simB1.json?.outcome === "activated", "B's payment activates");
 const statusB = await req("/api/payments/status");
 check(statusB.json?.state === "gold", "B is gold");
-check(monthsFromNow(statusB.json?.goldUntil) > 3.5, "B received the extra referral month", `(${monthsFromNow(statusB.json?.goldUntil).toFixed(1)} mo)`);
+check(monthsFromNow(statusB.json?.goldUntil) > goldMonths + 0.5, "B received the extra referral month", `(${monthsFromNow(statusB.json?.goldUntil).toFixed(1)} mo)`);
 const simB2 = await req("/api/payments/simulate", { method: "POST" });
 check(simB2.json?.outcome === "idempotent", "a second webhook is a no-op");
 const statusB2 = await req("/api/payments/status");
@@ -214,7 +274,7 @@ const jarB = snapshot();
 
 restore(jarA);
 const statusA = await req("/api/payments/status");
-check(monthsFromNow(statusA.json?.goldUntil) > 3.5, "A, the referrer, also received the extra month", `(${monthsFromNow(statusA.json?.goldUntil).toFixed(1)} mo)`);
+check(monthsFromNow(statusA.json?.goldUntil) > goldMonths + 0.5, "A, the referrer, also received the extra month", `(${monthsFromNow(statusA.json?.goldUntil).toFixed(1)} mo)`);
 const inviteA = await req("/invite");
 check(inviteA.text.includes("Ramesh") && inviteA.text.includes("+1 month"), "A's invite page lists Ramesh with the bonus");
 

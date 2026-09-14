@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { T } from "@/components/bilingual";
+import { useLang } from "@/components/lang-provider";
+import { pick } from "@/lib/pick";
 
 export type JoinerView = { firstName: string; city: string | null; daysAgo: number };
 
@@ -55,12 +58,19 @@ export function SocialProof({ joiners }: { joiners: JoinerView[] }) {
     return () => timers.forEach(clearTimeout);
   }, [joiners]);
 
+  const lang = useLang();
+
   if (dismissed || index === null) return null;
   const j = joiners[index];
   if (!j) return null;
 
-  const when = j.daysAgo === 0 ? "today" : j.daysAgo === 1 ? "yesterday" : `${j.daysAgo} days ago`;
-  const who = j.city ? `${j.firstName} from ${j.city}` : j.firstName;
+  const when =
+    j.daysAgo === 0
+      ? pick(lang, "आज", "today")
+      : j.daysAgo === 1
+        ? pick(lang, "कल", "yesterday")
+        : pick(lang, `${j.daysAgo} दिन पहले`, `${j.daysAgo} days ago`);
+  const who = j.city ? pick(lang, `${j.city} से ${j.firstName}`, `${j.firstName} from ${j.city}`) : j.firstName;
 
   return (
     <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] z-40 flex justify-center px-5">
@@ -69,12 +79,12 @@ export function SocialProof({ joiners }: { joiners: JoinerView[] }) {
           {j.firstName.charAt(0)}
         </span>
         <p className="min-w-0 flex-1 truncate text-[0.88rem] font-medium">
-          {who} joined Gold {when}
+          <T hi={`${who} ${when} Gold से जुड़े`} en={`${who} joined Gold ${when}`} />
         </p>
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          aria-label="Dismiss"
+          aria-label={pick(lang, "हटाइए", "Dismiss")}
           className="grid h-10 w-10 flex-none place-items-center rounded-pill text-[1.1rem] text-ink-3 hover:bg-wash hover:text-ink"
         >
           ×

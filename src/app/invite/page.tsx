@@ -4,6 +4,7 @@ import { Card } from "@/components/ui";
 import { withTenant } from "@/lib/db/tenant";
 import type { UserDoc } from "@/lib/db/documents";
 import { getOrCreateReferralCode } from "@/lib/referral";
+import { T } from "@/components/bilingual";
 import { getViewer, hasInvite } from "@/lib/viewer";
 import { ShareCode } from "./share";
 
@@ -28,20 +29,35 @@ export default async function InvitePage() {
     <AppShell
       viewer={viewer}
       tab="invite"
-      header={<GradHeader title="Invite a friend" subtitle="When a friend joins with your code, you both get an extra month." tall />}
+      header={
+        <GradHeader
+          title={<T hi="किसी दोस्त को बुलाइए" en="Invite a friend" />}
+          subtitle={
+            <T
+              hi="जब कोई दोस्त आपके code से जुड़ता है, तो आप दोनों को एक महीना अतिरिक्त मिलता है।"
+              en="When a friend joins with your code, you both get an extra month."
+            />
+          }
+          tall
+        />
+      }
     >
-      <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start lg:gap-8">
         <ShareCode code={code} />
 
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline gap-3">
-            <h2 className="text-[1.05rem] font-bold">Friends who joined</h2>
+            <h2 className="text-[1.05rem] font-bold">
+              <T hi="जो दोस्त जुड़े" en="Friends who joined" />
+            </h2>
             <span className="ml-auto text-[0.85rem] font-medium tabular-nums text-ink-3">{joined.length}</span>
           </div>
 
           {joined.length === 0 ? (
             <Card className="px-5 py-8 text-center">
-              <p className="text-[0.92rem] text-ink-3">Nobody yet. Use the button above to send your code.</p>
+              <p className="text-[0.92rem] text-ink-3">
+                <T hi="अभी कोई नहीं। ऊपर वाले बटन से अपना code भेजिए।" en="Nobody yet. Use the button above to send your code." />
+              </p>
             </Card>
           ) : (
             <div className="flex flex-col gap-2.5">
@@ -61,7 +77,7 @@ export default async function InvitePage() {
                         : "flex-none rounded-pill bg-wash px-3 py-1 text-[0.72rem] font-semibold text-ink-3"
                     }
                   >
-                    {p.rewardedAt ? "+1 month" : "Not gold yet"}
+                    {p.rewardedAt ? <T hi="+1 महीना" en="+1 month" /> : <T hi="अभी Gold नहीं" en="Not gold yet" />}
                   </span>
                 </Card>
               ))}

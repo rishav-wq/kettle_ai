@@ -3,45 +3,125 @@
   "categories": [
     {
       "id": "start",
-      "nameHi": "यहाँ से शुरू करें",
+      "nameHi": "AI से शुरुआत",
       "nameEn": "Start with AI",
-      "sortOrder": 0
-    },
-    {
-      "id": "safety",
-      "nameHi": "सुरक्षा",
-      "nameEn": "Stay safe online",
-      "sortOrder": 1
+      "sortOrder": 1,
+      "blurbEn": "New to AI? Start here",
+      "blurbHi": "AI में नए हैं? यहाँ से शुरू कीजिए"
     },
     {
       "id": "daily",
-      "nameHi": "रोज़ के काम",
+      "nameHi": "रोज़ की ज़िंदगी",
       "nameEn": "Everyday life",
       "sortOrder": 2
     },
     {
-      "id": "work",
-      "nameHi": "काम और पैसा",
-      "nameEn": "Work, forms, and money",
+      "id": "safety",
+      "nameHi": "ऑनलाइन सुरक्षा",
+      "nameEn": "Stay safe online",
       "sortOrder": 3
+    },
+    {
+      "id": "english",
+      "nameHi": "अंग्रेज़ी और बातचीत",
+      "nameEn": "English & communication",
+      "sortOrder": 4
+    },
+    {
+      "id": "phone",
+      "nameHi": "फ़ोन और तकनीक",
+      "nameEn": "Phone & technology help",
+      "sortOrder": 5
+    },
+    {
+      "id": "kitchen",
+      "nameHi": "रसोई और व्यंजन",
+      "nameEn": "Kitchen & recipes",
+      "sortOrder": 6
+    },
+    {
+      "id": "travel",
+      "nameHi": "यात्रा",
+      "nameEn": "Travel",
+      "sortOrder": 7
+    },
+    {
+      "id": "pooja",
+      "nameHi": "पूजा और भक्ति",
+      "nameEn": "Pooja & bhakti",
+      "sortOrder": 8
+    },
+    {
+      "id": "work",
+      "nameHi": "ऑफ़िस और काम",
+      "nameEn": "Office & work",
+      "sortOrder": 9
+    },
+    {
+      "id": "job",
+      "nameHi": "नौकरी की तलाश",
+      "nameEn": "Finding a job",
+      "sortOrder": 10
+    },
+    {
+      "id": "money",
+      "nameHi": "पैसों की बुनियादी बातें",
+      "nameEn": "Money basics",
+      "sortOrder": 11
+    },
+    {
+      "id": "family",
+      "nameHi": "परिवार और बच्चे",
+      "nameEn": "Family & parenting",
+      "sortOrder": 12
+    },
+    {
+      "id": "retirement",
+      "nameHi": "रिटायरमेंट और खाली समय",
+      "nameEn": "Retirement & free time",
+      "sortOrder": 13
+    },
+    {
+      "id": "yoga",
+      "nameHi": "योग और सेहत",
+      "nameEn": "Yoga & wellness",
+      "sortOrder": 14
+    },
+    {
+      "id": "gym",
+      "nameHi": "जिम और फ़िटनेस",
+      "nameEn": "Gym & fitness",
+      "sortOrder": 15
+    },
+    {
+      "id": "gardening",
+      "nameHi": "बागवानी",
+      "nameEn": "Gardening",
+      "sortOrder": 16
+    },
+    {
+      "id": "hobbies",
+      "nameHi": "शौक और सीखना",
+      "nameEn": "Hobbies & learning",
+      "sortOrder": 17
     }
   ],
   "courses": [
     {
       "id": "talk-to-ai",
       "categoryId": "start",
-      "titleHi": "AI से बात कैसे करें",
-      "titleEn": "Start using AI",
-      "descriptionHi": "अपने शब्दों में सवाल पूछिए और काम का जवाब पाइए। न अंग्रेज़ी चाहिए, न तकनीकी शब्द।",
-      "descriptionEn": "Learn what AI is, ask your first question, and use the answer for something real in your day.",
+      "titleHi": "AI से शुरुआत",
+      "titleEn": "Start with AI",
+      "descriptionHi": "AI इस्तेमाल करने से पहले जान लेने वाली चार बातें।",
+      "descriptionEn": "The four things to know before you use AI for anything else.",
       "imageUrl": "/courses/talk-to-ai.svg",
       "sortOrder": 0,
       "isPublished": true,
       "lessons": [
         {
           "id": "talk-to-ai-1",
-          "titleHi": "AI क्या है, आसान भाषा में",
-          "titleEn": "What AI is, in plain words",
+          "titleHi": "AI क्या है, और यह आपके किस काम आएगा?",
+          "titleEn": "What is AI, and why should I care?",
           "video": "https://youtu.be/ilNt2bikxDI?si=-miSc1x1AYMXQl_9",
           "durationSec": 240,
           "isFree": true,
@@ -50,41 +130,45 @@
         },
         {
           "id": "talk-to-ai-2",
-          "titleHi": "पहला सवाल पूछिए",
-          "titleEn": "Ask your first question",
+          "titleHi": "कौन से AI ऐप काम आते हैं?",
+          "titleEn": "Which AI apps should I know?",
           "video": "https://youtu.be/9fKQJcbd-jY?si=8kU2DKUe88Z7iaPo",
           "durationSec": 300,
           "isFree": true
         },
         {
           "id": "talk-to-ai-3",
-          "titleHi": "सवाल को साफ़ कैसे बनाएँ",
-          "titleEn": "Make your question clear",
+          "titleHi": "AI से बात कैसे करें",
+          "titleEn": "How to talk to AI",
           "video": "TODO-talk-3",
           "durationSec": 420,
           "transcriptHi": "जब आप AI से कुछ पूछें, तो तीन बातें बताइए — आपको क्या चाहिए, किसके लिए चाहिए, और कितना लंबा चाहिए। जैसे: \"मेरी बेटी की शादी का card लिखिए, Hindi में, चार line का।\" इतना कह देने से जवाब सीधे काम का आता है, और बार-बार सुधारना नहीं पड़ता।",
-          "transcriptEn": "When you ask AI for something, say three things: what you want, who it is for, and how long it should be. For example, \"Write a wedding card for my daughter, in Hindi, four lines.\" Say that much and the answer comes back usable the first time, without going back and forth."
+          "transcriptEn": "When you ask AI for something, say three things: what you want, who it is for, and how long it should be. For example, \"Write a wedding card for my daughter, in Hindi, four lines.\" Say that much and the answer comes back usable the first time, without going back and forth.",
+          "isFree": true
         },
         {
           "id": "talk-to-ai-4",
-          "titleHi": "जवाब सही है या नहीं",
-          "titleEn": "Is the answer right?",
+          "titleHi": "AI के साथ ये कभी न करें",
+          "titleEn": "What you should never do with AI",
           "video": "TODO-talk-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": true
         },
         {
           "id": "talk-to-ai-5",
           "titleHi": "बोलकर पूछिए, लिखना नहीं",
           "titleEn": "Ask by voice, not typing",
           "video": "TODO-talk-5",
-          "durationSec": 480
+          "durationSec": 480,
+          "isFree": false
         },
         {
           "id": "talk-to-ai-6",
           "titleHi": "रोज़ के तीन काम",
           "titleEn": "Three everyday uses",
           "video": "TODO-talk-6",
-          "durationSec": 480
+          "durationSec": 480,
+          "isFree": false
         }
       ]
     },
@@ -105,41 +189,45 @@
           "titleEn": "Nobody asks for your code",
           "video": "TODO-scam-1",
           "durationSec": 360,
-          "isFree": true
+          "isFree": false
         },
         {
           "id": "spot-a-scam-2",
           "titleHi": "बैंक कभी फ़ोन नहीं करता",
           "titleEn": "The bank never calls",
           "video": "TODO-scam-2",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "spot-a-scam-3",
           "titleHi": "नकली आवाज़ और नकली वीडियो",
           "titleEn": "Fake voices and fake videos",
           "video": "TODO-scam-3",
-          "durationSec": 480
+          "durationSec": 480,
+          "isFree": false
         },
         {
           "id": "spot-a-scam-4",
           "titleHi": "ठगी हो जाए तो क्या करें",
           "titleEn": "What to do if it happens",
           "video": "TODO-scam-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "spot-a-scam-5",
           "titleHi": "परिवार को कैसे समझाएँ",
           "titleEn": "Explaining it to family",
           "video": "TODO-scam-5",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         }
       ]
     },
     {
       "id": "ai-in-whatsapp",
-      "categoryId": "start",
+      "categoryId": "daily",
       "titleHi": "WhatsApp पर AI",
       "titleEn": "Use AI in WhatsApp",
       "descriptionHi": "जो ऐप आप रोज़ चलाते हैं, उसी में AI से मदद लीजिए।",
@@ -154,34 +242,37 @@
           "titleEn": "Where AI lives in WhatsApp",
           "video": "TODO-wa-1",
           "durationSec": 300,
-          "isFree": true
+          "isFree": false
         },
         {
           "id": "ai-in-whatsapp-2",
           "titleHi": "मैसेज का जवाब लिखवाइए",
           "titleEn": "Draft a reply",
           "video": "TODO-wa-2",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "ai-in-whatsapp-3",
           "titleHi": "फ़ोटो के बारे में पूछिए",
           "titleEn": "Ask about a photo",
           "video": "TODO-wa-3",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "ai-in-whatsapp-4",
           "titleHi": "क्या शेयर न करें",
           "titleEn": "What not to share",
           "video": "TODO-wa-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         }
       ]
     },
     {
       "id": "plan-a-pooja",
-      "categoryId": "daily",
+      "categoryId": "pooja",
       "titleHi": "पूजा की तैयारी",
       "titleEn": "Plan a family function with AI",
       "descriptionHi": "सामग्री की सूची, मुहूर्त, और निमंत्रण, सब AI से।",
@@ -195,34 +286,38 @@
           "titleHi": "सामग्री की सूची बनवाइए",
           "titleEn": "Make the items list",
           "video": "TODO-pooja-1",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "plan-a-pooja-2",
           "titleHi": "निमंत्रण लिखवाइए",
           "titleEn": "Write the invitation",
           "video": "TODO-pooja-2",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "plan-a-pooja-3",
           "titleHi": "विधि समझिए",
           "titleEn": "Understand the steps",
           "video": "TODO-pooja-3",
-          "durationSec": 480
+          "durationSec": 480,
+          "isFree": false
         },
         {
           "id": "plan-a-pooja-4",
           "titleHi": "प्रसाद की रेसिपी",
           "titleEn": "A prasad recipe",
           "video": "TODO-pooja-4",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         }
       ]
     },
     {
       "id": "write-a-letter",
-      "categoryId": "work",
+      "categoryId": "english",
       "titleHi": "चिट्ठी लिखवाइए",
       "titleEn": "Write a letter with AI",
       "descriptionHi": "बैंक, सोसाइटी, सरकारी दफ़्तर — किसी को भी सही भाषा में चिट्ठी।",
@@ -236,34 +331,38 @@
           "titleHi": "शिकायत की चिट्ठी",
           "titleEn": "A complaint letter",
           "video": "TODO-letter-1",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "write-a-letter-2",
           "titleHi": "बैंक को आवेदन",
           "titleEn": "An application to the bank",
           "video": "TODO-letter-2",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "write-a-letter-3",
           "titleHi": "अंग्रेज़ी में अनुवाद",
           "titleEn": "Translate to English",
           "video": "TODO-letter-3",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "write-a-letter-4",
           "titleHi": "ईमेल भेजना",
           "titleEn": "Sending it by email",
           "video": "TODO-letter-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         }
       ]
     },
     {
       "id": "write-a-resume",
-      "categoryId": "work",
+      "categoryId": "job",
       "titleHi": "Resume बनाइए",
       "titleEn": "Make a resume with AI",
       "descriptionHi": "अपने अनुभव को सही शब्दों में, एक पेज पर।",
@@ -277,28 +376,32 @@
           "titleHi": "अपना अनुभव बताइए",
           "titleEn": "Describe your experience",
           "video": "TODO-resume-1",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "write-a-resume-2",
           "titleHi": "AI से पहला draft",
           "titleEn": "A first draft from AI",
           "video": "TODO-resume-2",
-          "durationSec": 480
+          "durationSec": 480,
+          "isFree": false
         },
         {
           "id": "write-a-resume-3",
           "titleHi": "सुधार और छोटा करना",
           "titleEn": "Fix and shorten it",
           "video": "TODO-resume-3",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "write-a-resume-4",
           "titleHi": "PDF बनाकर भेजना",
           "titleEn": "Make a PDF and send it",
           "video": "TODO-resume-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         }
       ]
     },
@@ -318,34 +421,38 @@
           "titleHi": "किसके लिए है, यह बताइए",
           "titleEn": "Say who it is for",
           "video": "TODO-ask-better-questions-1",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "ask-better-questions-2",
           "titleHi": "एक उदाहरण दीजिए",
           "titleEn": "Give one example",
           "video": "TODO-ask-better-questions-2",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "ask-better-questions-3",
           "titleHi": "दोबारा करने को कहिए",
           "titleEn": "Ask it to try again",
           "video": "TODO-ask-better-questions-3",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "ask-better-questions-4",
           "titleHi": "छोटा या आसान करने को कहिए",
           "titleEn": "Ask for it shorter, or simpler",
           "video": "TODO-ask-better-questions-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         }
       ]
     },
     {
       "id": "ai-on-your-phone",
-      "categoryId": "start",
+      "categoryId": "phone",
       "titleHi": "अपने फ़ोन पर शुरू कीजिए",
       "titleEn": "Set up AI on your phone",
       "descriptionHi": "इंस्टॉल करना, सुरक्षित साइन इन, और अक्षर पढ़ने लायक बड़े करना।",
@@ -359,28 +466,32 @@
           "titleHi": "ऐप इंस्टॉल कीजिए",
           "titleEn": "Install the app",
           "video": "TODO-ai-on-your-phone-1",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "ai-on-your-phone-2",
           "titleHi": "सुरक्षित तरीके से साइन इन",
           "titleEn": "Sign in safely",
           "video": "TODO-ai-on-your-phone-2",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "ai-on-your-phone-3",
           "titleHi": "अक्षर बड़े कीजिए",
           "titleEn": "Make the text bigger",
           "video": "TODO-ai-on-your-phone-3",
-          "durationSec": 240
+          "durationSec": 240,
+          "isFree": false
         },
         {
           "id": "ai-on-your-phone-4",
           "titleHi": "टाइप करने की जगह बोलिए",
           "titleEn": "Talk instead of typing",
           "video": "TODO-ai-on-your-phone-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         }
       ]
     },
@@ -400,28 +511,32 @@
           "titleHi": "भेजने से पहले नाम जाँचिए",
           "titleEn": "Check the name before you pay",
           "video": "TODO-safe-online-payments-1",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "safe-online-payments-2",
           "titleHi": "असली request कैसी दिखती है",
           "titleEn": "What a real request looks like",
           "video": "TODO-safe-online-payments-2",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "safe-online-payments-3",
           "titleHi": "OTP कभी मत बताइए",
           "titleEn": "Never share an OTP",
           "video": "TODO-safe-online-payments-3",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "safe-online-payments-4",
           "titleHi": "अगर पैसे जा चुके हों",
           "titleEn": "If the money has already gone",
           "video": "TODO-safe-online-payments-4",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         }
       ]
     },
@@ -441,28 +556,32 @@
           "titleHi": "हर जगह एक ही पासवर्ड क्यों ख़तरा है",
           "titleEn": "Why one password everywhere is risky",
           "video": "TODO-strong-passwords-1",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "strong-passwords-2",
           "titleHi": "लंबा पासवर्ड, जो याद रहे",
           "titleEn": "Make a long one you remember",
           "video": "TODO-strong-passwords-2",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "strong-passwords-3",
           "titleHi": "इन्हें कहाँ लिखना सुरक्षित है",
           "titleEn": "Where it is safe to write them",
           "video": "TODO-strong-passwords-3",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "strong-passwords-4",
           "titleHi": "दूसरी जाँच चालू कीजिए",
           "titleEn": "Turn on the second check",
           "video": "TODO-strong-passwords-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         }
       ]
     },
@@ -482,34 +601,38 @@
           "titleHi": "पूछिए यह आया कहाँ से",
           "titleEn": "Ask where it came from",
           "video": "TODO-fake-photos-and-forwards-1",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "fake-photos-and-forwards-2",
           "titleHi": "हाथ और अक्षर ध्यान से देखिए",
           "titleEn": "Look at the hands and the letters",
           "video": "TODO-fake-photos-and-forwards-2",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "fake-photos-and-forwards-3",
           "titleHi": "एक search में जाँचिए",
           "titleEn": "Check it in one search",
           "video": "TODO-fake-photos-and-forwards-3",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "fake-photos-and-forwards-4",
           "titleHi": "घरवालों से क्या कहें",
           "titleEn": "What to say to family",
           "video": "TODO-fake-photos-and-forwards-4",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         }
       ]
     },
     {
       "id": "meals-and-shopping",
-      "categoryId": "daily",
+      "categoryId": "kitchen",
       "titleHi": "खाना और हफ़्ते का सौदा",
       "titleEn": "Plan meals and shopping with AI",
       "descriptionHi": "हफ़्ते भर का खाना तय कीजिए, और उसकी सूची बनवाइए।",
@@ -523,28 +646,32 @@
           "titleHi": "हफ़्ते भर का खाना तय कीजिए",
           "titleEn": "Plan a week of meals",
           "video": "TODO-meals-and-shopping-1",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "meals-and-shopping-2",
           "titleHi": "सौदे की सूची बनवाइए",
           "titleEn": "Make the shopping list",
           "video": "TODO-meals-and-shopping-2",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "meals-and-shopping-3",
           "titleHi": "जो घर में है, उसी से बनाइए",
           "titleEn": "Cook with what is at home",
           "video": "TODO-meals-and-shopping-3",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "meals-and-shopping-4",
           "titleHi": "मेहमान के हिसाब से बदलिए",
           "titleEn": "Adjust it for a guest",
           "video": "TODO-meals-and-shopping-4",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         }
       ]
     },
@@ -564,34 +691,38 @@
           "titleHi": "पर्ची समझिए",
           "titleEn": "Understand a prescription",
           "video": "TODO-health-questions-1",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "health-questions-2",
           "titleHi": "डॉक्टर के पास जाने की तैयारी",
           "titleEn": "Prepare for a doctor visit",
           "video": "TODO-health-questions-2",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "health-questions-3",
           "titleHi": "जाँच रिपोर्ट पढ़िए",
           "titleEn": "Read a test report",
           "video": "TODO-health-questions-3",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "health-questions-4",
           "titleHi": "कब भरोसा नहीं करना है",
           "titleEn": "When not to trust it",
           "video": "TODO-health-questions-4",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         }
       ]
     },
     {
       "id": "travel-and-tickets",
-      "categoryId": "daily",
+      "categoryId": "travel",
       "titleHi": "रेल, टिकट और रास्ता",
       "titleEn": "Plan travel with AI",
       "descriptionHi": "बुकिंग, योजना और रास्ता, बिना किसी और से पूछे।",
@@ -605,28 +736,32 @@
           "titleHi": "सही रेल ढूँढ़िए",
           "titleEn": "Find the right train",
           "video": "TODO-travel-and-tickets-1",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "travel-and-tickets-2",
           "titleHi": "बिना दलाल के बुक कीजिए",
           "titleEn": "Book without a middleman",
           "video": "TODO-travel-and-tickets-2",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "travel-and-tickets-3",
           "titleHi": "ऐसा रास्ता, जो समझ आए",
           "titleEn": "Get directions you can follow",
           "video": "TODO-travel-and-tickets-3",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "travel-and-tickets-4",
           "titleHi": "सामान बाँधिए",
           "titleEn": "Pack for the trip",
           "video": "TODO-travel-and-tickets-4",
-          "durationSec": 240
+          "durationSec": 240,
+          "isFree": false
         }
       ]
     },
@@ -646,34 +781,38 @@
           "titleHi": "समझिए क्या पूछा जा रहा है",
           "titleEn": "Understand what is being asked",
           "video": "TODO-government-forms-1",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "government-forms-2",
           "titleHi": "आवेदन लिखवाइए",
           "titleEn": "Write the application",
           "video": "TODO-government-forms-2",
-          "durationSec": 420
+          "durationSec": 420,
+          "isFree": false
         },
         {
           "id": "government-forms-3",
           "titleHi": "भेजने से पहले जाँचिए",
           "titleEn": "Check it before you send",
           "video": "TODO-government-forms-3",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "government-forms-4",
           "titleHi": "शालीनता से याद दिलाइए",
           "titleEn": "Follow up politely",
           "video": "TODO-government-forms-4",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         }
       ]
     },
     {
       "id": "bills-and-budget",
-      "categoryId": "work",
+      "categoryId": "money",
       "titleHi": "बिल, बजट और छोटा कारोबार",
       "titleEn": "Manage bills and money with AI",
       "descriptionHi": "क्या आ रहा है और क्या जा रहा है, आसान हिसाब में।",
@@ -687,28 +826,32 @@
           "titleHi": "बिल ठीक से पढ़िए",
           "titleEn": "Read a bill properly",
           "video": "TODO-bills-and-budget-1",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "bills-and-budget-2",
           "titleHi": "महीने का आसान बजट",
           "titleEn": "Make a simple monthly budget",
           "video": "TODO-bills-and-budget-2",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         },
         {
           "id": "bills-and-budget-3",
           "titleHi": "दाम की सूची बनाइए",
           "titleEn": "Write a price list",
           "video": "TODO-bills-and-budget-3",
-          "durationSec": 300
+          "durationSec": 300,
+          "isFree": false
         },
         {
           "id": "bills-and-budget-4",
           "titleHi": "अदायगी की शालीन याद",
           "titleEn": "Chase a payment politely",
           "video": "TODO-bills-and-budget-4",
-          "durationSec": 360
+          "durationSec": 360,
+          "isFree": false
         }
       ]
     }

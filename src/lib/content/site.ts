@@ -13,11 +13,30 @@ import path from "node:path";
   about. Add them back when there are real people to put in them.
 */
 
-export type Faq = { q: string; a: string };
+/* Hindi is optional so an unanswered question still renders; it falls back to
+   the English, which is better than an empty accordion. */
+export type Faq = { q: string; a: string; qHi?: string; aHi?: string };
+
+/**
+ * The weekly live session, sold on the Gold page.
+ *
+ * `placeholder` marks it as not yet real. While it is set, the details render
+ * with a dashed border and an EXAMPLE chip so the block cannot ship unnoticed —
+ * the same treatment the teacher and testimonial blocks had. Fill `when` and
+ * `howToJoin` with the real day, time and route to the link, then drop the flag.
+ */
+export type LiveSession = {
+  placeholder?: boolean;
+  when: string;
+  whenHi: string;
+  howToJoin: string;
+  howToJoinHi: string;
+};
 
 export type SiteContent = {
-  contact: { whatsapp: string; hours: string };
+  contact: { whatsapp: string; hours: string; hoursHi: string };
   faq: Faq[];
+  liveSession: LiveSession | null;
 };
 
 let cached: SiteContent | null = null;
@@ -27,8 +46,9 @@ export function getSiteContent(): SiteContent {
   const file = path.join(process.cwd(), "content", "kettle-site.json");
   const raw = JSON.parse(readFileSync(file, "utf8")) as Partial<SiteContent>;
   cached = {
-    contact: raw.contact ?? { whatsapp: "", hours: "" },
+    contact: raw.contact ?? { whatsapp: "", hours: "", hoursHi: "" },
     faq: raw.faq ?? [],
+    liveSession: raw.liveSession ?? null,
   };
   return cached;
 }

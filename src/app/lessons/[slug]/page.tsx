@@ -11,6 +11,9 @@ import { GOLD, formatRupees } from "@/lib/payments/plan";
 import { freeLeft, getViewer, lockReason } from "@/lib/viewer";
 import { pageMetadata, SITE_NAME } from "@/lib/seo";
 import { LessonStage } from "./stage";
+import { T } from "@/components/bilingual";
+import { getLang } from "@/lib/lang";
+import { pick } from "@/lib/pick";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +48,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   const reason = lockReason(viewer, lesson);
   const minutes = Math.max(1, Math.round((lesson.video?.durationSec ?? 0) / 60));
   const remaining = freeLeft(viewer);
+  const lang = await getLang();
 
   return (
     <AppShell
@@ -52,10 +56,13 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       tab="learn"
       header={
         <GradHeader
-          back={{ href: `/courses/${lesson.course.id}`, label: "Back to course" }}
+          back={{ href: `/courses/${lesson.course.id}`, label: pick(lang, "कोर्स पर वापस", "Back to course") }}
           action={
             <span className="rounded-pill bg-white/18 px-3 py-1.5 text-[0.78rem] font-semibold text-white backdrop-blur-sm">
-              Lesson {lesson.sortOrder} of {lesson.course.lessonCount}
+              <T
+                hi={`${lesson.course.lessonCount} में से lesson ${lesson.sortOrder}`}
+                en={`Lesson ${lesson.sortOrder} of ${lesson.course.lessonCount}`}
+              />
             </span>
           }
           tall
@@ -79,7 +86,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
           <LessonStage
             lessonId={lesson.id}
             locked={reason}
-            playable={reason ? { kind: "pending", reason: "locked" } : toPlayable(lesson.video, lesson.titleEn)}
+            playable={reason ? { kind: "pending", reason: "locked" } : toPlayable(lesson.video, pick(lang, lesson.titleHi, lesson.titleEn))}
             durationSec={lesson.video?.durationSec ?? 0}
             startAtSec={progress?.watchedSec ?? 0}
             tracking={Boolean(viewer.userId)}
@@ -91,25 +98,37 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
         </GradHeader>
       }
     >
-      <div className="mt-6 flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
         <Card className="flex flex-col gap-2.5 p-5 lg:col-span-2 lg:p-6">
           <Rule />
-          <h1 className="text-[1.3rem] font-bold leading-tight">{lesson.titleEn}</h1>
+          <h1 className="text-[1.3rem] font-bold leading-tight">
+            <T hi={lesson.titleHi} en={lesson.titleEn} />
+          </h1>
           <p className="text-[0.88rem] font-medium tabular-nums text-ink-3">
-            {lesson.course.titleEn} · {minutes} min{progress?.completed ? " · Watched" : ""}
+            <T
+              hi={`${lesson.course.titleHi} · ${minutes} मिनट${progress?.completed ? " · देख लिया" : ""}`}
+              en={`${lesson.course.titleEn} · ${minutes} min${progress?.completed ? " · Watched" : ""}`}
+            />
           </p>
         </Card>
 
         {viewer.state === "free" && remaining > 0 ? (
           <p className="rounded-tile bg-wash px-4 py-3 text-[0.9rem] font-medium text-violet lg:col-span-2">
-            {remaining} free {remaining === 1 ? "lesson" : "lessons"} left.
+            <T
+              hi={`${remaining} मुफ़्त ${remaining === 1 ? "lesson" : "lessons"} बाकी हैं।`}
+              en={`${remaining} free ${remaining === 1 ? "lesson" : "lessons"} left.`}
+            />
           </p>
         ) : null}
 
         {!reason && lesson.transcriptEn ? (
           <Card className="flex flex-col gap-2 p-5 lg:col-start-1 lg:row-start-3">
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-ink-3">Read along</span>
-            <p className="text-[0.98rem] leading-[1.8] text-ink-2">{lesson.transcriptEn}</p>
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-ink-3">
+              <T hi="साथ पढ़ें" en="Read along" />
+            </span>
+            <p className="text-[0.98rem] leading-[1.8] text-ink-2">
+              <T hi={lesson.transcriptHi ?? lesson.transcriptEn} en={lesson.transcriptEn} />
+            </p>
           </Card>
         ) : null}
 
@@ -117,15 +136,15 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
           <div className="flex flex-col gap-2.5 lg:col-start-2 lg:row-start-3">
             {lesson.next ? (
               <Button href={`/lessons/${lesson.next.id}`} size="lg" full>
-                Next lesson
+                <T hi="अगला lesson" en="Next lesson" />
               </Button>
             ) : (
               <Button href={`/courses/${lesson.course.id}`} size="lg" full>
-                Course finished
+                <T hi="कोर्स पूरा हुआ" en="Course finished" />
               </Button>
             )}
             <Button href={`/courses/${lesson.course.id}`} variant="ghost" full>
-              All lessons
+              <T hi="सभी lessons" en="All lessons" />
             </Button>
           </div>
         ) : (
@@ -138,7 +157,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
             full
             className="lg:col-span-2 lg:mx-auto lg:w-auto lg:min-w-[300px]"
           >
-            All lessons
+            <T hi="सभी lessons" en="All lessons" />
           </Button>
         )}
       </div>

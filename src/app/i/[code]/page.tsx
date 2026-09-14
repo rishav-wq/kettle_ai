@@ -6,6 +6,7 @@ import type { UserDoc } from "@/lib/db/documents";
 import { lookupReferrer } from "@/lib/referral";
 import { getFreeLessons } from "@/lib/content/queries";
 import { Wordmark } from "@/components/logo";
+import { T, TN } from "@/components/bilingual";
 
 export const dynamic = "force-dynamic";
 
@@ -38,13 +39,21 @@ export default async function ReferralLanding({ params }: { params: Promise<{ co
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col bg-ground lg:max-w-[720px]">
       <header className="grad rounded-b-[34px] px-5 pb-10 pt-[calc(16px+env(safe-area-inset-top))] text-white lg:mt-8 lg:rounded-[28px] lg:px-10 lg:pb-12 lg:pt-8">
-        <Wordmark href="/" className="text-white" size="sm" />
-        <p className="mt-6 text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-white/70">An invitation</p>
+        <Wordmark href="/" className="text-white" size="sm" tone="milk" />
+        <p className="mt-6 text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-white/70">
+          <T hi="एक न्योता" en="An invitation" />
+        </p>
         <h1 className="mt-2 text-[1.9rem] font-bold leading-tight">
-          {firstName ? `${firstName} invited you to Kettle` : "You have been invited to Kettle"}
+          <T
+            hi={firstName ? `${firstName} ने आपको Kettle पर बुलाया है` : "आपको Kettle पर बुलाया गया है"}
+            en={firstName ? `${firstName} invited you to Kettle` : "You have been invited to Kettle"}
+          />
         </h1>
         <p className="mt-3 text-[0.98rem] leading-relaxed text-white/85">
-          Everyday AI in short videos. The first four lessons are free, with no account.
+          <T
+            hi="छोटे वीडियो में रोज़ के काम का AI। पहले चार lessons मुफ़्त हैं, बिना किसी खाते के।"
+            en="Everyday AI in short videos. The first four lessons are free, with no account."
+          />
         </p>
       </header>
 
@@ -52,23 +61,30 @@ export default async function ReferralLanding({ params }: { params: Promise<{ co
         <div className="flex flex-col gap-2.5">
           {free[0] ? (
             <Button href={`/lessons/${free[0].id}`} size="lg" full>
-              Watch the first lesson
+              <T hi="पहला lesson देखिए" en="Watch the first lesson" />
             </Button>
           ) : null}
           <Button href={`/signin?ref=${clean}`} variant="soft" full>
-            Sign in with code {clean}
+            <T hi={`code ${clean} के साथ साइन इन कीजिए`} en={`Sign in with code ${clean}`} />
           </Button>
         </div>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-[1.05rem] font-bold">Free lessons</h2>
+          <h2 className="text-[1.05rem] font-bold">
+            <T hi="मुफ़्त lessons" en="Free lessons" />
+          </h2>
           <div className="flex flex-col gap-2.5">
             {free.map((l, i) => (
               <LessonRow
                 key={l.id}
                 index={i + 1}
-                title={l.titleEn}
-                meta={`${l.courseTitleEn} · ${Math.max(1, Math.round(l.durationSec / 60))} min`}
+                title={<T hi={l.titleHi} en={l.titleEn} />}
+                meta={
+                  <T
+                    hi={`${l.courseTitleHi} · ${Math.max(1, Math.round(l.durationSec / 60))} मिनट`}
+                    en={`${l.courseTitleEn} · ${Math.max(1, Math.round(l.durationSec / 60))} min`}
+                  />
+                }
                 href={`/lessons/${l.id}`}
               />
             ))}
@@ -77,7 +93,20 @@ export default async function ReferralLanding({ params }: { params: Promise<{ co
 
         <Card className="p-5">
           <p className="text-[0.9rem] leading-relaxed text-ink-2">
-            <strong className="font-semibold text-ink">Kettle will never call you</strong> and ask for a code. If someone does, that is a scam.
+            <TN
+              hi={
+                <>
+                  <strong className="font-semibold text-ink">Kettle आपको कभी फ़ोन नहीं करेगा</strong> और code नहीं माँगेगा। अगर कोई ऐसा करे, तो वह
+                  धोखा है।
+                </>
+              }
+              en={
+                <>
+                  <strong className="font-semibold text-ink">Kettle will never call you</strong> and ask for a code. If someone does, that is a
+                  scam.
+                </>
+              }
+            />
           </p>
         </Card>
       </main>

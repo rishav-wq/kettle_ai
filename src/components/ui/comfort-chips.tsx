@@ -1,7 +1,10 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { T } from "@/components/bilingual";
+import { useLang } from "@/components/lang-provider";
+import { pick } from "@/lib/pick";
 
 type Prefs = { textsize?: "big"; theme?: "dark" | "light" };
 
@@ -55,20 +58,31 @@ function write(p: Prefs) {
 }
 
 export function ComfortChips({ className, onGrad }: { className?: string; onGrad?: boolean }) {
+  const lang = useLang();
   const prefs = parse(useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot));
   const big = prefs.textsize === "big";
   const dark = prefs.theme === "dark";
   const update = (patch: Prefs) => write({ ...prefs, ...patch });
 
   return (
-    <div className={cn("flex gap-2", className)} role="group" aria-label="Reading comfort">
-      <Chip on={big} onGrad={onGrad} onClick={() => update({ textsize: big ? undefined : "big" })} label="Bigger text" />
-      <Chip on={dark} onGrad={onGrad} onClick={() => update({ theme: dark ? undefined : "dark" })} label={dark ? "Day" : "Night"} />
+    <div className={cn("flex gap-2", className)} role="group" aria-label={pick(lang, "पढ़ने की सुविधा", "Reading comfort")}>
+      <Chip
+        on={big}
+        onGrad={onGrad}
+        onClick={() => update({ textsize: big ? undefined : "big" })}
+        label={<T hi="बड़ा अक्षर" en="Bigger text" />}
+      />
+      <Chip
+        on={dark}
+        onGrad={onGrad}
+        onClick={() => update({ theme: dark ? undefined : "dark" })}
+        label={dark ? <T hi="दिन" en="Day" /> : <T hi="रात" en="Night" />}
+      />
     </div>
   );
 }
 
-function Chip({ on, onClick, label, onGrad }: { on: boolean; onClick: () => void; label: string; onGrad?: boolean }) {
+function Chip({ on, onClick, label, onGrad }: { on: boolean; onClick: () => void; label: ReactNode; onGrad?: boolean }) {
   return (
     <button
       type="button"

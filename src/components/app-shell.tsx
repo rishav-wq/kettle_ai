@@ -8,6 +8,9 @@ import { SocialProof } from "@/components/social-proof";
 import { Wordmark } from "@/components/logo";
 import { ComfortChips } from "@/components/ui";
 import { BookIcon, BookmarkIcon, HeartIcon, PersonIcon, StarIcon } from "@/components/icons";
+import { T } from "@/components/bilingual";
+import { getLang } from "@/lib/lang";
+import { pick } from "@/lib/pick";
 
 type Tab = "learn" | "mine" | "invite" | "account";
 
@@ -45,15 +48,29 @@ const CANVAS = "lg:max-w-[1240px]";
 export async function AppShell({ viewer, tab, header, children }: Props) {
   const gold = viewer.state === "gold";
   const signedIn = Boolean(viewer.userId);
+  const lang = await getLang();
   const joiners = showsMarketing(viewer) ? await withTenant(viewer.tenantId, (tx) => recentJoiners(tx, 6)) : [];
 
+  /*
+    Each tab carries both labels rather than one. The visible text goes through
+    <T>, which CSS switches; the aria-label needs an actual string, because an
+    attribute cannot be hidden by language the way an element can.
+
+    "Gold" stays Latin in both. It is the name of the plan, not a word.
+  */
   const tabs = [
-    { key: "learn" as const, href: "/learn", label: "Learn", Icon: BookIcon },
-    { key: "mine" as const, href: "/mine", label: "My classes", Icon: BookmarkIcon },
+    { key: "learn" as const, href: "/learn", hi: "सीखिए", en: "Learn", Icon: BookIcon },
+    { key: "mine" as const, href: "/mine", hi: "मेरी क्लास", en: "My classes", Icon: BookmarkIcon },
     gold
-      ? { key: "invite" as const, href: "/invite", label: "Invite", Icon: HeartIcon }
-      : { key: "invite" as const, href: "/gold", label: "Gold", Icon: StarIcon },
-    { key: "account" as const, href: signedIn ? "/account" : "/signin", label: signedIn ? "You" : "Sign in", Icon: PersonIcon },
+      ? { key: "invite" as const, href: "/invite", hi: "न्योता", en: "Invite", Icon: HeartIcon }
+      : { key: "invite" as const, href: "/gold", hi: "Gold", en: "Gold", Icon: StarIcon },
+    {
+      key: "account" as const,
+      href: signedIn ? "/account" : "/signin",
+      hi: signedIn ? "आप" : "साइन इन",
+      en: signedIn ? "You" : "Sign in",
+      Icon: PersonIcon,
+    },
   ];
 
   return (
@@ -65,8 +82,8 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
             adrift of a column it is supposed to head. */}
         <Wordmark href="/" className="px-4 text-violet" size="lg" />
 
-        <nav className="flex flex-col gap-1.5" aria-label="Main">
-          {tabs.slice(0, 3).map(({ key, href, label, Icon }) => {
+        <nav className="flex flex-col gap-1.5" aria-label={pick(lang, "मुख्य", "Main")}>
+          {tabs.slice(0, 3).map(({ key, href, hi, en, Icon }) => {
             const active = tab === key;
             return (
               <Link
@@ -79,7 +96,7 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
                 )}
               >
                 <Icon className="h-5 w-5 flex-none" filled={active} />
-                {label}
+                <T hi={hi} en={en} />
               </Link>
             );
           })}
@@ -90,12 +107,14 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
             <span aria-hidden className="grid h-5 w-5 flex-none place-items-center font-bold">
               ?
             </span>
-            Help
+            <T hi="मदद" en="Help" />
           </Link>
         </nav>
 
         <div className="flex flex-col gap-2.5 border-t border-line pt-6">
-          <span className="px-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-ink-3">Reading comfort</span>
+          <span className="px-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-ink-3">
+            <T hi="पढ़ने की सुविधा" en="Reading comfort" />
+          </span>
           <ComfortChips />
         </div>
 
@@ -107,7 +126,9 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[0.95rem] font-semibold">{viewer.name ?? "—"}</span>
-                <span className="block text-[0.78rem] text-ink-3">{gold ? "Kettle Gold" : "Free"}</span>
+                <span className="block text-[0.78rem] text-ink-3">
+                  {gold ? "Kettle Gold" : <T hi="मुफ़्त" en="Free" />}
+                </span>
               </span>
             </Link>
           ) : (
@@ -115,7 +136,7 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
               href="/signin"
               className="flex min-h-[52px] items-center justify-center rounded-pill bg-fill text-[0.95rem] font-semibold text-on-fill shadow-m"
             >
-              Sign in
+              <T hi="साइन इन कीजिए" en="Sign in" />
             </Link>
           )}
         </div>
@@ -135,7 +156,15 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
           style={{ "--d": "0.09s" } as React.CSSProperties}
           className={cn(
             "enter relative z-10 flex flex-1 flex-col px-5 pb-32 lg:mx-auto lg:w-full lg:px-0 lg:pb-16",
-            header ? "" : "pt-5 lg:pt-0",
+            /*
+              The gap under the panel belongs here, not to each page.
+
+              Every screen had been setting its own — pt-6, mt-6, mt-5 lg:mt-6,
+              nothing — so the first line of content sat at a different height
+              on every tab, which is what made the app feel loosely assembled
+              when you moved between them. One value, one place to change it.
+            */
+            header ? "pt-6 lg:pt-7" : "pt-5 lg:pt-0",
             CANVAS
           )}
         >
@@ -143,23 +172,28 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
         </main>
 
         {/* Tab bar, phone only. */}
-        <nav aria-label="Main" className="pointer-events-none sticky bottom-0 z-30 px-5 pb-[calc(14px+env(safe-area-inset-bottom))] pt-2 lg:hidden">
+        <nav
+          aria-label={pick(lang, "मुख्य", "Main")}
+          className="pointer-events-none sticky bottom-0 z-30 px-5 pb-[calc(14px+env(safe-area-inset-bottom))] pt-2 lg:hidden"
+        >
           <div className="pointer-events-auto flex items-center gap-1 rounded-pill bg-paper p-1.5 shadow-l">
-            {tabs.map(({ key, href, label, Icon }) => {
+            {tabs.map(({ key, href, hi, en, Icon }) => {
               const active = tab === key;
               return (
                 <Link
                   key={key}
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  aria-label={label}
+                  aria-label={pick(lang, hi, en)}
                   className={cn(
                     "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 rounded-pill text-[0.66rem] font-semibold transition-colors",
                     active ? "bg-fill text-on-fill" : "text-ink-3 hover:text-violet"
                   )}
                 >
                   <Icon className="h-5 w-5" filled={active} />
-                  <span className="leading-none">{label}</span>
+                  <span className="leading-none">
+                    <T hi={hi} en={en} />
+                  </span>
                 </Link>
               );
             })}
@@ -187,8 +221,10 @@ export function GradHeader({
   children,
   tall,
 }: {
-  title?: string;
-  subtitle?: string;
+  /* ReactNode rather than string, so a page can pass <T hi en /> and let CSS
+     choose. A string still works and is still the common case. */
+  title?: ReactNode;
+  subtitle?: ReactNode;
   back?: { href: string; label: string };
   action?: ReactNode;
   children?: ReactNode;

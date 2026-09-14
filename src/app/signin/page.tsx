@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import { AppShell } from "@/components/app-shell";
 import { getViewer } from "@/lib/viewer";
 import { smsIsDev } from "@/lib/auth/sms";
 import { widgetIsConfigured } from "@/lib/auth/msg91-widget";
 import { env } from "@/lib/env";
+import { getLang } from "@/lib/lang";
 import { SignInFlow } from "./flow";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +23,14 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
     ? { id: env.NEXT_PUBLIC_MSG91_WIDGET_ID!, token: env.NEXT_PUBLIC_MSG91_WIDGET_TOKEN! }
     : null;
 
-  return <SignInFlow next={safeNext(next)} referralCode={ref ?? null} devMode={smsIsDev() && !widget} widget={widget} />;
+  return (
+    <AppShell viewer={viewer} tab="account">
+      {/* The language already chosen on the landing page comes with them, so
+          the account is created reading the way they were reading. Onboarding
+          asks again, with this as the answer already selected. */}
+      <SignInFlow next={safeNext(next)} referralCode={ref ?? null} devMode={smsIsDev() && !widget} widget={widget} lang={await getLang()} />
+    </AppShell>
+  );
 }
 
 /** Only ever redirect within this app. An open redirect is a phishing gift. */

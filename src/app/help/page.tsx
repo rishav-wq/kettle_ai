@@ -4,6 +4,10 @@ import { Button, Card } from "@/components/ui";
 import { ChatIcon } from "@/components/icons";
 import { getSiteContent } from "@/lib/content/site";
 import { getViewer } from "@/lib/viewer";
+import { T } from "@/components/bilingual";
+import { cn } from "@/lib/cn";
+import { getLang } from "@/lib/lang";
+import { pick } from "@/lib/pick";
 import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +26,7 @@ export const metadata = pageMetadata({
  */
 export default async function HelpPage() {
   const viewer = await getViewer();
+  const lang = await getLang();
   const site = getSiteContent();
   const wa = site.contact.whatsapp ? `https://wa.me/${site.contact.whatsapp}` : null;
 
@@ -36,42 +41,99 @@ export default async function HelpPage() {
     <AppShell
       viewer={viewer}
       tab="account"
-      header={<GradHeader title="Help" subtitle="Talk to a person, or read the common questions." back={{ href: "/mine", label: "Back" }} />}
+      header={
+        <GradHeader
+          title={<T hi="मदद" en="Help" />}
+          subtitle={<T hi="किसी व्यक्ति से बात कीजिए, या आम सवाल पढ़िए।" en="Talk to a person, or read the common questions." />}
+          back={{ href: "/mine", label: pick(lang, "पीछे", "Back") }}
+        />
+      }
     >
       {/* Explicit placement rather than reordering, so the phone keeps the
           order that matters there — reach a person, then read, then policies —
           while desktop puts the long list of questions beside the short ones. */}
-      <div className="flex flex-col gap-7 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:items-start lg:gap-8">
         {wa ? (
           <Card className="flex flex-col gap-3 p-5 lg:col-start-2 lg:row-start-1">
-            <h2 className="text-[1.1rem] font-bold">Talk to a person</h2>
-            <p className="text-[0.92rem] text-ink-2">{site.contact.hours}</p>
+            <h2 className="text-[1.1rem] font-bold">
+              <T hi="किसी व्यक्ति से बात कीजिए" en="Talk to a person" />
+            </h2>
+            <p className="text-[0.92rem] text-ink-2">
+              <T hi={site.contact.hoursHi || site.contact.hours} en={site.contact.hours} />
+            </p>
+            {/* The Gold page promises members are answered first, so the page
+                someone actually writes in from has to say the same thing. */}
+            <p className="text-[0.85rem] leading-relaxed text-ink-3">
+              <T
+                hi="हर किसी को जवाब मिलता है। Gold सदस्यों के संदेश पहले देखे जाते हैं।"
+                en="Everyone gets a reply. Gold members’ messages are looked at first."
+              />
+            </p>
             <Button href={wa} full>
               <ChatIcon className="h-5 w-5" />
-              Message us on WhatsApp
+              <T hi="WhatsApp पर संदेश भेजिए" en="Message us on WhatsApp" />
             </Button>
           </Card>
         ) : null}
 
         <section className="flex flex-col gap-3 lg:col-start-1 lg:row-start-1 lg:row-span-2">
-          <h2 className="text-[1.05rem] font-bold">Common questions</h2>
+          <h2 className="text-[1.05rem] font-bold">
+            <T hi="आम सवाल" en="Common questions" />
+          </h2>
           <Card className="divide-y divide-line">
             {site.faq.map((f, i) => (
               <details key={i} className="group p-4">
                 <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-3 text-[0.96rem] font-semibold [&::-webkit-details-marker]:hidden">
-                  <span className="min-w-0 flex-1">{f.q}</span>
+                  <span className="min-w-0 flex-1">
+                    <T hi={f.qHi ?? f.q} en={f.q} />
+                  </span>
                   <span aria-hidden className="grid h-7 w-7 flex-none place-items-center rounded-pill bg-wash text-violet transition-transform group-open:rotate-45">
                     +
                   </span>
                 </summary>
-                <p className="mt-2 pr-10 text-[0.9rem] leading-relaxed text-ink-2">{f.a}</p>
+                <p className="mt-2 pr-10 text-[0.9rem] leading-relaxed text-ink-2">
+                  <T hi={f.aHi ?? f.a} en={f.a} />
+                </p>
               </details>
             ))}
           </Card>
         </section>
 
-        <section className="flex flex-col gap-3 lg:col-start-2 lg:row-start-2">
-          <h2 className="text-[1.05rem] font-bold">Policies</h2>
+        {/* Sold on the Gold page, so it has to be findable from the page
+            people go to when they want to reach us. */}
+        {site.liveSession ? (
+          <section className="flex flex-col gap-3 lg:col-start-2 lg:row-start-2">
+            <h2 className="text-[1.05rem] font-bold">
+              <T hi="हर हफ़्ते का live session" en="The weekly live session" />
+            </h2>
+            <Card
+              className={cn(
+                "flex flex-col gap-2 p-5",
+                site.liveSession.placeholder && "border border-dashed border-line bg-transparent shadow-none"
+              )}
+            >
+              {site.liveSession.placeholder ? (
+                <span className="w-fit rounded-pill bg-wash px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-ink-3">
+                  Example
+                </span>
+              ) : null}
+              <p className="text-[0.95rem] font-semibold">
+                <T hi={site.liveSession.whenHi} en={site.liveSession.when} />
+              </p>
+              <p className="text-[0.9rem] leading-relaxed text-ink-2">
+                <T hi={site.liveSession.howToJoinHi} en={site.liveSession.howToJoin} />
+              </p>
+              <p className="text-[0.85rem] leading-relaxed text-ink-3">
+                <T hi="live session Gold सदस्यों के लिए है।" en="The live session is for Gold members." />
+              </p>
+            </Card>
+          </section>
+        ) : null}
+
+        <section className="flex flex-col gap-3 lg:col-start-2 lg:row-start-3">
+          <h2 className="text-[1.05rem] font-bold">
+            <T hi="नीतियाँ" en="Policies" />
+          </h2>
           <Card className="divide-y divide-line">
             {policies.map((p) => (
               <Link key={p.href} href={p.href} className="flex min-h-[56px] items-center gap-3 px-4 text-[0.95rem] font-medium">

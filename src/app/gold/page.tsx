@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
-import { AppShell, GradHeader } from "@/components/app-shell";
+import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui";
+import { ShieldIcon } from "@/components/icons";
 import { GOLD, formatRupees } from "@/lib/payments/plan";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
 import { getViewer } from "@/lib/viewer";
 import { GoldCta } from "./cta";
+import { T } from "@/components/bilingual";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Kettle Gold" };
@@ -18,28 +21,45 @@ export default async function GoldPage() {
       viewer={viewer}
       tab="invite"
       header={
-        <GradHeader title="Kettle Gold" subtitle="One payment. Nothing renews on its own." tall>
-          <div className="mt-5 flex items-baseline gap-2">
+        /*
+          Gold rather than Pine, and the only place in the product that is.
+          The spacing is the panel's own rather than GradHeader's: the price
+          sat tight under the subtitle with the panel's bottom padding below
+          it, so the block read as bottom-heavy.
+        */
+        <div className="flex flex-col gap-3 rounded-[26px] bg-gold px-6 py-8 text-on-gold lg:px-9 lg:py-10">
+          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-on-gold/70">Kettle Gold</span>
+          <h1 className="text-[1.85rem] font-bold leading-tight lg:text-[2.3rem]">
+            <T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />
+          </h1>
+          <p className="max-w-[46ch] text-[0.95rem] leading-relaxed text-on-gold/80 lg:text-[1.02rem]">
+            <T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />
+          </p>
+          <div className="mt-2 flex items-baseline gap-2">
             <span className="text-[2.6rem] font-bold leading-none tabular-nums">{formatRupees(GOLD.amountPaise)}</span>
-            <span className="text-[0.95rem] font-medium text-white/80">for {GOLD.months} months</span>
+            <span className="text-[0.95rem] font-medium text-on-gold/75">
+              <T hi={`${GOLD.months} महीने के लिए`} en={`for ${GOLD.months} months`} />
+            </span>
           </div>
-        </GradHeader>
+        </div>
       }
     >
       {/* Two columns from lg: what you get on the left, the decision on the
           right. Previously this was capped at 620px inside a 1440px shell, so
           the price banner ran to the edge of the page and the card it was
           selling stopped halfway across. */}
-      <div className="mt-6 flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start lg:gap-7">
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start lg:gap-7">
         <Card className="flex flex-col gap-3 p-5 lg:p-6">
-          <h2 className="text-[1.05rem] font-bold">What you get</h2>
+          <h2 className="text-[1.05rem] font-bold">
+            <T hi="आपको क्या मिलता है" en="What you get" />
+          </h2>
           <ul className="flex flex-col gap-2.5">
             {GOLD_INCLUDES.map((r) => (
-              <li key={r} className="flex gap-3 text-[0.94rem] leading-snug text-ink-2">
-                <span aria-hidden className="flex-none font-bold text-violet">
+              <li key={r.en} className="flex gap-3 text-[0.94rem] leading-snug text-ink-2">
+                <span aria-hidden className="flex-none font-bold text-gold-deep">
                   ✓
                 </span>
-                {r}
+                <T hi={r.hi} en={r.en} />
               </li>
             ))}
           </ul>
@@ -48,8 +68,22 @@ export default async function GoldPage() {
         <div className="flex flex-col gap-4 lg:sticky lg:top-8">
           <GoldCta price={formatRupees(GOLD.amountPaise)} months={GOLD.months} signedIn={Boolean(viewer.userId)} />
 
+          <p className="flex items-center justify-center gap-1.5 px-2 text-center text-[0.84rem] leading-relaxed text-ink-3">
+            <ShieldIcon className="h-4 w-4 flex-none text-gold-deep" />
+            <T hi="Payment Razorpay के ज़रिए होता है।" en="Payment processed by Razorpay." />
+          </p>
+
+          {/* Two of the five benefits above are things a person does rather
+              than things the app does. A buyer should be able to see when and
+              where, before paying, rather than after. */}
           <p className="px-2 text-center text-[0.84rem] leading-relaxed text-ink-3">
-            Razorpay handles the payment. Kettle never sees your card. You can cancel inside the app.
+            <T
+              hi="live session और support का समय मदद पेज पर देखिए।"
+              en="The live session times and how support works are on the help page."
+            />{" "}
+            <Link href="/help" className="font-semibold underline underline-offset-4">
+              <T hi="मदद पेज" en="Help page" />
+            </Link>
           </p>
         </div>
       </div>

@@ -10,17 +10,29 @@
   promised "ask a question any time", which is not a feature; the WhatsApp
   helpline on /help is open to everyone, Gold or not.
 
-  Every line here is something the code actually does, so keep it that way:
-  all lessons (viewer.ts), progress across devices (progress.ts), no marketing
-  popups for members (showsMarketing), and the referral month (referral.ts).
+  Three of these are things the code does: all lessons (viewer.ts), the twelve
+  months (plan.ts), and the new-lesson notice.
+
+  Two are not, and cannot be — they are promises Rishav keeps by hand, decided
+  deliberately on 2026-09-14 after the contradiction was raised. Support is
+  answered first for members and around the clock, which meant changing the
+  published hours in content/kettle-site.json and on the contact page so the
+  product stops disagreeing with itself. The live session is weekly, and its
+  day, time and joining route live in content/kettle-site.json flagged as a
+  placeholder until the first one is scheduled.
+
+  So the old rule stands with one amendment: every line here is either
+  something the code does or something written down elsewhere that someone has
+  committed to doing. Nothing here is a slogan with nothing behind it.
 
   Its own module rather than part of plan.ts because the paywall is a client
   component, and plan.ts reads the server environment. This file imports
   nothing, so it is safe on either side.
 */
 export const GOLD_INCLUDES = [
-  "Every lesson in every course",
-  "Pick up where you left, on any phone",
-  "No adverts, no popups",
-  "Invite a friend and you both get an extra month",
+  { hi: "सारे कोर्स खुल जाते हैं", en: "Get access to all courses" },
+  { hi: "12 महीने तक सब कुछ unlocked", en: "Everything unlocked for 12 months" },
+  { hi: "Priority support, 24x7 — आपका सवाल पहले", en: "Priority support, 24x7 — your questions answered first" },
+  { hi: "हर हफ़्ते live session, आपके सवालों के लिए", en: "A live session every week, for your questions" },
+  { hi: "हर नए Gold lesson की खबर सबसे पहले", en: "First to know about every new Gold lesson" },
 ] as const;

@@ -6,6 +6,7 @@ import { Player } from "@/components/player";
 import { Paywall } from "@/components/paywall";
 import type { Playable } from "@/lib/video/embed";
 import type { LockReason } from "@/lib/viewer";
+import { T } from "@/components/bilingual";
 
 type Props = {
   lessonId: string;
@@ -36,13 +37,17 @@ export function LessonStage({ lessonId, locked, playable, durationSec, startAtSe
               🔒
             </span>
             <p className="text-[0.95rem] font-medium text-white/90">
-              {locked === "free_limit_reached" ? "You have used the four free lessons" : "This lesson is for Gold members"}
+              {locked === "free_limit_reached" ? (
+                <T hi="आपने चारों मुफ़्त lessons देख लिए हैं" en="You have used the four free lessons" />
+              ) : (
+                <T hi="यह lesson Gold सदस्यों के लिए है" en="This lesson is for Gold members" />
+              )}
             </p>
           </div>
         </div>
         <div className="pt-4">
           <Button full size="lg" variant="onGrad" onClick={() => setPaywall(locked)}>
-            Become a Gold member
+            <T hi="Gold सदस्य बनिए" en="Become a Gold member" />
           </Button>
         </div>
         <Paywall open={paywall !== null} onClose={() => setPaywall(null)} reason={paywall ?? locked} price={price} months={months} signedIn={signedIn} />

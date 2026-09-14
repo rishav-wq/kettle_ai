@@ -44,9 +44,29 @@
   --grad: var(--fill);
   --grad-deep: var(--fill);
 
-  --shadow-s: 0 2px 8px rgba(0, 49, 31, 0.06);
-  --shadow-m: 0 8px 24px rgba(0, 49, 31, 0.09);
-  --shadow-l: 0 18px 44px rgba(0, 49, 31, 0.15);
+  /*
+    Gold. The one sanctioned departure from Pine-on-white.
+
+    It marks exactly one thing — the paid plan — and it is a token rather than
+    a hex in a component so it cannot spread. Ink on gold is a very dark warm
+    brown rather than black or Pine: gold is a mid-tone, so white text on it
+    fails contrast, and Pine on gold reads muddy.
+  */
+  --gold: #c9a227;
+  --gold-deep: #a8842f;
+  --on-gold: #241b05;
+
+  /*
+    Shadows, softened.
+
+    Two layers each rather than one: a tight, nearly opaque contact shadow that
+    seats the card on the page, and a wide, very faint one that gives it depth.
+    A single heavy blur reads as a drop shadow drawn on top of the card; two
+    light ones read as the card simply being there.
+  */
+  --shadow-s: 0 1px 2px rgba(0, 49, 31, 0.04), 0 2px 6px rgba(0, 49, 31, 0.03);
+  --shadow-m: 0 1px 2px rgba(0, 49, 31, 0.04), 0 6px 16px rgba(0, 49, 31, 0.05);
+  --shadow-l: 0 2px 4px rgba(0, 49, 31, 0.05), 0 14px 32px rgba(0, 49, 31, 0.07);
 
   color-scheme: light;
 }
@@ -98,6 +118,10 @@
 
   --color-fill: var(--fill);
   --color-on-fill: var(--on-fill);
+
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-on-gold: var(--on-gold);
 
   /*
     Device chrome for the hero mockups. Deliberately outside the ink/paper
@@ -251,6 +275,47 @@ p {
 }
 .drift {
   animation: drift 18s ease-in-out infinite;
+}
+
+/*
+  Bilingual copy.
+
+  <T hi en /> renders both languages; these two rules show one. Doing it in CSS
+  rather than JavaScript is what lets it work in a server component: the right
+  language is in the HTML as it streams, so nothing flashes from English to
+  Hindi after hydration.
+
+  display:none also removes the hidden copy from the accessibility tree, so a
+  screen reader is not read both languages back to back.
+*/
+html[lang="en"] [data-lang="hi"],
+html[lang="hi"] [data-lang="en"] {
+  display: none;
+}
+
+/*
+  Devanagari needs room above and below the line that Latin does not. At Latin
+  leading the matras above and the conjuncts below collide with the lines
+  either side — legible to someone who already knows the word, hard work for
+  someone reading it slowly, which is this audience.
+
+  1.34 for headings and 1.5 for body, as the type rules have always said.
+*/
+html[lang="hi"] body {
+  font-family: var(--font-devanagari), var(--font-poppins), system-ui, sans-serif;
+  line-height: 1.7;
+}
+html[lang="hi"] h1,
+html[lang="hi"] h2,
+html[lang="hi"] h3,
+html[lang="hi"] h4 {
+  font-family: var(--font-devanagari), var(--font-poppins), system-ui, sans-serif;
+  line-height: 1.34;
+}
+
+/* A Hindi string inside an otherwise English page still gets the right face. */
+[lang="hi"] {
+  font-family: var(--font-devanagari), var(--font-poppins), system-ui, sans-serif;
 }
 
 /* Hide scrollbars on the horizontal shelves without losing the scroll. */

@@ -39,7 +39,7 @@ type CourseIn = {
   lessons: LessonIn[];
 };
 type Content = {
-  categories: Array<{ id: string; nameHi: string; nameEn: string; sortOrder: number }>;
+  categories: Array<{ id: string; nameHi: string; nameEn: string; blurbHi?: string; blurbEn?: string; sortOrder: number }>;
   courses: CourseIn[];
 };
 
@@ -69,7 +69,16 @@ async function main() {
         await db.updateOne<CategoryDoc>(
           "categories",
           { id: c.id },
-          { $set: { id: c.id, nameHi: c.nameHi, nameEn: c.nameEn, sortOrder: c.sortOrder } },
+          {
+            $set: {
+              id: c.id,
+              nameHi: c.nameHi,
+              nameEn: c.nameEn,
+              blurbHi: c.blurbHi ?? null,
+              blurbEn: c.blurbEn ?? null,
+              sortOrder: c.sortOrder,
+            },
+          },
           { upsert: true }
         );
       }

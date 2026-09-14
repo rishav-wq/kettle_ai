@@ -49,6 +49,8 @@ export type CategoryWithCourses = {
   id: string;
   nameHi: string;
   nameEn: string;
+  blurbHi: string | null;
+  blurbEn: string | null;
   courses: CourseSummary[];
 };
 
@@ -78,14 +80,22 @@ export async function getCatalog(db: Scoped): Promise<CategoryWithCourses[]> {
     };
   });
 
-  return cats
-    .map((c) => ({
-      id: c.id,
-      nameHi: c.nameHi,
-      nameEn: c.nameEn,
-      courses: summaries.filter((s) => s.categoryId === c.id),
-    }))
-    .filter((c) => c.courses.length > 0);
+  /*
+    Empty categories are kept, not dropped.
+
+    A category with nothing in it yet still says what this product is going to
+    be, and which of them get tapped is the cheapest signal there is about what
+    to film next. Filtering them out showed a thinner catalogue than the one
+    being built. The Learn page renders them as "coming soon".
+  */
+  return cats.map((c) => ({
+    id: c.id,
+    nameHi: c.nameHi,
+    nameEn: c.nameEn,
+    blurbHi: c.blurbHi ?? null,
+    blurbEn: c.blurbEn ?? null,
+    courses: summaries.filter((s) => s.categoryId === c.id),
+  }));
 }
 
 export type LessonRowData = {
@@ -194,6 +204,7 @@ export async function getFreeLessons(db: Scoped) {
       titleHi: l.titleHi,
       titleEn: l.titleEn,
       courseId: l.courseId,
+      courseTitleHi: courseById.get(l.courseId)!.titleHi,
       courseTitleEn: courseById.get(l.courseId)!.titleEn,
       durationSec: l.videoAssetId ? (assetById.get(l.videoAssetId)?.durationSec ?? 0) : 0,
     }));

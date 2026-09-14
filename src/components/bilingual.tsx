@@ -1,16 +1,49 @@
+import type { ReactNode } from "react";
+
 /**
- * The interface is English only.
+ * Bilingual copy.
  *
- * This used to render Hindi or English from the `lang` attribute. The product
- * decision changed: the videos stay Hinglish, the interface does not. Rather
- * than touch a hundred and sixty call sites at once, the component now returns
- * the English string and ignores the Hindi one, so the switch was a single
- * edit and the remaining `hi` props can be cleaned out as files are revisited.
+ * Renders both strings and lets CSS show one, keyed off `<html lang>`. That
+ * sounds wasteful and is the reason this works at all: it needs no client
+ * JavaScript, so it runs in server components, and the right language is in
+ * the first byte of HTML rather than swapped in after hydration. A reader on a
+ * slow connection never sees English flash to Hindi.
  *
- * New code should not use this. Write the English string directly.
- *
- * @deprecated Write English text inline instead.
+ * The rules live in globals.css under "Bilingual copy". Hidden text stays in
+ * the DOM, so it is hidden from screen readers too — hence aria-hidden on the
+ * copy that is not showing.
  */
-export function T({ en, className }: { hi?: string; en: string; className?: string }) {
-  return className ? <span className={className}>{en}</span> : <>{en}</>;
+export function T({ hi, en, className }: { hi: string; en: string; className?: string }) {
+  return (
+    <span className={className}>
+      <span lang="hi" data-lang="hi">
+        {hi}
+      </span>
+      <span lang="en" data-lang="en">
+        {en}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The same thing for copy that contains elements.
+ *
+ * A sentence with a link in it cannot be a pair of strings, and the link is
+ * rarely in the same place in both languages — "our terms and privacy policy"
+ * lands at the end of the English sentence and in the middle of the Hindi one.
+ * So each language gets its own tree rather than a shared template with holes
+ * in it, which is the only way word order can differ.
+ */
+export function TN({ hi, en, className }: { hi: ReactNode; en: ReactNode; className?: string }) {
+  return (
+    <span className={className}>
+      <span lang="hi" data-lang="hi">
+        {hi}
+      </span>
+      <span lang="en" data-lang="en">
+        {en}
+      </span>
+    </span>
+  );
 }

@@ -6,7 +6,6 @@ import {
   FaqBlock,
   Footer,
   HowItWorks,
-  SafetyPromise,
   Section,
   Stats,
   WhatYouCanDo,
@@ -15,6 +14,8 @@ import { withTenant } from "@/lib/db/tenant";
 import { getCatalog, getCatalogStats, getFreeLessons } from "@/lib/content/queries";
 import { getSiteContent } from "@/lib/content/site";
 import { getViewer } from "@/lib/viewer";
+import { getLang } from "@/lib/lang";
+import { T } from "@/components/bilingual";
 import { HeroTypingDemo } from "@/components/hero-typing-demo";
 import { LaptopFrame, PhoneFrame } from "@/components/device-frame";
 import { Reveal } from "@/components/reveal";
@@ -58,6 +59,7 @@ export default async function Home() {
   const viewer = await getViewer();
   if (viewer.userId) redirect(viewer.onboarded ? "/learn" : "/onboarding");
 
+  const lang = await getLang();
   const site = getSiteContent();
   const { free, stats, catalog } = await withTenant(viewer.tenantId, async (tx) => ({
     free: await getFreeLessons(tx),
@@ -102,7 +104,7 @@ export default async function Home() {
       <header className="grad relative overflow-hidden rounded-b-[38px] pb-10 pt-[calc(16px+env(safe-area-inset-top))] text-white lg:rounded-b-[56px] lg:pb-20 lg:pt-8">
         <div aria-hidden className="drift pointer-events-none absolute -right-20 top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className={SHELL}>
-          <SiteNav firstLessonHref={firstLesson} />
+          <SiteNav firstLessonHref={firstLesson} lang={lang} />
 
           {/* Words left, illustration right, once there is room for both.
               The right column is wide enough to hold a laptop at a believable
@@ -116,19 +118,22 @@ export default async function Home() {
                   style={{ "--d": "0.05s" } as React.CSSProperties}
                   className="enter flex w-fit items-center gap-2 rounded-pill bg-white/12 px-3 py-1.5 text-[0.74rem] font-semibold uppercase tracking-[0.13em] text-white/85"
                 >
-                  <span className="h-2 w-2 rounded-full bg-amber" /> Made for real life
+                  <span className="h-2 w-2 rounded-full bg-amber" /> <T hi="रोज़ के काम के लिए" en="Made for real life" />
                 </span>
                 <h1
                   style={{ "--d": "0.13s" } as React.CSSProperties}
                   className="enter max-w-[11ch] text-[2.55rem] font-bold leading-[1.08] lg:text-[4.25rem]"
                 >
-                  Learn AI for your everyday life.
+                  <T hi="अपने रोज़ के काम के लिए AI सीखिए" en="Learn AI for your everyday life." />
                 </h1>
                 <p
                   style={{ "--d": "0.22s" } as React.CSSProperties}
                   className="enter max-w-[34ch] text-[1rem] leading-relaxed text-white/85 lg:max-w-[40ch] lg:text-[1.12rem]"
                 >
-                  Simple 5–6 minute videos for people over 40. Learn what AI can do, how to use it, and how to stay safe.
+                  <T
+                    hi="AI सिर्फ़ तकनीक के जानकारों के लिए नहीं है। आपके लिए भी है। 5–6 मिनट के आसान वीडियो — मैसेज लिखिए, यात्रा की योजना बनाइए, ईमेल भेजिए। शुरुआत से, अपने फ़ोन पर।"
+                    en="AI isn’t only for tech experts. It’s for you too. Simple 5–6 minute videos — write messages, plan trips, send emails. Start from the basics, on your phone."
+                  />
                 </p>
               </div>
 
@@ -143,11 +148,11 @@ export default async function Home() {
                 className="enter mt-7 flex flex-col gap-3 lg:mt-9 lg:max-w-[400px]"
               >
                 <Button href={firstLesson} variant="onGrad" size="lg" full>
-                  Start a short lesson <span aria-hidden>→</span>
+                  <T hi="एक मुफ़्त वीडियो देखिए" en="Watch a free lesson" /> <span aria-hidden>→</span>
                 </Button>
                 <p className="flex items-center justify-center gap-2 text-center text-[0.86rem] font-medium text-white/85 lg:justify-start lg:text-left">
                   <span aria-hidden className="grid h-5 w-5 place-items-center rounded-full bg-white/15 text-[0.7rem]">✓</span>
-                  No account or card needed
+                  <T hi="कोई साइन-अप नहीं। पहले 4 वीडियो के लिए कोई पैसा नहीं।" en="No sign-up. No payment for the first 4 videos." />
                 </p>
               </div>
             </div>
@@ -169,32 +174,46 @@ export default async function Home() {
         </Reveal>
 
         <Reveal>
-          <SafetyPromise />
-        </Reveal>
-
-        <Reveal>
           <WhatYouCanDo />
         </Reveal>
 
         {/* The catalog, as a horizontal shelf so breadth is felt rather than claimed. */}
         <Reveal>
-        <Section id="courses" eyebrow="The courses" title="Start with a course that fits your day">
+        <Section
+          id="courses"
+          eyebrow={<T hi="कोर्स" en="The courses" />}
+          title={<T hi="अपने दिन में फ़िट बैठने वाले कोर्स से शुरू कीजिए" en="Start with a course that fits your day" />}
+        >
           <div className="no-bar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">
             {courses.map((c) => (
               <Tile
                 key={c.id}
                 href={`/courses/${c.id}`}
                 image={c.imageUrl ?? undefined}
-                title={c.titleEn}
-                meta={`${c.lessonCount} lessons · ${c.minutes} min`}
-                badge={c.hasFree ? "Free" : undefined}
+                title={<T hi={c.titleHi} en={c.titleEn} />}
+                meta={
+                  <T hi={`${c.lessonCount} lessons · ${c.minutes} मिनट`} en={`${c.lessonCount} lessons · ${c.minutes} min`} />
+                }
+                badge={c.hasFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
                 className="w-[190px] flex-none snap-start lg:w-auto"
               />
             ))}
           </div>
-          <Button href="/learn" variant="soft" full className="lg:mx-auto lg:w-auto lg:min-w-[260px]">
-            Browse all courses
-          </Button>
+          {/*
+            The one place on this page that asks for an account, and it asks
+            plainly. Four lessons play without signing in — the hero sends
+            people there — so the whole catalogue is a fair thing to want a name
+            for. Solid rather than soft: it is the second real decision offered
+            on the page, and a ghost button read as a caption.
+          */}
+          <div className="flex flex-col items-center gap-2.5">
+            <Button href="/signin?next=/learn" full size="lg" className="lg:w-auto lg:min-w-[280px]">
+              <T hi="सभी कोर्स देखिए" en="Browse all courses" /> <span aria-hidden>→</span>
+            </Button>
+            <p className="text-center text-[0.85rem] text-ink-3">
+              <T hi="पहले 4 वीडियो बिना खाते के चलते हैं।" en="The first 4 videos play without an account." />
+            </p>
+          </div>
         </Section>
         </Reveal>
 
@@ -211,7 +230,7 @@ export default async function Home() {
         </Reveal>
 
         <Reveal>
-          <Footer whatsapp={whatsapp} hours={site.contact.hours} />
+          <Footer whatsapp={whatsapp} hours={site.contact.hours} hoursHi={site.contact.hoursHi} />
         </Reveal>
       </div>
     </div>

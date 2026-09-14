@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { PlayIcon } from "@/components/icons";
 import { post } from "@/lib/http";
 import type { Playable } from "@/lib/video/embed";
+import { T } from "@/components/bilingual";
+import { useLang } from "@/components/lang-provider";
+import { pick } from "@/lib/pick";
 
 type Props = {
   lessonId: string;
@@ -33,6 +36,7 @@ const HEARTBEAT_MS = 15_000;
  */
 export function Player({ lessonId, playable, durationSec, startAtSec, tracking, onFreeLimit }: Props) {
   const router = useRouter();
+  const lang = useLang();
   const [playing, setPlaying] = useState(false);
   const elapsed = useRef(startAtSec);
   const notified = useRef(false);
@@ -61,7 +65,9 @@ export function Player({ lessonId, playable, durationSec, startAtSec, tracking, 
   if (playable.kind === "pending") {
     return (
       <Frame>
-        <p className="px-6 text-center text-[0.95rem] font-medium text-white/85">This video is being added.</p>
+        <p className="px-6 text-center text-[0.95rem] font-medium text-white/85">
+          <T hi="यह video जोड़ी जा रही है।" en="This video is being added." />
+        </p>
       </Frame>
     );
   }
@@ -78,7 +84,7 @@ export function Player({ lessonId, playable, durationSec, startAtSec, tracking, 
         <button
           type="button"
           onClick={() => setPlaying(true)}
-          aria-label="Play lesson"
+          aria-label={pick(lang, "lesson चलाइए", "Play lesson")}
           className="group relative z-10 grid h-[84px] w-[84px] place-items-center rounded-full bg-violet/75 text-white shadow-l backdrop-blur-sm transition-transform hover:scale-105"
         >
           <PlayIcon className="ml-1 h-9 w-9" />
