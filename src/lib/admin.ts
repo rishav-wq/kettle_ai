@@ -55,6 +55,26 @@ const ADMINS: ReadonlySet<string> = new Set(
     .filter((p): p is string => p !== null)
 );
 
+/*
+  Said once, at boot, in the server log.
+
+  This variable is the only thing in the product whose being wrong produces no
+  symptom at all: the editor is simply not there, exactly as it looks when
+  nobody is meant to be an admin. There is nowhere in the interface it would be
+  safe to explain that, so it is explained here, where the person who set it
+  can read it.
+
+  The count, never the numbers. Knowing one is configured is what tells you the
+  variable arrived; which one it is belongs in the dashboard you typed it into.
+*/
+if (process.env.NODE_ENV !== "test") {
+  console.log(
+    ADMINS.size === 0
+      ? "[admin] ADMIN_PHONES is unset or empty — /admin is unreachable for everyone, which is correct unless you meant otherwise."
+      : `[admin] ${ADMINS.size} phone number${ADMINS.size === 1 ? "" : "s"} may edit the catalogue.`
+  );
+}
+
 export function adminPhoneCount(): number {
   return ADMINS.size;
 }
@@ -81,7 +101,18 @@ export async function getAdmin(): Promise<AdminViewer | null> {
   if (ADMINS.size === 0) return null;
 
   const me = await withTenant(viewer.tenantId, (db) => db.findOne<UserDoc>("users", { id: viewer.userId! }));
-  if (!me || !isAdminPhone(me.phone)) return null;
+  if (!me) return null;
+
+  if (!isAdminPhone(me.phone)) {
+    /*
+      Only when someone actually asks for the editor — getAdmin is called by
+      /admin and the /api/admin routes, not on ordinary pages, so this does not
+      log every learner on every screen. It logs the person who went looking
+      for a door that did not open, which is the one case worth explaining.
+    */
+    console.warn(`[admin] ${me.phone} is signed in but is not in ADMIN_PHONES (${ADMINS.size} configured).`);
+    return null;
+  }
 
   return { ...viewer, userId: viewer.userId, phone: me.phone };
 }
