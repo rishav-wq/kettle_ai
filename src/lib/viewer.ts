@@ -102,6 +102,21 @@ export const getViewer = cache(async (): Promise<Viewer> => {
 
 /** May this viewer watch this lesson right now? */
 export function canWatch(viewer: Viewer, lesson: { isFree: boolean }): boolean {
+  /*
+    An editor can watch everything, because the alternative is absurd: the one
+    person who has to check that a lesson plays, that the right video is behind
+    it and that the captions match, locked out of the thing they just
+    published.
+
+    Deliberately not implemented by making them gold. Their state stays "free",
+    so nothing here touches memberships, payments, the joiners popup or any
+    count of who has paid. This grants sight of the content and nothing else —
+    an admin who wants to see the product as a learner sees it can use the
+    account they are not an admin on, which is what "View as learner" in the
+    editor is for.
+  */
+  if (viewer.isAdmin) return true;
+
   if (viewer.state === "gold") return true;
   if (!lesson.isFree) return false;
   // An anonymous visitor can watch the free lessons; the counter only starts at sign in.

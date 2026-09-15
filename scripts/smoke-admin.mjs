@@ -132,6 +132,44 @@ check(!(await req("/learn")).text.includes("Smoke course"), "an unpublished cour
 check((await req("/api/admin/courses", { method: "POST", body: { ...course, isPublished: true } })).status === 200, "the course is published");
 check((await req("/learn")).text.includes("Smoke course"), "and now appears on Learn");
 
+/*
+  The editor can watch what they publish, and nobody else inherits it.
+
+  smoke-lesson is deliberately a paid lesson with a real video behind it, so
+  the two halves of this are asked of the same document: the admin gets the
+  player, and a learner signing in fresh against that very lesson gets the
+  lock. An entitlement change that only ever tests the permissive half is how
+  a paywall quietly stops being one.
+*/
+console.log("\n— an editor can preview, a learner still cannot —");
+const asAdmin = await req("/lessons/smoke-lesson");
+check(asAdmin.status === 200, "the admin opens a paid lesson", `→ ${asAdmin.status}`);
+check(asAdmin.text.includes("youtube-nocookie"), "and is given the player");
+check(!asAdmin.text.includes("Become a Gold member"), "and is not sold anything");
+
+const adminState = await req("/api/payments/status");
+check(adminState.json?.state === "free", "yet the admin is still not a member", `→ ${adminState.json?.state}`);
+
+const adminJar = new Map(jar);
+jar.clear();
+const learnerPhone = `+9196${String(Math.floor(Math.random() * 1e8)).padStart(8, "0")}`;
+await req("/api/auth/otp/send", { method: "POST", body: { phone: learnerPhone } });
+const learnerCode = await codeFor(learnerPhone);
+check(
+  (await req("/api/auth/otp/verify", { method: "POST", body: { phone: learnerPhone, code: learnerCode, name: "Learner" } })).status === 200,
+  "a learner signs in"
+);
+const asLearner = await req("/lessons/smoke-lesson");
+check(!asLearner.text.includes("youtube-nocookie"), "the same lesson withholds the player from them");
+check(asLearner.text.includes("Gold"), "and offers Gold instead");
+check(
+  (await req("/api/progress", { method: "POST", body: { lessonId: "smoke-lesson", positionSec: 30 } })).status === 403,
+  "and their progress write is refused"
+);
+check((await req("/api/account", { method: "DELETE" })).status === 200, "the learner account is removed");
+jar.clear();
+for (const [k, v] of adminJar) jar.set(k, v);
+
 console.log("\n— the link is confirmed against YouTube —");
 const look = await req("/api/admin/video", { method: "POST", body: { video: "9fKQJcbd-jY" } });
 check(look.status === 200, "a lookup answers", `→ ${look.status}`);
