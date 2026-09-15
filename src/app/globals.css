@@ -47,14 +47,39 @@
   /*
     Gold. The one sanctioned departure from Pine-on-white.
 
-    It marks exactly one thing — the paid plan — and it is a token rather than
-    a hex in a component so it cannot spread. Ink on gold is a very dark warm
-    brown rather than black or Pine: gold is a mid-tone, so white text on it
-    fails contrast, and Pine on gold reads muddy.
+    It marks exactly one thing — the paid plan — and it lives in tokens rather
+    than as a hex in a component so it cannot spread. Ink on gold is a very
+    dark warm brown rather than black or Pine: gold is a mid-tone, so white
+    text on it fails contrast (2.4:1), and Pine on gold reads muddy.
+
+    Five values rather than one, because metal is not a colour — it is a
+    surface with a light on it. A single flat fill can only ever read as
+    ochre, which is what #c9a227 did. The ramp runs bronze at the edges
+    through gold to a champagne highlight where the light lands, and
+    .gold-surface sweeps it diagonally.
+
+    Contrast was measured against --on-gold at every stop, not eyeballed. The
+    darkest, --gold-edge, is the one that decides it: 5.0:1, which clears AA
+    for body text. Do not darken the edges or brighten the ink without
+    re-checking that pair — it is the whole reason this ramp is these values.
   */
-  --gold: #c9a227;
-  --gold-deep: #a8842f;
-  --on-gold: #241b05;
+  --gold-edge: #b07d1c;
+  --gold: #d2a437;
+  --gold-lit: #f3dc96;
+  /* For gold used as ink on a pale ground: ticks, the shield, small print.
+     5.05:1 on white, 4.77:1 on --gold-wash. */
+  --gold-deep: #8a6a18;
+  --on-gold: #1c1403;
+
+  /*
+    The ground the gold sits in.
+
+    The panel alone against plain white read as one gold rectangle stapled to
+    a cold page. A warm, almost-white wash and a warm hairline let the whole
+    screen belong to the same object without becoming a second gold surface.
+  */
+  --gold-wash: #fdf8ec;
+  --gold-line: #ead9ae;
 
   /*
     Shadows, softened.
@@ -90,6 +115,15 @@
   --grad: var(--fill);
   --grad-deep: var(--fill);
 
+  /*
+    Gold at night. The ramp is unchanged — gold is a light colour in any
+    theme, and --on-gold stays dark against it — but the ground it sits in
+    cannot be a near-white wash on a dark page. A deep warm brown does the
+    same job of stopping the panel floating on its own.
+  */
+  --gold-wash: #211a0c;
+  --gold-line: #4a3c1c;
+
   --shadow-s: 0 2px 8px rgba(0, 0, 0, 0.26);
   --shadow-m: 0 8px 24px rgba(0, 0, 0, 0.3);
   --shadow-l: 0 18px 44px rgba(0, 0, 0, 0.36);
@@ -121,6 +155,10 @@
 
   --color-gold: var(--gold);
   --color-gold-deep: var(--gold-deep);
+  --color-gold-lit: var(--gold-lit);
+  --color-gold-edge: var(--gold-edge);
+  --color-gold-wash: var(--gold-wash);
+  --color-gold-line: var(--gold-line);
   --color-on-gold: var(--on-gold);
 
   /*
@@ -203,6 +241,39 @@ p {
 }
 .grad-deep {
   background: var(--grad-deep);
+}
+
+/*
+  The gold surface.
+
+  The one gradient in the product, and it is here because gold is the one
+  thing being drawn that is a material rather than a colour. The sweep is what
+  makes it read as metal instead of mustard: bronze at the top-left corner,
+  full gold, a champagne band across the middle where the light catches, then
+  back down to bronze. Off-axis at 135deg so the band crosses the panel
+  diagonally rather than sitting as a horizontal stripe.
+
+  The two insets are the edges of a struck surface: a bright hairline along
+  the top where light would catch a bevel, and a darker one along the bottom
+  where it would fall away. They are what stop the gradient looking like a
+  gradient.
+
+  Everything about it is fixed — no animation, no shimmer sweeping across on a
+  timer. This audience is taught by the first course to distrust a page that
+  glitters at them.
+*/
+.gold-surface {
+  background-image: linear-gradient(
+    135deg,
+    var(--gold-edge) 0%,
+    var(--gold) 26%,
+    var(--gold-lit) 50%,
+    var(--gold) 72%,
+    var(--gold-edge) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(28, 20, 3, 0.18);
 }
 
 /* A hairline that reads on both themes. */

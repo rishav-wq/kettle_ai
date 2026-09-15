@@ -27,7 +27,7 @@ export default async function GoldPage() {
           sat tight under the subtitle with the panel's bottom padding below
           it, so the block read as bottom-heavy.
         */
-        <div className="flex flex-col gap-3 rounded-[26px] bg-gold px-6 py-8 text-on-gold lg:px-9 lg:py-10">
+        <div className="gold-surface flex flex-col gap-3 rounded-[26px] px-6 py-8 text-on-gold lg:px-9 lg:py-10">
           <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-on-gold/70">Kettle Gold</span>
           <h1 className="text-[1.85rem] font-bold leading-tight lg:text-[2.3rem]">
             <T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />
@@ -49,7 +49,10 @@ export default async function GoldPage() {
           the price banner ran to the edge of the page and the card it was
           selling stopped halfway across. */}
       <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start lg:gap-7">
-        <Card className="flex flex-col gap-3 p-5 lg:p-6">
+        {/* Warmed and outlined, so the list of benefits reads as part of the
+            same object as the panel above it rather than a white card that
+            happens to sit under it. */}
+        <Card className="flex flex-col gap-3 border border-gold-line bg-gold-wash p-5 lg:p-6">
           <h2 className="text-[1.05rem] font-bold">
             <T hi="आपको क्या मिलता है" en="What you get" />
           </h2>

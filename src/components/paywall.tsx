@@ -134,7 +134,7 @@ export function Paywall({
     <Sheet open={open} onClose={onClose} title="Kettle Gold">
       {/* The one gold surface in the product. It marks the paid plan and
           nothing else, which is what stops it becoming decoration. */}
-      <div className="-mx-5 -mt-4 flex flex-col gap-3 bg-gold px-6 py-6 text-on-gold sm:-mx-7 sm:-mt-6 sm:px-7 sm:pt-7">
+      <div className="gold-surface -mx-5 -mt-4 flex flex-col gap-3 px-6 py-6 text-on-gold sm:-mx-7 sm:-mt-6 sm:px-7 sm:pt-7">
         <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-on-gold/70">Kettle Gold</span>
         <h2 className="text-[1.35rem] font-bold leading-tight">
           {reason === "free_limit_reached" ? (

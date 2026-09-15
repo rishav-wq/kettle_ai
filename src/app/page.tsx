@@ -184,7 +184,7 @@ export default async function Home() {
           eyebrow={<T hi="कोर्स" en="The courses" />}
           title={<T hi="अपने दिन में फ़िट बैठने वाले कोर्स से शुरू कीजिए" en="Start with a course that fits your day" />}
         >
-          <div className="no-bar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">
+          <div className="no-bar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">
             {courses.map((c) => (
               <Tile
                 key={c.id}

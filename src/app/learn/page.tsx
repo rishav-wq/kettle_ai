@@ -158,7 +158,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                  each category one glance tall. The negative margin lets the
                  first and last card meet the screen edge while the page keeps
                  its gutter. */
-              <div className="no-bar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:px-0">
+              <div className="no-bar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:scroll-px-0 lg:px-0">
                 {cat.courses.map((c) => (
                   <Tile
                     key={c.id}
