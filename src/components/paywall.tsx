@@ -134,7 +134,14 @@ export function Paywall({
     <Sheet open={open} onClose={onClose} title="Kettle Gold">
       {/* The one gold surface in the product. It marks the paid plan and
           nothing else, which is what stops it becoming decoration. */}
-      <div className="gold-surface -mx-5 -mt-4 flex flex-col gap-3 px-6 py-6 text-on-gold sm:-mx-7 sm:-mt-6 sm:px-7 sm:pt-7">
+      {/*
+        The same block as the top of /gold, in the same order: name the plan,
+        say what it opens, say the thing everyone is actually worried about,
+        then the price. The sheet used to skip the third line, which is the one
+        that answers "will this keep charging me" — the objection this audience
+        brings to every payment screen, and the reason the copy exists at all.
+      */}
+      <div className="gold-surface -mx-5 -mt-4 flex flex-col gap-1.5 px-6 py-7 text-on-gold sm:-mx-7 sm:-mt-6 sm:px-7 sm:pt-8">
         <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-on-gold/70">Kettle Gold</span>
         <h2 className="text-[1.35rem] font-bold leading-tight">
           {reason === "free_limit_reached" ? (
@@ -143,7 +150,10 @@ export function Paywall({
             <T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />
           )}
         </h2>
-        <div className="flex items-baseline gap-2">
+        <p className="max-w-[40ch] text-[0.92rem] leading-relaxed text-on-gold/80">
+          <T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />
+        </p>
+        <div className="mt-4 flex items-baseline gap-2">
           <span className="text-[2.3rem] font-bold leading-none tabular-nums">{price}</span>
           <span className="text-[0.9rem] font-medium text-on-gold/75">
             <T hi={`${months} महीने के लिए`} en={`for ${months} months`} />

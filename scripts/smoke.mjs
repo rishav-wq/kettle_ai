@@ -7,7 +7,8 @@
   It signs a user in with the code printed by the dev SMS sender, finishes
   onboarding, watches the four free lessons, checks that the fifth is refused,
   pays, and confirms the paywall is gone. It also probes the things that should
-  fail: a forged webhook, a cross-origin write, and an unauthenticated write.
+  fail: a forged webhook, a cross-origin write, an unauthenticated write, and
+  every way into the catalogue editor from an account that is not an admin.
 */
 import { readFileSync } from "node:fs";
 
@@ -277,6 +278,61 @@ const statusA = await req("/api/payments/status");
 check(monthsFromNow(statusA.json?.goldUntil) > goldMonths + 0.5, "A, the referrer, also received the extra month", `(${monthsFromNow(statusA.json?.goldUntil).toFixed(1)} mo)`);
 const inviteA = await req("/invite");
 check(inviteA.text.includes("Ramesh") && inviteA.text.includes("+1 month"), "A's invite page lists Ramesh with the bonus");
+
+/*
+  The catalogue editor.
+
+  B is an ordinary signed-in learner, which is the account an attacker would
+  actually have: they can sign in, so "not signed in" proves nothing. Every one
+  of these is a way to write to the catalogue, and a catalogue write is the
+  highest-value thing in this product — a lesson pointing at any video at all,
+  shown to an audience being taught to trust it.
+
+  /admin answers 404 rather than 403 on purpose. A 403 confirms the address
+  exists; for the one route whose existence is itself worth knowing, it should
+  not.
+
+  These pass by the allow-list being empty for the smoke run, which is also how
+  every environment except Rishav's is configured. If ADMIN_PHONES ever picks
+  up the number this suite signs in with, they will fail loudly, which is the
+  correct outcome.
+*/
+console.log(`\n— the catalogue editor —`);
+const editorPage = await req("/admin");
+check(editorPage.status === 404, "a signed-in learner gets 404 from /admin", `→ ${editorPage.status}`);
+/*
+  Asserted against the catalogue itself rather than against a word on the
+  screen. The first version of this looked for "Catalogue" and failed on the
+  string "CatalogueEditor" in the client-reference manifest — a module name,
+  not a leak. What matters is that no course, no draft and no admin phone
+  comes back, and that what does come back is the ordinary 404.
+*/
+check(!editorPage.text.includes("talk-to-ai") && !editorPage.text.includes("Start with AI"), "and no catalogue content comes back");
+check(!editorPage.text.includes(phoneB), "and no admin allow-list is disclosed");
+check(editorPage.text.includes("could not find"), "it is the ordinary not-found page");
+
+for (const [path, body] of [
+  ["/api/admin/categories", { id: "evil", nameHi: "x", nameEn: "x", sortOrder: 1 }],
+  ["/api/admin/courses", { id: "evil", categoryId: "start", titleHi: "x", titleEn: "x", sortOrder: 1, isPublished: true }],
+  [
+    "/api/admin/lessons",
+    { id: "evil", courseId: "talk-to-ai", titleHi: "x", titleEn: "x", video: "TODO", durationSec: 1, isFree: true, sortOrder: 99 },
+  ],
+  ["/api/admin/video", { video: "https://youtu.be/9fKQJcbd-jY" }],
+]) {
+  const res = await req(path, { method: "POST", body });
+  check(res.status === 403, `${path} refuses a learner`, `→ ${res.status}`);
+}
+
+// The refusal must come before the body is read, so a malformed payload from a
+// non-admin is still a 403 rather than a 400 that leaks which fields exist.
+const junk = await req("/api/admin/lessons", { method: "POST", body: { nonsense: true } });
+check(junk.status === 403, "and refuses before validating the body", `→ ${junk.status}`);
+
+// Deletes too. A separate verb is a separate door.
+const del = await req("/api/admin/courses", { method: "DELETE", body: { id: "talk-to-ai" } });
+check(del.status === 403, "/api/admin/courses refuses a learner's DELETE", `→ ${del.status}`);
+check((await req("/courses/talk-to-ai")).status === 200, "and the course it aimed at is still there");
 
 console.log(`\n— account —`);
 check((await req("/api/account", { method: "PATCH", body: { name: "Sunita Devi" } })).status === 200, "profile update saves");

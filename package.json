@@ -12,7 +12,8 @@
     "smoke": "node scripts/smoke.mjs",
     "sms:test": "tsx --conditions=react-server scripts/send-test-otp.ts",
     "check:tenancy": "tsx --conditions=react-server scripts/check-tenancy.ts",
-    "db:ping": "node scripts/mongo-ping.mjs"
+    "db:ping": "node scripts/mongo-ping.mjs",
+    "smoke:admin": "node scripts/smoke-admin.mjs"
   },
   "dependencies": {
     "mongodb": "^7.6.0",

@@ -54,6 +54,17 @@ export const LIMITS = {
   orderCreate: { max: 10, windowSec: 60 * 60 } satisfies Limit,
   /** Progress heartbeats per user. Generous, only stops abuse. */
   progressBeat: { max: 600, windowSec: 60 * 60 } satisfies Limit,
+  /*
+    Catalogue edits per admin.
+
+    Not a security boundary — an admin is already trusted, and the allow-list
+    is the real control. This is a brake on a loop: a script pointed at these
+    routes could rewrite the whole catalogue faster than anyone would notice,
+    and content is the one thing here with no undo.
+  */
+  adminWrite: { max: 240, windowSec: 60 * 60 } satisfies Limit,
+  /** Resolving a pasted video link. Each one costs an outbound call to YouTube. */
+  adminVideoLookup: { max: 120, windowSec: 60 * 60 } satisfies Limit,
 };
 
 export type RateResult = { ok: boolean; remaining: number; retryAfterSec: number };

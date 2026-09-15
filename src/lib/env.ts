@@ -60,6 +60,15 @@ const schema = z.object({
   RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
 
+  /*
+    Who may edit the catalogue: a comma separated list of phone numbers in
+    E.164, exactly as they are stored. Unset means nobody, which is the right
+    default for every environment that is not yours.
+
+    In the environment rather than the database on purpose — see src/lib/admin.ts.
+  */
+  ADMIN_PHONES: z.string().optional(),
+
   SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),

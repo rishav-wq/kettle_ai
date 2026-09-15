@@ -1,11 +1,20 @@
 /*
   Loads content/kettle-content.json into MongoDB.
 
-  Idempotent: documents are upserted by id, so running it twice is safe.
-  Removing a lesson from the file does not delete it from the database; do that
-  by hand. Runs with tenant scoping bypassed because content is global.
+  This is a bootstrap, not the source of truth. The admin panel is — since
+  content can be written from /admin, a seed that ran unconditionally would
+  quietly undo an afternoon of editing, and the person who noticed would be a
+  learner. So it refuses against a database that already has courses.
 
-    npm run db:seed
+    npm run db:seed              # first run, or a fresh database
+    npm run db:seed -- --force   # deliberately overwrite from the file
+
+  What it still is: the fixture a clean checkout starts from, and the fastest
+  way to put a known catalogue in front of local work. What it is not: a thing
+  to run on a deploy.
+
+  Upserts by id, so --force does not delete anything the file has stopped
+  mentioning; removing a lesson is still a job for the admin panel.
 */
 import "./load-env";
 import { readFileSync } from "node:fs";
@@ -51,10 +60,25 @@ if (freeCount !== 4) {
   throw new Error(`Exactly 4 lessons must be free. Found ${freeCount}.`);
 }
 
+const force = process.argv.includes("--force");
+
 async function main() {
   await withTenant(
     PUBLIC_TENANT,
     async (db) => {
+      /*
+        The guard. Counted rather than checked for emptiness so the message can
+        say how much is at stake, which is the difference between a warning
+        someone reads and one they retry past.
+      */
+      const existing = await db.countDocuments<CourseDoc>("courses", {});
+      if (existing > 0 && !force) {
+        throw new Error(
+          `Refusing to seed: ${existing} courses already exist.\n` +
+            `The admin panel is the source of truth now — seeding would overwrite edits made there.\n` +
+            `Pass --force if you really mean to write content/kettle-content.json over them.`
+        );
+      }
       const existingTenant = await db.findOne<TenantDoc>("tenants", { id: PUBLIC_TENANT });
       if (!existingTenant) {
         await db.insertOne<TenantDoc>("tenants", {

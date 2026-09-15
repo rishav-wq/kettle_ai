@@ -195,7 +195,7 @@ export default async function Home() {
                   <T hi={`${c.lessonCount} lessons · ${c.minutes} मिनट`} en={`${c.lessonCount} lessons · ${c.minutes} min`} />
                 }
                 badge={c.hasFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
-                className="w-[190px] flex-none snap-start lg:w-auto"
+                className="w-[calc((100%-1rem)/2)] flex-none snap-start sm:w-[200px] lg:w-auto"
               />
             ))}
           </div>
