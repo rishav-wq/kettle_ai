@@ -109,6 +109,20 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
             </span>
             <T hi="मदद" en="Help" />
           </Link>
+
+          {/* Only for the one person who has one, and English only: it is a
+              tool, not part of the product. */}
+          {viewer.isAdmin ? (
+            <Link
+              href="/admin"
+              className="flex min-h-[52px] items-center gap-3.5 rounded-pill px-4 text-[0.98rem] font-semibold text-ink-3 transition-colors hover:bg-wash hover:text-violet"
+            >
+              <span aria-hidden className="grid h-5 w-5 flex-none place-items-center font-bold">
+                ✎
+              </span>
+              Catalogue
+            </Link>
+          ) : null}
         </nav>
 
         <div className="flex flex-col gap-2.5 border-t border-line pt-6">

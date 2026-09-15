@@ -4,6 +4,7 @@ import { withTenant } from "@/lib/db/tenant";
 import type { UserDoc } from "@/lib/db/documents";
 import { getViewer, type Viewer } from "@/lib/viewer";
 import { ForbiddenError } from "@/lib/security/request";
+import { indianPhone } from "@/lib/security/validators";
 
 /*
   Who may edit the catalogue.
@@ -26,21 +27,43 @@ import { ForbiddenError } from "@/lib/security/request";
   Identity is still the session. This only decides what that identity may do.
 */
 
-/** Parsed once. Blank or unset means nobody is an admin, which is the safe default. */
+/*
+  Both sides go through the same normaliser the sign-in form uses.
+
+  Comparing as written was the obvious thing and it was a trap. Phones are
+  stored as +91XXXXXXXXXX, but the number a person types into a hosting
+  dashboard is whatever is in their head — 9876543210, 09876543210,
+  91 98765 43210. Every one of those would have failed to match, silently, with
+  no way to tell it apart from the variable not being set at all. There is no
+  security in being strict here: the value is the secret, not its punctuation.
+
+  Anything that cannot be read as an Indian mobile is dropped and named in the
+  log, because a typo in this variable means the editor is unreachable and
+  nothing else in the app would ever mention it.
+*/
 const ADMINS: ReadonlySet<string> = new Set(
   (env.ADMIN_PHONES ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean)
+    .map((raw) => {
+      const parsed = indianPhone.safeParse(raw);
+      if (parsed.success) return parsed.data;
+      console.error(`[admin] ADMIN_PHONES entry is not a readable Indian mobile and was ignored: ${JSON.stringify(raw)}`);
+      return null;
+    })
+    .filter((p): p is string => p !== null)
 );
 
 export function adminPhoneCount(): number {
   return ADMINS.size;
 }
 
-/** Phones are stored in E.164 and compared as written. No normalising here: the env is typed by hand, once. */
+/** True when this phone is on the list, whatever shape either side was written in. */
 export function isAdminPhone(phone: string | null | undefined): boolean {
-  return Boolean(phone && ADMINS.has(phone));
+  if (!phone || ADMINS.size === 0) return false;
+  const parsed = indianPhone.safeParse(phone);
+  return ADMINS.has(parsed.success ? parsed.data : phone);
 }
 
 export type AdminViewer = Viewer & { userId: string; phone: string };

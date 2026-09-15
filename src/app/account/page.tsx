@@ -4,7 +4,6 @@ import { withTenant } from "@/lib/db/tenant";
 import type { UserDoc } from "@/lib/db/documents";
 import { getViewer } from "@/lib/viewer";
 import { getLang } from "@/lib/lang";
-import { isAdminPhone } from "@/lib/admin";
 import Link from "next/link";
 import { AccountForm } from "./form";
 
@@ -30,7 +29,7 @@ export default async function AccountPage() {
           /admin is reachable by address regardless; this is a convenience, not
           the access control.
         */}
-        {isAdminPhone(me?.phone) ? (
+        {viewer.isAdmin ? (
           <Link
             href="/admin"
             className="flex min-h-[52px] items-center gap-3 rounded-tile border border-line bg-paper px-4 text-[0.95rem] font-semibold"

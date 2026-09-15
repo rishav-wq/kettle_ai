@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { PUBLIC_TENANT, withTenant } from "@/lib/db/scope";
 import type { FreeWatchDoc, MembershipDoc, UserDoc } from "@/lib/db/documents";
+import { isAdminPhone } from "@/lib/admin";
 import { readSession } from "@/lib/auth/session";
 
 /*
@@ -33,6 +34,15 @@ export type Viewer = {
   goldUntil: Date | null;
   /** From onboarding. Puts that category first on the Learn page. */
   preferredCategoryId: string | null;
+  /**
+   * May this person edit the catalogue.
+   *
+   * Free to carry here — the user document is already loaded and the answer is
+   * a set lookup on a phone number. It decides whether a link is drawn and
+   * nothing else: /admin and every /api/admin route re-check for themselves,
+   * because a nav flag is a display decision and must never be an access one.
+   */
+  isAdmin: boolean;
 };
 
 /** How many free lessons a signed-in viewer gets before the paywall. */
@@ -48,6 +58,7 @@ export const ANONYMOUS: Viewer = {
   onboarded: false,
   goldUntil: null,
   preferredCategoryId: null,
+  isAdmin: false,
 };
 
 /**
@@ -84,6 +95,7 @@ export const getViewer = cache(async (): Promise<Viewer> => {
       onboarded: user.onboardedAt !== null,
       goldUntil: gold?.validUntil ?? null,
       preferredCategoryId: user.preferredCategoryId,
+      isAdmin: isAdminPhone(user.phone),
     };
   });
 });
