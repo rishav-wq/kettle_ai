@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AppShell } from "@/components/app-shell";
+import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { ShieldIcon } from "@/components/icons";
 import { GOLD, formatRupees } from "@/lib/payments/plan";
@@ -22,26 +22,24 @@ export default async function GoldPage() {
       tab="invite"
       header={
         /*
-          Gold rather than Pine, and the only place in the product that is.
-          The spacing is the panel's own rather than GradHeader's: the price
-          sat tight under the subtitle with the panel's bottom padding below
-          it, so the block read as bottom-heavy.
+          Gold rather than Pine, and the only place in the product that is —
+          but the same panel as everywhere else, so it runs to the edge of the
+          phone with a rounded bottom instead of floating as an inset card with
+          the page showing around its corners.
         */
-        <div className="gold-surface flex flex-col gap-3 rounded-[26px] px-6 py-8 text-on-gold lg:px-9 lg:py-10">
-          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-on-gold/70">Kettle Gold</span>
-          <h1 className="text-[1.85rem] font-bold leading-tight lg:text-[2.3rem]">
-            <T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />
-          </h1>
-          <p className="max-w-[46ch] text-[0.95rem] leading-relaxed text-on-gold/80 lg:text-[1.02rem]">
-            <T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />
-          </p>
-          <div className="mt-2 flex items-baseline gap-2">
+        <GradHeader
+          tone="gold"
+          eyebrow="Kettle Gold"
+          title={<T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />}
+          subtitle={<T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />}
+        >
+          <div className="mt-4 flex items-baseline gap-2">
             <span className="text-[2.6rem] font-bold leading-none tabular-nums">{formatRupees(GOLD.amountPaise)}</span>
             <span className="text-[0.95rem] font-medium text-on-gold/75">
               <T hi={`${GOLD.months} महीने के लिए`} en={`for ${GOLD.months} months`} />
             </span>
           </div>
-        </div>
+        </GradHeader>
       }
     >
       {/* Two columns from lg: what you get on the left, the decision on the

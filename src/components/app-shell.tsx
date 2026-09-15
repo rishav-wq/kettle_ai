@@ -207,33 +207,46 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
 }
 
 /**
- * The Pine panel at the top of a screen.
+ * The panel at the top of a screen.
  *
  * Full bleed with a rounded bottom on a phone; a rounded card on desktop,
  * where the sidebar already frames the page. Content that should overlap it
  * is pulled up with a negative margin by the page.
+ *
+ * Pine by default, gold on the one screen that sells the plan. `tone` exists
+ * so that screen stops hand-rolling its own panel: it did, and drifted — all
+ * four corners rounded and inset, so the page showed white around a panel that
+ * every other screen runs to the edge of the phone. One component owns this
+ * geometry now, and a second tone is cheaper than a second panel.
  */
 export function GradHeader({
   title,
   subtitle,
+  eyebrow,
   back,
   action,
   children,
   tall,
+  tone = "pine",
 }: {
   /* ReactNode rather than string, so a page can pass <T hi en /> and let CSS
      choose. A string still works and is still the common case. */
   title?: ReactNode;
   subtitle?: ReactNode;
+  /** A small line above the title. Used by Gold to name the plan. */
+  eyebrow?: ReactNode;
   back?: { href: string; label: string };
   action?: ReactNode;
   children?: ReactNode;
   tall?: boolean;
+  tone?: "pine" | "gold";
 }) {
+  const gold = tone === "gold";
   return (
     <header
       className={cn(
-        "grad relative min-h-0 rounded-b-[34px] px-5 pt-[calc(16px+env(safe-area-inset-top))] text-white lg:min-h-[240px] lg:rounded-[26px] lg:px-9 lg:pt-8",
+        "relative min-h-0 rounded-b-[34px] px-5 pt-[calc(16px+env(safe-area-inset-top))] lg:min-h-[240px] lg:rounded-[26px] lg:px-9 lg:pt-8",
+        gold ? "gold-surface text-on-gold" : "grad text-white",
         tall ? "pb-16" : "pb-8 lg:pb-9"
       )}
     >
@@ -252,10 +265,29 @@ export function GradHeader({
         </div>
       ) : null}
 
-      {title ? (
+      {title || eyebrow ? (
         <div className={cn("flex flex-col gap-1.5", back || action ? "mt-3" : "mt-1")}>
-          <h1 className="text-[1.85rem] font-bold leading-tight lg:text-[2.3rem]">{title}</h1>
-          {subtitle ? <p className="max-w-[52ch] text-[0.95rem] leading-snug text-white/80 lg:text-[1.02rem]">{subtitle}</p> : null}
+          {eyebrow ? (
+            <span
+              className={cn(
+                "text-[0.72rem] font-semibold uppercase tracking-[0.16em]",
+                gold ? "text-on-gold/70" : "text-white/70"
+              )}
+            >
+              {eyebrow}
+            </span>
+          ) : null}
+          {title ? <h1 className="text-[1.85rem] font-bold leading-tight lg:text-[2.3rem]">{title}</h1> : null}
+          {subtitle ? (
+            <p
+              className={cn(
+                "max-w-[52ch] text-[0.95rem] leading-snug lg:text-[1.02rem]",
+                gold ? "text-on-gold/80" : "text-white/80"
+              )}
+            >
+              {subtitle}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
