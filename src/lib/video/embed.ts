@@ -60,22 +60,25 @@ export function youtubeId(input: string): string | null {
 export function stageClass(portrait: boolean): string {
   return portrait
     /*
-      62% on a phone, and the number is not a taste decision.
+      Two caps, and the one that matters is the subtraction.
 
-      Below the stage sit the lesson title and the "N free lessons left" line,
-      and they have to be on screen without scrolling — the title says which
-      lesson this is, and its presence is what tells a reader there is more
-      underneath. On a 956px handset: the panel spends about 72px above the
-      video and 32px below it, the title card is about 96px, and the floating
-      tab bar covers the last 84px. That leaves roughly 620px, and 62dvh is
-      593px.
+      What has to stay on screen below the video is the lesson title and the
+      "N free lessons left" line: the title says which lesson this is, and
+      seeing the card at all is what tells a reader there is a transcript
+      under it. The things competing for that space are a fixed number of
+      pixels, not a share of the screen — 16 of safe area, a 44px back row, a
+      12px gap, 32px of panel padding, a 24px gap, a 96px card, and 96px of
+      floating tab bar. That is 320px, so 20rem is reserved outright.
 
-      It was briefly 80% to compete with fullscreen. That pushed the title to
-      989px on a 956px screen — off the bottom entirely — which is the exact
-      failure the original cap was written to avoid. Fullscreen is not worth
-      a hidden title.
+      The percentage is only the second cap, stopping the video dominating a
+      tall screen where the subtraction alone would leave room for more.
+
+      Both are needed. A percentage by itself was wrong twice: at 80% the
+      title landed at 989px on a 956px screen, and even at 62% the tab bar
+      still sat over the card on a shorter handset, because a proportion of a
+      small screen is small while the tab bar is the same size on every one.
     */
-    ? "mx-auto w-full max-w-[min(100%,calc(62dvh*9/16))] sm:max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
+    ? "mx-auto w-full max-w-[min(100%,calc((100dvh-20rem)*9/16),calc(62dvh*9/16))] sm:max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
     : "mx-auto w-full max-w-[min(1080px,calc(66dvh*16/9))] aspect-video";
 }
 
