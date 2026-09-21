@@ -1,17 +1,18 @@
-import { Governing, H1, H2, P, UL } from "../parts";
+import { Governing, H1, H2, LastUpdated, P, Pending, UL } from "../parts";
 import { T } from "@/components/bilingual";
+import { getSiteContent } from "@/lib/content/site";
 
 export const metadata = { title: "Kettle · Terms of use" };
 
 export default function Terms() {
+  const { business } = getSiteContent();
+
   return (
     <>
       <H1>
         <T hi="इस्तेमाल की शर्तें" en="Terms of use" />
       </H1>
-      <P muted>
-        <T hi="आख़िरी बदलाव: launch से पहले तय होना है।" en="Last updated: to confirm before launch." />
-      </P>
+      {business ? <LastUpdated business={business} /> : null}
       <Governing />
 
       <H2>
@@ -19,10 +20,18 @@ export default function Terms() {
       </H2>
       <P>
         <T
-          hi="Kettle उन video कोर्स तक पहुँच बेचता है जो artificial intelligence के रोज़मर्रा इस्तेमाल सिखाते हैं। चार lessons बिना खाते के मुफ़्त देखे जा सकते हैं। बाकी Gold सदस्यता से खुलते हैं।"
-          en="Kettle sells access to video courses that teach everyday uses of artificial intelligence. Four lessons are free to watch without an account. The rest open with a Gold membership."
+          hi="Kettle उन video कोर्स तक पहुँच बेचता है जो artificial intelligence के रोज़मर्रा इस्तेमाल सिखाते हैं। चार lessons बिना खाते के मुफ़्त देखे जा सकते हैं। बाकी Gold सदस्यता से खुलते हैं। सारे दाम भारतीय रुपये (INR) में हैं।"
+          en="Kettle sells access to video courses that teach everyday uses of artificial intelligence. Four lessons are free to watch without an account. The rest open with a Gold membership. All prices are in Indian rupees (INR)."
         />
       </P>
+      {business ? (
+        <P muted>
+          <Pending when={business.placeholder === true}>
+            <T hi="यह सेवा चलाई जाती है " en="This service is operated by " />
+            {business.legalName} ({business.entityType}), {business.city}, {business.state}.
+          </Pending>
+        </P>
+      ) : null}
 
       <H2>
         <T hi="आपका खाता" en="Your account" />
@@ -99,14 +108,26 @@ export default function Terms() {
       </P>
 
       <H2>
-        <T hi="लागू कानून" en="Governing law" />
+        <T hi="कैसे मिलता है" en="How you receive what you buy" />
       </H2>
-      <P muted>
+      <P>
         <T
-          hi="अधिकार-क्षेत्र और कानूनी संस्था का नाम: launch से पहले तय होना है।"
-          en="Jurisdiction and the legal entity name: TO CONFIRM before launch."
+          hi="Kettle एक डिजिटल सेवा है। कुछ भी भेजा नहीं जाता। payment पूरा होते ही आपके खाते पर पहुँच खुल जाती है, आम तौर पर कुछ ही पलों में — Razorpay से पुष्टि मिलते ही। अगर पैसे कट गए और पहुँच नहीं खुली, तो हमें बताइए।"
+          en="Kettle is a digital service. Nothing is shipped. Access opens on your account as soon as the payment is confirmed, usually within moments of Razorpay telling us. If money has left your account and access has not opened, tell us."
         />
       </P>
+
+      <H2>
+        <T hi="लागू कानून" en="Governing law" />
+      </H2>
+      {business ? (
+        <P muted>
+          <Pending when={business.placeholder === true}>
+            <T hi="ये शर्तें भारत के कानून से चलती हैं। अधिकार-क्षेत्र: " en="These terms are governed by the laws of India. Jurisdiction: " />
+            {business.jurisdiction}. {business.legalName} ({business.entityType}).
+          </Pending>
+        </P>
+      ) : null}
     </>
   );
 }

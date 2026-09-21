@@ -1,9 +1,12 @@
-import { Governing, H1, H2, P } from "../parts";
+import { ContactLines, Governing, H1, H2, P, RegisteredAddress } from "../parts";
 import { T } from "@/components/bilingual";
+import { getSiteContent } from "@/lib/content/site";
 
 export const metadata = { title: "Kettle · Contact us" };
 
 export default function Contact() {
+  const { business } = getSiteContent();
+
   return (
     <>
       <H1>
@@ -14,22 +17,12 @@ export default function Contact() {
       <H2>
         <T hi="हमें लिखिए" en="Write to us" />
       </H2>
-      <P muted>
-        <T hi="Email पता: launch से पहले तय होना है।" en="Email address: TO CONFIRM before launch." />
-      </P>
-      <P muted>
-        <T hi="WhatsApp नंबर: launch से पहले तय होना है।" en="WhatsApp number: TO CONFIRM before launch." />
-      </P>
+      {business ? <ContactLines business={business} /> : null}
 
       <H2>
         <T hi="पंजीकृत पता" en="Registered address" />
       </H2>
-      <P muted>
-        <T
-          hi="कानूनी संस्था का नाम और राज्य तथा पिनकोड सहित पूरा डाक पता: launch से पहले तय होना है। live खाता मंज़ूर करने से पहले Razorpay यहाँ पूरा और असली पता माँगता है।"
-          en="Legal entity name and full postal address including the state and postcode: TO CONFIRM before launch. Razorpay requires a real, complete address here before a live account is approved."
-        />
-      </P>
+      {business ? <RegisteredAddress business={business} /> : null}
 
       <H2>
         <T hi="हम कब जवाब देते हैं" en="When we reply" />

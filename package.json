@@ -15,7 +15,8 @@
     "db:ping": "node scripts/mongo-ping.mjs",
     "smoke:admin": "node scripts/smoke-admin.mjs",
     "db:flatten": "tsx --conditions=react-server scripts/flatten-courses.ts",
-    "db:move-art": "tsx --conditions=react-server scripts/move-art.ts"
+    "db:move-art": "tsx --conditions=react-server scripts/move-art.ts",
+    "check:legal": "node scripts/check-legal.mjs"
   },
   "dependencies": {
     "mongodb": "^7.6.0",

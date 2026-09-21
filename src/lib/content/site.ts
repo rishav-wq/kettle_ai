@@ -33,10 +33,48 @@ export type LiveSession = {
   howToJoinHi: string;
 };
 
+/**
+ * Who is actually selling this.
+ *
+ * One block, read by all four policy pages, because these facts were repeated
+ * across them and repeated facts drift: the entity name on the terms page
+ * stops matching the one on the contact page, and the mismatch is exactly what
+ * a payment provider's reviewer is looking for.
+ *
+ * Razorpay will not approve a live account without the entity name, a full
+ * postal address with state and postcode, a reachable phone number and an
+ * email — all publicly visible and reachable without signing in. The grievance
+ * officer is India's requirement rather than Razorpay's, under the IT Rules
+ * and the DPDP Act.
+ *
+ * `placeholder` stays true until every field is real. While it is, each page
+ * renders these with a dashed border and an EXAMPLE chip, the same treatment
+ * the teacher and testimonial blocks had, so a half-filled policy page cannot
+ * ship unnoticed.
+ */
+export type Business = {
+  placeholder?: boolean;
+  legalName: string;
+  entityType: string;
+  addressLines: string[];
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  grievanceName: string;
+  grievanceEmail: string;
+  jurisdiction: string;
+  updated: string;
+};
+
 export type SiteContent = {
   contact: { whatsapp: string; hours: string; hoursHi: string };
   faq: Faq[];
   liveSession: LiveSession | null;
+  business: Business | null;
 };
 
 let cached: SiteContent | null = null;
@@ -49,6 +87,7 @@ export function getSiteContent(): SiteContent {
     contact: raw.contact ?? { whatsapp: "", hours: "", hoursHi: "" },
     faq: raw.faq ?? [],
     liveSession: raw.liveSession ?? null,
+    business: raw.business ?? null,
   };
   return cached;
 }

@@ -1,17 +1,18 @@
-import { Governing, H1, H2, P, UL } from "../parts";
+import { Governing, H1, H2, LastUpdated, P, Pending, UL } from "../parts";
 import { T } from "@/components/bilingual";
+import { getSiteContent } from "@/lib/content/site";
 
 export const metadata = { title: "Kettle · Privacy policy" };
 
 export default function Privacy() {
+  const { business } = getSiteContent();
+
   return (
     <>
       <H1>
         <T hi="निजता नीति" en="Privacy policy" />
       </H1>
-      <P muted>
-        <T hi="आख़िरी बदलाव: launch से पहले तय होना है।" en="Last updated: to confirm before launch." />
-      </P>
+      {business ? <LastUpdated business={business} /> : null}
       <Governing />
 
       <H2>
@@ -103,9 +104,17 @@ export default function Privacy() {
           en="If you are unhappy with how your information has been handled, write to our grievance officer and we will respond."
         />
       </P>
-      <P muted>
-        <T hi="नाम, email और डाक पता: launch से पहले तय होना है।" en="Name, email, and postal address: TO CONFIRM before launch." />
-      </P>
+      {business ? (
+        <P muted>
+          <Pending when={business.placeholder === true}>
+            {business.grievanceName}
+            <br />
+            {business.grievanceEmail}
+            <br />
+            {business.legalName}, {business.city}, {business.state} {business.postcode}
+          </Pending>
+        </P>
+      ) : null}
     </>
   );
 }

@@ -1,17 +1,18 @@
-import { Governing, H1, H2, P, UL } from "../parts";
+import { Governing, H1, H2, LastUpdated, P, UL } from "../parts";
 import { T } from "@/components/bilingual";
+import { getSiteContent } from "@/lib/content/site";
 
 export const metadata = { title: "Kettle · Refunds and cancellation" };
 
 export default function Refunds() {
+  const { business } = getSiteContent();
+
   return (
     <>
       <H1>
         <T hi="वापसी और रद्द करना" en="Refunds and cancellation" />
       </H1>
-      <P muted>
-        <T hi="आख़िरी बदलाव: launch से पहले तय होना है।" en="Last updated: to confirm before launch." />
-      </P>
+      {business ? <LastUpdated business={business} /> : null}
       <Governing />
 
       <H2>

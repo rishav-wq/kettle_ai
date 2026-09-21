@@ -37,5 +37,25 @@
     "whenHi": "तय होना है: दिन और समय, जैसे हर रविवार, शाम 5 बजे",
     "howToJoin": "TO CONFIRM: how members get the link, e.g. sent on WhatsApp the morning before",
     "howToJoinHi": "तय होना है: सदस्यों को link कैसे मिलेगा, जैसे एक दिन पहले सुबह WhatsApp पर"
+  },
+  "business": {
+    "placeholder": true,
+    "legalName": "TO CONFIRM — the registered name, exactly as on the Razorpay account",
+    "entityType": "TO CONFIRM — sole proprietorship, private limited, or LLP",
+    "addressLines": [
+      "TO CONFIRM — building and street",
+      "TO CONFIRM — locality"
+    ],
+    "city": "TO CONFIRM",
+    "state": "TO CONFIRM",
+    "postcode": "TO CONFIRM",
+    "country": "India",
+    "email": "TO CONFIRM — a monitored address",
+    "phone": "TO CONFIRM — a reachable number, with +91",
+    "whatsapp": "TO CONFIRM — may be the same as phone",
+    "grievanceName": "TO CONFIRM — a named person",
+    "grievanceEmail": "TO CONFIRM",
+    "jurisdiction": "TO CONFIRM — the city whose courts apply",
+    "updated": "TO CONFIRM — the date these were last reviewed"
   }
 }
