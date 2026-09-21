@@ -59,7 +59,18 @@ export function youtubeId(input: string): string | null {
  */
 export function stageClass(portrait: boolean): string {
   return portrait
-    ? "mx-auto w-full max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
+    /*
+      Taller on a phone than on a desktop.
+
+      On a phone the stage is competing with fullscreen, and fullscreen is
+      worse: the video is 16:9 tall while the handset is around 19.5:9, so it
+      letterboxes with roughly ninety pixels of black at each end and YouTube
+      paints its own title bar and settings row over the top. Giving the
+      in-page stage more height means fewer people reach for a control that
+      makes the video smaller in practice. On a desktop the opposite holds, so
+      it stays modest from sm up.
+    */
+    ? "mx-auto w-full max-w-[min(100%,calc(80dvh*9/16))] sm:max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
     : "mx-auto w-full max-w-[min(1080px,calc(66dvh*16/9))] aspect-video";
 }
 
@@ -94,9 +105,23 @@ export function toPlayable(asset: VideoAsset | null, title: string): Playable {
         and asked YouTube for Hindi captions that do not exist. The spoken
         audio is still Hinglish; that is a content decision, not this one.
       */
+      /*
+        What can actually be turned off.
+
+        modestbranding used to shrink the YouTube wordmark and was removed
+        here because it has done nothing since 2023 — YouTube deprecated it,
+        and leaving it in suggests the chrome is under our control when it is
+        not. The title, the channel avatar and the settings row belong to
+        YouTube and cannot be styled or hidden from an embed at all.
+
+        These four do still work: no related videos from other channels, no
+        annotation cards, a white progress bar rather than red, and inline
+        playback so iOS does not hijack the video into its own player.
+      */
       const params = new URLSearchParams({
         rel: "0",
-        modestbranding: "1",
+        iv_load_policy: "3",
+        color: "white",
         playsinline: "1",
         hl: "en",
         cc_lang_pref: "en",
