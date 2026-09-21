@@ -60,17 +60,22 @@ export function youtubeId(input: string): string | null {
 export function stageClass(portrait: boolean): string {
   return portrait
     /*
-      Taller on a phone than on a desktop.
+      62% on a phone, and the number is not a taste decision.
 
-      On a phone the stage is competing with fullscreen, and fullscreen is
-      worse: the video is 16:9 tall while the handset is around 19.5:9, so it
-      letterboxes with roughly ninety pixels of black at each end and YouTube
-      paints its own title bar and settings row over the top. Giving the
-      in-page stage more height means fewer people reach for a control that
-      makes the video smaller in practice. On a desktop the opposite holds, so
-      it stays modest from sm up.
+      Below the stage sit the lesson title and the "N free lessons left" line,
+      and they have to be on screen without scrolling — the title says which
+      lesson this is, and its presence is what tells a reader there is more
+      underneath. On a 956px handset: the panel spends about 72px above the
+      video and 32px below it, the title card is about 96px, and the floating
+      tab bar covers the last 84px. That leaves roughly 620px, and 62dvh is
+      593px.
+
+      It was briefly 80% to compete with fullscreen. That pushed the title to
+      989px on a 956px screen — off the bottom entirely — which is the exact
+      failure the original cap was written to avoid. Fullscreen is not worth
+      a hidden title.
     */
-    ? "mx-auto w-full max-w-[min(100%,calc(80dvh*9/16))] sm:max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
+    ? "mx-auto w-full max-w-[min(100%,calc(62dvh*9/16))] sm:max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
     : "mx-auto w-full max-w-[min(1080px,calc(66dvh*16/9))] aspect-video";
 }
 
