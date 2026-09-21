@@ -16,7 +16,7 @@
           "durationSec": 240,
           "isFree": true,
           "isPublished": true,
-          "imageUrl": "/courses/talk-to-ai.svg",
+          "imageUrl": "/art/talk-to-ai.svg",
           "transcriptHi": "AI कोई जादू नहीं है। यह एक ऐसा program है जिसने बहुत सारी किताबें और बातचीत पढ़ी हैं, और उसी से आपके सवाल का जवाब बनाता है। आप उससे अपनी भाषा में बात कर सकते हैं — जैसे किसी पढ़े-लिखे पड़ोसी से पूछते हैं। वह थकता नहीं, और दस बार पूछने पर भी बुरा नहीं मानता।",
           "transcriptEn": "AI is not magic. It is a program that has read a great many books and conversations, and it puts together an answer from that. You can talk to it in your own words, the way you would ask a well-read neighbour. It does not get tired, and it does not mind being asked ten times.",
           "sortOrder": 1
@@ -29,7 +29,7 @@
           "durationSec": 300,
           "isFree": true,
           "isPublished": true,
-          "imageUrl": "/courses/talk-to-ai.svg",
+          "imageUrl": "/art/talk-to-ai.svg",
           "sortOrder": 2
         },
         {
@@ -40,7 +40,7 @@
           "durationSec": 420,
           "isFree": true,
           "isPublished": true,
-          "imageUrl": "/courses/talk-to-ai.svg",
+          "imageUrl": "/art/talk-to-ai.svg",
           "transcriptHi": "जब आप AI से कुछ पूछें, तो तीन बातें बताइए — आपको क्या चाहिए, किसके लिए चाहिए, और कितना लंबा चाहिए। जैसे: \"मेरी बेटी की शादी का card लिखिए, Hindi में, चार line का।\" इतना कह देने से जवाब सीधे काम का आता है, और बार-बार सुधारना नहीं पड़ता।",
           "transcriptEn": "When you ask AI for something, say three things: what you want, who it is for, and how long it should be. For example, \"Write a wedding card for my daughter, in Hindi, four lines.\" Say that much and the answer comes back usable the first time, without going back and forth.",
           "sortOrder": 3
@@ -53,7 +53,7 @@
           "durationSec": 360,
           "isFree": true,
           "isPublished": true,
-          "imageUrl": "/courses/talk-to-ai.svg",
+          "imageUrl": "/art/talk-to-ai.svg",
           "sortOrder": 4
         },
         {
@@ -63,7 +63,7 @@
           "video": "TODO-talk-5",
           "durationSec": 480,
           "isPublished": true,
-          "imageUrl": "/courses/talk-to-ai.svg",
+          "imageUrl": "/art/talk-to-ai.svg",
           "sortOrder": 5
         },
         {
@@ -73,7 +73,7 @@
           "video": "TODO-talk-6",
           "durationSec": 480,
           "isPublished": true,
-          "imageUrl": "/courses/talk-to-ai.svg",
+          "imageUrl": "/art/talk-to-ai.svg",
           "sortOrder": 6
         },
         {
@@ -83,7 +83,7 @@
           "video": "TODO-ask-better-questions-1",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/ask-better-questions.svg",
+          "imageUrl": "/art/ask-better-questions.svg",
           "sortOrder": 7
         },
         {
@@ -93,7 +93,7 @@
           "video": "TODO-ask-better-questions-2",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/ask-better-questions.svg",
+          "imageUrl": "/art/ask-better-questions.svg",
           "sortOrder": 8
         },
         {
@@ -103,7 +103,7 @@
           "video": "TODO-ask-better-questions-3",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/ask-better-questions.svg",
+          "imageUrl": "/art/ask-better-questions.svg",
           "sortOrder": 9
         },
         {
@@ -113,7 +113,7 @@
           "video": "TODO-ask-better-questions-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/ask-better-questions.svg",
+          "imageUrl": "/art/ask-better-questions.svg",
           "sortOrder": 10
         }
       ]
@@ -131,7 +131,7 @@
           "video": "TODO-wa-1",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/ai-in-whatsapp.svg",
+          "imageUrl": "/art/ai-in-whatsapp.svg",
           "sortOrder": 1
         },
         {
@@ -141,7 +141,7 @@
           "video": "TODO-wa-2",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/ai-in-whatsapp.svg",
+          "imageUrl": "/art/ai-in-whatsapp.svg",
           "sortOrder": 2
         },
         {
@@ -151,7 +151,7 @@
           "video": "TODO-wa-3",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/ai-in-whatsapp.svg",
+          "imageUrl": "/art/ai-in-whatsapp.svg",
           "sortOrder": 3
         },
         {
@@ -161,7 +161,7 @@
           "video": "TODO-wa-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/ai-in-whatsapp.svg",
+          "imageUrl": "/art/ai-in-whatsapp.svg",
           "sortOrder": 4
         },
         {
@@ -171,7 +171,7 @@
           "video": "TODO-health-questions-1",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/health-questions.svg",
+          "imageUrl": "/art/health-questions.svg",
           "sortOrder": 5
         },
         {
@@ -181,7 +181,7 @@
           "video": "TODO-health-questions-2",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/health-questions.svg",
+          "imageUrl": "/art/health-questions.svg",
           "sortOrder": 6
         },
         {
@@ -191,7 +191,7 @@
           "video": "TODO-health-questions-3",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/health-questions.svg",
+          "imageUrl": "/art/health-questions.svg",
           "sortOrder": 7
         },
         {
@@ -201,7 +201,7 @@
           "video": "TODO-health-questions-4",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/health-questions.svg",
+          "imageUrl": "/art/health-questions.svg",
           "sortOrder": 8
         }
       ]
@@ -219,7 +219,7 @@
           "video": "TODO-scam-1",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/spot-a-scam.svg",
+          "imageUrl": "/art/spot-a-scam.svg",
           "sortOrder": 1
         },
         {
@@ -229,7 +229,7 @@
           "video": "TODO-scam-2",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/spot-a-scam.svg",
+          "imageUrl": "/art/spot-a-scam.svg",
           "sortOrder": 2
         },
         {
@@ -239,7 +239,7 @@
           "video": "TODO-scam-3",
           "durationSec": 480,
           "isPublished": true,
-          "imageUrl": "/courses/spot-a-scam.svg",
+          "imageUrl": "/art/spot-a-scam.svg",
           "sortOrder": 3
         },
         {
@@ -249,7 +249,7 @@
           "video": "TODO-scam-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/spot-a-scam.svg",
+          "imageUrl": "/art/spot-a-scam.svg",
           "sortOrder": 4
         },
         {
@@ -259,7 +259,7 @@
           "video": "TODO-scam-5",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/spot-a-scam.svg",
+          "imageUrl": "/art/spot-a-scam.svg",
           "sortOrder": 5
         },
         {
@@ -269,7 +269,7 @@
           "video": "TODO-safe-online-payments-1",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/safe-online-payments.svg",
+          "imageUrl": "/art/safe-online-payments.svg",
           "sortOrder": 6
         },
         {
@@ -279,7 +279,7 @@
           "video": "TODO-safe-online-payments-2",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/safe-online-payments.svg",
+          "imageUrl": "/art/safe-online-payments.svg",
           "sortOrder": 7
         },
         {
@@ -289,7 +289,7 @@
           "video": "TODO-safe-online-payments-3",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/safe-online-payments.svg",
+          "imageUrl": "/art/safe-online-payments.svg",
           "sortOrder": 8
         },
         {
@@ -299,7 +299,7 @@
           "video": "TODO-safe-online-payments-4",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/safe-online-payments.svg",
+          "imageUrl": "/art/safe-online-payments.svg",
           "sortOrder": 9
         },
         {
@@ -309,7 +309,7 @@
           "video": "TODO-strong-passwords-1",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/strong-passwords.svg",
+          "imageUrl": "/art/strong-passwords.svg",
           "sortOrder": 10
         },
         {
@@ -319,7 +319,7 @@
           "video": "TODO-strong-passwords-2",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/strong-passwords.svg",
+          "imageUrl": "/art/strong-passwords.svg",
           "sortOrder": 11
         },
         {
@@ -329,7 +329,7 @@
           "video": "TODO-strong-passwords-3",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/strong-passwords.svg",
+          "imageUrl": "/art/strong-passwords.svg",
           "sortOrder": 12
         },
         {
@@ -339,7 +339,7 @@
           "video": "TODO-strong-passwords-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/strong-passwords.svg",
+          "imageUrl": "/art/strong-passwords.svg",
           "sortOrder": 13
         },
         {
@@ -349,7 +349,7 @@
           "video": "TODO-fake-photos-and-forwards-1",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/fake-photos-and-forwards.svg",
+          "imageUrl": "/art/fake-photos-and-forwards.svg",
           "sortOrder": 14
         },
         {
@@ -359,7 +359,7 @@
           "video": "TODO-fake-photos-and-forwards-2",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/fake-photos-and-forwards.svg",
+          "imageUrl": "/art/fake-photos-and-forwards.svg",
           "sortOrder": 15
         },
         {
@@ -369,7 +369,7 @@
           "video": "TODO-fake-photos-and-forwards-3",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/fake-photos-and-forwards.svg",
+          "imageUrl": "/art/fake-photos-and-forwards.svg",
           "sortOrder": 16
         },
         {
@@ -379,7 +379,7 @@
           "video": "TODO-fake-photos-and-forwards-4",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/fake-photos-and-forwards.svg",
+          "imageUrl": "/art/fake-photos-and-forwards.svg",
           "sortOrder": 17
         }
       ]
@@ -399,7 +399,7 @@
           "video": "TODO-letter-1",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-letter.svg",
+          "imageUrl": "/art/write-a-letter.svg",
           "sortOrder": 1
         },
         {
@@ -409,7 +409,7 @@
           "video": "TODO-letter-2",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-letter.svg",
+          "imageUrl": "/art/write-a-letter.svg",
           "sortOrder": 2
         },
         {
@@ -419,7 +419,7 @@
           "video": "TODO-letter-3",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-letter.svg",
+          "imageUrl": "/art/write-a-letter.svg",
           "sortOrder": 3
         },
         {
@@ -429,7 +429,7 @@
           "video": "TODO-letter-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-letter.svg",
+          "imageUrl": "/art/write-a-letter.svg",
           "sortOrder": 4
         }
       ]
@@ -449,7 +449,7 @@
           "video": "TODO-ai-on-your-phone-1",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/ai-on-your-phone.svg",
+          "imageUrl": "/art/ai-on-your-phone.svg",
           "sortOrder": 1
         },
         {
@@ -459,7 +459,7 @@
           "video": "TODO-ai-on-your-phone-2",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/ai-on-your-phone.svg",
+          "imageUrl": "/art/ai-on-your-phone.svg",
           "sortOrder": 2
         },
         {
@@ -469,7 +469,7 @@
           "video": "TODO-ai-on-your-phone-3",
           "durationSec": 240,
           "isPublished": true,
-          "imageUrl": "/courses/ai-on-your-phone.svg",
+          "imageUrl": "/art/ai-on-your-phone.svg",
           "sortOrder": 3
         },
         {
@@ -479,7 +479,7 @@
           "video": "TODO-ai-on-your-phone-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/ai-on-your-phone.svg",
+          "imageUrl": "/art/ai-on-your-phone.svg",
           "sortOrder": 4
         }
       ]
@@ -499,7 +499,7 @@
           "video": "TODO-meals-and-shopping-1",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/meals-and-shopping.svg",
+          "imageUrl": "/art/meals-and-shopping.svg",
           "sortOrder": 1
         },
         {
@@ -509,7 +509,7 @@
           "video": "TODO-meals-and-shopping-2",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/meals-and-shopping.svg",
+          "imageUrl": "/art/meals-and-shopping.svg",
           "sortOrder": 2
         },
         {
@@ -519,7 +519,7 @@
           "video": "TODO-meals-and-shopping-3",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/meals-and-shopping.svg",
+          "imageUrl": "/art/meals-and-shopping.svg",
           "sortOrder": 3
         },
         {
@@ -529,7 +529,7 @@
           "video": "TODO-meals-and-shopping-4",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/meals-and-shopping.svg",
+          "imageUrl": "/art/meals-and-shopping.svg",
           "sortOrder": 4
         }
       ]
@@ -549,7 +549,7 @@
           "video": "TODO-travel-and-tickets-1",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/travel-and-tickets.svg",
+          "imageUrl": "/art/travel-and-tickets.svg",
           "sortOrder": 1
         },
         {
@@ -559,7 +559,7 @@
           "video": "TODO-travel-and-tickets-2",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/travel-and-tickets.svg",
+          "imageUrl": "/art/travel-and-tickets.svg",
           "sortOrder": 2
         },
         {
@@ -569,7 +569,7 @@
           "video": "TODO-travel-and-tickets-3",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/travel-and-tickets.svg",
+          "imageUrl": "/art/travel-and-tickets.svg",
           "sortOrder": 3
         },
         {
@@ -579,7 +579,7 @@
           "video": "TODO-travel-and-tickets-4",
           "durationSec": 240,
           "isPublished": true,
-          "imageUrl": "/courses/travel-and-tickets.svg",
+          "imageUrl": "/art/travel-and-tickets.svg",
           "sortOrder": 4
         }
       ]
@@ -599,7 +599,7 @@
           "video": "TODO-pooja-1",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/plan-a-pooja.svg",
+          "imageUrl": "/art/plan-a-pooja.svg",
           "sortOrder": 1
         },
         {
@@ -609,7 +609,7 @@
           "video": "TODO-pooja-2",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/plan-a-pooja.svg",
+          "imageUrl": "/art/plan-a-pooja.svg",
           "sortOrder": 2
         },
         {
@@ -619,7 +619,7 @@
           "video": "TODO-pooja-3",
           "durationSec": 480,
           "isPublished": true,
-          "imageUrl": "/courses/plan-a-pooja.svg",
+          "imageUrl": "/art/plan-a-pooja.svg",
           "sortOrder": 3
         },
         {
@@ -629,7 +629,7 @@
           "video": "TODO-pooja-4",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/plan-a-pooja.svg",
+          "imageUrl": "/art/plan-a-pooja.svg",
           "sortOrder": 4
         }
       ]
@@ -649,7 +649,7 @@
           "video": "TODO-government-forms-1",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/government-forms.svg",
+          "imageUrl": "/art/government-forms.svg",
           "sortOrder": 1
         },
         {
@@ -659,7 +659,7 @@
           "video": "TODO-government-forms-2",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/government-forms.svg",
+          "imageUrl": "/art/government-forms.svg",
           "sortOrder": 2
         },
         {
@@ -669,7 +669,7 @@
           "video": "TODO-government-forms-3",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/government-forms.svg",
+          "imageUrl": "/art/government-forms.svg",
           "sortOrder": 3
         },
         {
@@ -679,7 +679,7 @@
           "video": "TODO-government-forms-4",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/government-forms.svg",
+          "imageUrl": "/art/government-forms.svg",
           "sortOrder": 4
         }
       ]
@@ -699,7 +699,7 @@
           "video": "TODO-resume-1",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-resume.svg",
+          "imageUrl": "/art/write-a-resume.svg",
           "sortOrder": 1
         },
         {
@@ -709,7 +709,7 @@
           "video": "TODO-resume-2",
           "durationSec": 480,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-resume.svg",
+          "imageUrl": "/art/write-a-resume.svg",
           "sortOrder": 2
         },
         {
@@ -719,7 +719,7 @@
           "video": "TODO-resume-3",
           "durationSec": 420,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-resume.svg",
+          "imageUrl": "/art/write-a-resume.svg",
           "sortOrder": 3
         },
         {
@@ -729,7 +729,7 @@
           "video": "TODO-resume-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/write-a-resume.svg",
+          "imageUrl": "/art/write-a-resume.svg",
           "sortOrder": 4
         }
       ]
@@ -749,7 +749,7 @@
           "video": "TODO-bills-and-budget-1",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/bills-and-budget.svg",
+          "imageUrl": "/art/bills-and-budget.svg",
           "sortOrder": 1
         },
         {
@@ -759,7 +759,7 @@
           "video": "TODO-bills-and-budget-2",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/bills-and-budget.svg",
+          "imageUrl": "/art/bills-and-budget.svg",
           "sortOrder": 2
         },
         {
@@ -769,7 +769,7 @@
           "video": "TODO-bills-and-budget-3",
           "durationSec": 300,
           "isPublished": true,
-          "imageUrl": "/courses/bills-and-budget.svg",
+          "imageUrl": "/art/bills-and-budget.svg",
           "sortOrder": 3
         },
         {
@@ -779,7 +779,7 @@
           "video": "TODO-bills-and-budget-4",
           "durationSec": 360,
           "isPublished": true,
-          "imageUrl": "/courses/bills-and-budget.svg",
+          "imageUrl": "/art/bills-and-budget.svg",
           "sortOrder": 4
         }
       ]

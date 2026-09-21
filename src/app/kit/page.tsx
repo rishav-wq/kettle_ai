@@ -50,8 +50,8 @@ export default function KitPage() {
 
       <Kit title="Tiles">
         <div className="grid grid-cols-2 gap-4">
-          <Tile href="#" image="/courses/spot-a-scam.svg" title="Spot a scam call" meta="5 min" badge="Free" />
-          <Tile href="#" image="/courses/plan-a-pooja.svg" title="Plan a pooja" meta="4 min" />
+          <Tile href="#" image="/art/spot-a-scam.svg" title="Spot a scam call" meta="5 min" badge="Free" />
+          <Tile href="#" image="/art/plan-a-pooja.svg" title="Plan a pooja" meta="4 min" />
         </div>
       </Kit>
 

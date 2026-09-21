@@ -157,7 +157,7 @@ const art = {
     <path d="M136 92 h48 m-48 18 h48 m-40 -30 v46 m0 -12 c22 0 22 -22 0 -22" fill="none" stroke="${WHITE}" stroke-width="7" stroke-linecap="round"/>`,
 };
 
-const dir = path.join(process.cwd(), "public", "courses");
+const dir = path.join(process.cwd(), "public", "art");
 mkdirSync(dir, { recursive: true });
 
 function write(id, shapes, height) {
@@ -166,7 +166,7 @@ function write(id, shapes, height) {
 </svg>
 `;
   writeFileSync(path.join(dir, `${id}.svg`), svg);
-  console.log(`wrote public/courses/${id}.svg`);
+  console.log(`wrote public/art/${id}.svg`);
 }
 
 for (const [id, shapes] of Object.entries(art)) write(id, shapes, H);

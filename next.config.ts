@@ -67,7 +67,15 @@ const nextConfig: NextConfig = {
     for about a week.
   */
   async redirects() {
-    return [{ source: "/courses/:slug*", destination: "/learn", permanent: true }];
+    /*
+      Slug-shaped segments only. ":slug*" also matched /courses/foo.svg, which
+      is where the placeholder art used to live — so every lesson without a
+      video answered 308 and rendered a blank card. The art has moved to
+      /art/, so they no longer collide at all; this keeps the redirect narrow
+      anyway, because the next thing put under a public directory should not
+      be able to disappear this way.
+    */
+    return [{ source: "/courses/:slug([a-z0-9-]+)", destination: "/learn", permanent: true }];
   },
 };
 
