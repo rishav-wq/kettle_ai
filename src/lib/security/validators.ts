@@ -48,24 +48,14 @@ export const categoryInput = z.object({
   nameEn: shortText,
   blurbHi: shortText.optional().or(z.literal("").transform(() => undefined)),
   blurbEn: shortText.optional().or(z.literal("").transform(() => undefined)),
-  sortOrder: z.coerce.number().int().min(0).max(9999),
-});
-
-export const courseInput = z.object({
-  id: slug,
-  categoryId: slug,
-  titleHi: shortText,
-  titleEn: shortText,
   descriptionHi: optionalLongText,
   descriptionEn: optionalLongText,
-  imageUrl: z.string().trim().max(300).optional().or(z.literal("").transform(() => undefined)),
   sortOrder: z.coerce.number().int().min(0).max(9999),
-  isPublished: z.boolean(),
 });
 
 export const lessonInput = z.object({
   id: slug,
-  courseId: slug,
+  categoryId: slug,
   titleHi: shortText,
   titleEn: shortText,
   /*
@@ -80,6 +70,8 @@ export const lessonInput = z.object({
   transcriptHi: optionalLongText,
   transcriptEn: optionalLongText,
   isFree: z.boolean(),
+  isPublished: z.boolean(),
+  imageUrl: z.string().trim().max(300).optional().or(z.literal("").transform(() => undefined)),
   sortOrder: z.coerce.number().int().min(0).max(9999),
 });
 

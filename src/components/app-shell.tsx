@@ -7,7 +7,7 @@ import { showsMarketing, type Viewer } from "@/lib/viewer";
 import { SocialProof } from "@/components/social-proof";
 import { Wordmark } from "@/components/logo";
 import { ComfortChips } from "@/components/ui";
-import { BookIcon, BookmarkIcon, HeartIcon, PersonIcon, StarIcon } from "@/components/icons";
+import { BookIcon, BookmarkIcon, HeartIcon, HelpIcon, PencilIcon, PersonIcon, StarIcon } from "@/components/icons";
 import { T } from "@/components/bilingual";
 import { getLang } from "@/lib/lang";
 import { pick } from "@/lib/pick";
@@ -104,9 +104,7 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
             href="/help"
             className="flex min-h-[52px] items-center gap-3.5 rounded-pill px-4 text-[0.98rem] font-semibold text-ink-3 transition-colors hover:bg-wash hover:text-violet"
           >
-            <span aria-hidden className="grid h-5 w-5 flex-none place-items-center font-bold">
-              ?
-            </span>
+            <HelpIcon className="h-5 w-5 flex-none" />
             <T hi="मदद" en="Help" />
           </Link>
 
@@ -117,9 +115,7 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
               href="/admin"
               className="flex min-h-[52px] items-center gap-3.5 rounded-pill px-4 text-[0.98rem] font-semibold text-ink-3 transition-colors hover:bg-wash hover:text-violet"
             >
-              <span aria-hidden className="grid h-5 w-5 flex-none place-items-center font-bold">
-                ✎
-              </span>
+              <PencilIcon className="h-5 w-5 flex-none" />
               Catalogue
             </Link>
           ) : null}
@@ -145,7 +141,7 @@ export async function AppShell({ viewer, tab, header, children }: Props) {
                 </span>
               </span>
             </Link>
-          ) : (
+          ) : tab === "account" ? null : (
             <Link
               href="/signin"
               className="flex min-h-[52px] items-center justify-center rounded-pill bg-fill text-[0.95rem] font-semibold text-on-fill shadow-m"

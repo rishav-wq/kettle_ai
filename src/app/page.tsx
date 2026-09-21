@@ -68,7 +68,7 @@ export default async function Home() {
   }));
 
   const firstLesson = free[0] ? `/lessons/${free[0].id}` : "/learn";
-  const courses = catalog.flatMap((c) => c.courses).slice(0, 6);
+  const featured = catalog.flatMap((c) => c.lessons).slice(0, 6);
   const whatsapp = site.contact.whatsapp || null;
   const structuredData = {
     "@context": "https://schema.org",
@@ -182,19 +182,17 @@ export default async function Home() {
         <Section
           id="courses"
           eyebrow={<T hi="कोर्स" en="The courses" />}
-          title={<T hi="अपने दिन में फ़िट बैठने वाले कोर्स से शुरू कीजिए" en="Start with a course that fits your day" />}
+          title={<T hi="अपने दिन में फ़िट बैठने वाले lesson से शुरू कीजिए" en="Start with a lesson that fits your day" />}
         >
           <div className="no-bar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">
-            {courses.map((c) => (
+            {featured.map((l) => (
               <Tile
-                key={c.id}
-                href={`/courses/${c.id}`}
-                image={c.imageUrl ?? undefined}
-                title={<T hi={c.titleHi} en={c.titleEn} />}
-                meta={
-                  <T hi={`${c.lessonCount} lessons · ${c.minutes} मिनट`} en={`${c.lessonCount} lessons · ${c.minutes} min`} />
-                }
-                badge={c.hasFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
+                key={l.id}
+                href={`/lessons/${l.id}`}
+                image={l.imageUrl ?? undefined}
+                title={<T hi={l.titleHi} en={l.titleEn} />}
+                meta={<T hi={`${l.minutes} मिनट`} en={`${l.minutes} min`} />}
+                badge={l.isFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
                 className="w-[calc((100%-1rem)/2)] flex-none snap-start sm:w-[200px] lg:w-auto"
               />
             ))}

@@ -34,8 +34,24 @@ export type TenantDoc = {
   createdAt: Date;
 };
 
+/**
+ * A category, and now the only thing a lesson belongs to.
+ *
+ * Courses used to sit between the two. They were removed because in eight of
+ * the eleven filled categories there was exactly one course, so the layer was
+ * a tap to a page that repeated the category under a near-identical name — in
+ * "Start with AI" it was the same name exactly. Two levels is also simply
+ * right for the audience: a category, then a five minute video.
+ *
+ * What the course carried and the category now carries: a description, and a
+ * published flag that has moved down to the lesson, where it belongs — a
+ * lesson with no video yet is the thing that should stay hidden, not a whole
+ * group of them.
+ */
 export type CategoryDoc = {
   id: string; // slug
+  /** Null means global content, visible to every tenant. */
+  tenantId: string | null;
   nameHi: string;
   nameEn: string;
   /**
@@ -45,6 +61,9 @@ export type CategoryDoc = {
    */
   blurbHi?: string | null;
   blurbEn?: string | null;
+  /** The longer text, shown at the top of the category's own page. */
+  descriptionHi?: string | null;
+  descriptionEn?: string | null;
   sortOrder: number;
 };
 
@@ -56,23 +75,15 @@ export type VideoAssetDoc = {
   durationSec: number;
 };
 
-export type CourseDoc = {
-  id: string; // slug
-  /** Null means global content, visible to every tenant. */
-  tenantId: string | null;
-  categoryId: string;
-  titleHi: string;
-  titleEn: string;
-  descriptionHi: string | null;
-  descriptionEn: string | null;
-  imageUrl: string | null;
-  sortOrder: number;
-  isPublished: boolean;
-};
+/*
+  CourseDoc used to be here. Lessons hang off a category directly now; see the
+  note on CategoryDoc. scripts/flatten-courses.ts performed the migration and
+  can be deleted once no database needs it.
+*/
 
 export type LessonDoc = {
   id: string; // slug
-  courseId: string;
+  categoryId: string;
   sortOrder: number;
   titleHi: string;
   titleEn: string;
@@ -81,6 +92,18 @@ export type LessonDoc = {
   transcriptEn: string | null;
   /** Exactly four lessons carry this. They are the whole top of the funnel. */
   isFree: boolean;
+  /**
+   * Off by default, so a lesson typed into the editor before its video exists
+   * is not on the Learn page while it is being written. Inherited from the
+   * course when courses were flattened away.
+   */
+  isPublished: boolean;
+  /**
+   * Card art. Usually null: the YouTube thumbnail is used when there is a real
+   * video, which is a frame of the actual lesson rather than stock
+   * illustration. This is the override, and the fallback while a video is TODO.
+   */
+  imageUrl: string | null;
 };
 
 export type UserDoc = {

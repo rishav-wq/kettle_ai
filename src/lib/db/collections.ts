@@ -38,14 +38,19 @@ export const OWNED = [
  * Catalogue content. Mirrors the old courses_visible policy: a document with
  * no tenantId is global, otherwise it belongs to one tenant. Writes need the
  * bypass, exactly as courses_write did.
+ *
+ * This was "courses". When courses were flattened away, categories took the
+ * classification rather than it disappearing: a tenant with private content of
+ * its own is still a thing this model can express, and losing that quietly
+ * because of an unrelated refactor would have been the wrong kind of tidying.
  */
-export const CONTENT = ["courses"] as const;
+export const CONTENT = ["categories"] as const;
 
 /**
- * Global reference data with no tenant column at all: categories, the lessons
- * inside a course, video assets, the tenant registry itself.
+ * Global reference data with no tenant column at all: the lessons inside a
+ * category, video assets, the tenant registry itself.
  */
-export const GLOBAL = ["tenants", "categories", "lessons", "video_assets"] as const;
+export const GLOBAL = ["tenants", "lessons", "video_assets"] as const;
 
 /**
  * Infrastructure that exists before anyone is known, so there is no tenant to

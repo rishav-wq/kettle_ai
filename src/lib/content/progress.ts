@@ -1,5 +1,5 @@
 import "server-only";
-import type { CourseDoc, FreeWatchDoc, LessonDoc, ProgressDoc, VideoAssetDoc } from "@/lib/db/documents";
+import type { CategoryDoc, FreeWatchDoc, LessonDoc, ProgressDoc, VideoAssetDoc } from "@/lib/db/documents";
 import type { Scoped } from "@/lib/db/scope";
 
 /*
@@ -10,10 +10,14 @@ import type { Scoped } from "@/lib/db/scope";
   erase progress. A lesson counts as complete at ninety percent watched, because
   almost nobody sits through end credits.
 
+  Progress is tracked per lesson and rolled up per category. It used to roll up
+  per course; courses were flattened away, so "finished" now means a category,
+  which is a bigger unit — seventeen lessons in Stay safe online rather than
+  five in Stay safe from scams. Worth knowing when reading My classes.
+
   Where Postgres did this with joins, MongoDB does it with a second lookup and
-  a join in memory. The catalogue is sixteen courses and sixty-seven lessons —
-  small enough that two round trips beat an aggregation pipeline nobody can
-  read six months from now.
+  a join in memory. Sixty-seven lessons is small enough that two round trips
+  beat an aggregation pipeline nobody can read six months from now.
 */
 
 export const COMPLETE_AT = 0.9;
@@ -21,8 +25,8 @@ const HEARTBEAT_SEC = 15;
 
 export type ProgressRow = { lessonId: string; watchedSec: number; completed: boolean };
 
-export async function getCourseProgress(db: Scoped, userId: string, courseId: string): Promise<Map<string, ProgressRow>> {
-  const lessons = await db.find<LessonDoc>("lessons", { courseId }, { projection: { id: 1 } });
+export async function getCategoryProgress(db: Scoped, userId: string, categoryId: string): Promise<Map<string, ProgressRow>> {
+  const lessons = await db.find<LessonDoc>("lessons", { categoryId }, { projection: { id: 1 } });
   if (lessons.length === 0) return new Map();
 
   const rows = await db.find<ProgressDoc>("progress", { userId, lessonId: { $in: lessons.map((l) => l.id) } });
@@ -41,9 +45,9 @@ export type Continue = {
   lessonId: string;
   lessonTitleHi: string;
   lessonTitleEn: string;
-  courseId: string;
-  courseTitleHi: string;
-  courseTitleEn: string;
+  categoryId: string;
+  categoryNameHi: string;
+  categoryNameEn: string;
   sortOrder: number;
   lessonCount: number;
   watchedSec: number;
@@ -54,9 +58,10 @@ export type Continue = {
 export async function getContinue(db: Scoped, userId: string): Promise<Continue | null> {
   /*
     Walk back through recent unfinished progress rather than taking only the
-    newest. The newest might belong to a lesson whose course was unpublished,
-    which in SQL the INNER JOIN silently skipped; here it has to be skipped
-    deliberately or the card would point at something a visitor cannot open.
+    newest. The newest might belong to a lesson that has since been
+    unpublished, which in SQL the INNER JOIN silently skipped; here it has to
+    be skipped deliberately or the card would point at something a visitor
+    cannot open.
   */
   const recent = await db.find<ProgressDoc>(
     "progress",
@@ -65,22 +70,22 @@ export async function getContinue(db: Scoped, userId: string): Promise<Continue 
   );
 
   for (const row of recent) {
-    const lesson = await db.findOne<LessonDoc>("lessons", { id: row.lessonId });
+    const lesson = await db.findOne<LessonDoc>("lessons", { id: row.lessonId, isPublished: true });
     if (!lesson) continue;
 
-    const course = await db.findOne<CourseDoc>("courses", { id: lesson.courseId, isPublished: true });
-    if (!course) continue;
+    const category = await db.findOne<CategoryDoc>("categories", { id: lesson.categoryId });
+    if (!category) continue;
 
     const asset = lesson.videoAssetId ? await db.findOne<VideoAssetDoc>("video_assets", { id: lesson.videoAssetId }) : null;
-    const lessonCount = await db.countDocuments<LessonDoc>("lessons", { courseId: course.id });
+    const lessonCount = await db.countDocuments<LessonDoc>("lessons", { categoryId: category.id, isPublished: true });
 
     return {
       lessonId: lesson.id,
       lessonTitleHi: lesson.titleHi,
       lessonTitleEn: lesson.titleEn,
-      courseId: course.id,
-      courseTitleHi: course.titleHi,
-      courseTitleEn: course.titleEn,
+      categoryId: category.id,
+      categoryNameHi: category.nameHi,
+      categoryNameEn: category.nameEn,
       sortOrder: lesson.sortOrder,
       lessonCount,
       watchedSec: row.watchedSec,
@@ -91,36 +96,40 @@ export async function getContinue(db: Scoped, userId: string): Promise<Continue 
   return null;
 }
 
-export type FinishedCourse = { courseId: string; titleHi: string; titleEn: string; done: number; total: number };
+export type CategoryCompletion = { categoryId: string; nameHi: string; nameEn: string; done: number; total: number };
 
-export async function getCourseCompletion(db: Scoped, userId: string): Promise<FinishedCourse[]> {
+export async function getCategoryCompletion(db: Scoped, userId: string): Promise<CategoryCompletion[]> {
   const completed = await db.find<ProgressDoc>("progress", { userId, completedAt: { $ne: null } });
   if (completed.length === 0) return [];
 
-  const lessons = await db.find<LessonDoc>("lessons", { id: { $in: completed.map((p) => p.lessonId) } });
-  const courseIds = [...new Set(lessons.map((l) => l.courseId))];
+  const touched = await db.find<LessonDoc>("lessons", { id: { $in: completed.map((p) => p.lessonId) } }, { projection: { id: 1, categoryId: 1 } });
+  const categoryIds = [...new Set(touched.map((l) => l.categoryId))];
 
-  const courses = await db.find<CourseDoc>("courses", { id: { $in: courseIds }, isPublished: true }, { sort: { sortOrder: 1 } });
-  const allLessons = await db.find<LessonDoc>("lessons", { courseId: { $in: courses.map((c) => c.id) } }, { projection: { id: 1, courseId: 1 } });
+  const categories = await db.find<CategoryDoc>("categories", { id: { $in: categoryIds } }, { sort: { sortOrder: 1 } });
+  const allLessons = await db.find<LessonDoc>(
+    "lessons",
+    { categoryId: { $in: categories.map((c) => c.id) }, isPublished: true },
+    { projection: { id: 1, categoryId: 1 } }
+  );
 
-  const doneByCourse = new Map<string, number>();
-  const lessonToCourse = new Map(allLessons.map((l) => [l.id, l.courseId]));
+  const lessonToCategory = new Map(allLessons.map((l) => [l.id, l.categoryId]));
+  const doneBy = new Map<string, number>();
   for (const p of completed) {
-    const courseId = lessonToCourse.get(p.lessonId);
-    if (courseId) doneByCourse.set(courseId, (doneByCourse.get(courseId) ?? 0) + 1);
+    const categoryId = lessonToCategory.get(p.lessonId);
+    if (categoryId) doneBy.set(categoryId, (doneBy.get(categoryId) ?? 0) + 1);
   }
 
-  const totalByCourse = new Map<string, number>();
-  for (const l of allLessons) totalByCourse.set(l.courseId, (totalByCourse.get(l.courseId) ?? 0) + 1);
+  const totalBy = new Map<string, number>();
+  for (const l of allLessons) totalBy.set(l.categoryId, (totalBy.get(l.categoryId) ?? 0) + 1);
 
-  return courses
-    .filter((c) => (doneByCourse.get(c.id) ?? 0) > 0)
+  return categories
+    .filter((c) => (doneBy.get(c.id) ?? 0) > 0)
     .map((c) => ({
-      courseId: c.id,
-      titleHi: c.titleHi,
-      titleEn: c.titleEn,
-      done: doneByCourse.get(c.id) ?? 0,
-      total: totalByCourse.get(c.id) ?? 0,
+      categoryId: c.id,
+      nameHi: c.nameHi,
+      nameEn: c.nameEn,
+      done: doneBy.get(c.id) ?? 0,
+      total: totalBy.get(c.id) ?? 0,
     }));
 }
 

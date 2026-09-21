@@ -24,19 +24,20 @@ type Spec = [name: string, key: IndexSpecification, options?: CreateIndexesOptio
 const INDEXES: Record<string, Spec[]> = {
   tenants: [["id", { id: 1 }, { unique: true }]],
 
-  categories: [["id", { id: 1 }, { unique: true }]],
-
   video_assets: [["id", { id: 1 }, { unique: true }]],
 
-  courses: [
+  categories: [
     ["id", { id: 1 }, { unique: true }],
-    ["category", { categoryId: 1 }],
     ["tenant", { tenantId: 1 }],
+    ["order", { sortOrder: 1 }],
   ],
 
   lessons: [
     ["id", { id: 1 }, { unique: true }],
-    ["course", { courseId: 1, sortOrder: 1 }],
+    // Every catalogue read is "the lessons of this category, in order".
+    ["category", { categoryId: 1, sortOrder: 1 }],
+    // The free four are looked up on their own by the landing page.
+    ["free", { isFree: 1 }],
   ],
 
   users: [

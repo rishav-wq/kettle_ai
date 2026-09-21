@@ -81,8 +81,8 @@ export default async function ReferralLanding({ params }: { params: Promise<{ co
                 title={<T hi={l.titleHi} en={l.titleEn} />}
                 meta={
                   <T
-                    hi={`${l.courseTitleHi} · ${Math.max(1, Math.round(l.durationSec / 60))} मिनट`}
-                    en={`${l.courseTitleEn} · ${Math.max(1, Math.round(l.durationSec / 60))} min`}
+                    hi={`${l.categoryNameHi} · ${Math.max(1, Math.round(l.durationSec / 60))} मिनट`}
+                    en={`${l.categoryNameEn} · ${Math.max(1, Math.round(l.durationSec / 60))} min`}
                   />
                 }
                 href={`/lessons/${l.id}`}

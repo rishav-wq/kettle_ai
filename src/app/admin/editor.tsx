@@ -14,6 +14,8 @@ type CategoryDraft = {
   nameEn: string;
   blurbHi: string;
   blurbEn: string;
+  descriptionHi: string;
+  descriptionEn: string;
   sortOrder: number;
 };
 
@@ -23,6 +25,8 @@ const blankCategory = (sortOrder: number): CategoryDraft => ({
   nameEn: "",
   blurbHi: "",
   blurbEn: "",
+  descriptionHi: "",
+  descriptionEn: "",
   sortOrder,
 });
 
@@ -32,6 +36,8 @@ const toDraft = (c: AdminCategory): CategoryDraft => ({
   nameEn: c.nameEn,
   blurbHi: c.blurbHi ?? "",
   blurbEn: c.blurbEn ?? "",
+  descriptionHi: c.descriptionHi ?? "",
+  descriptionEn: c.descriptionEn ?? "",
   sortOrder: c.sortOrder,
 });
 
@@ -49,7 +55,6 @@ export function CatalogueEditor({ catalog, freeLimit }: { catalog: AdminCatalog;
 
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-  const [addingCourseIn, setAddingCourseIn] = useState<string | null>(null);
 
   const missingVideo = totals.lessons - totals.withVideo;
 
@@ -63,10 +68,9 @@ export function CatalogueEditor({ catalog, freeLimit }: { catalog: AdminCatalog;
           filmed, what is only written down, and whether the free four are
           actually four.
         */}
-        <dl className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <dl className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           <Stat label="Categories" v={totals.categories} />
-          <Stat label="Courses" v={totals.courses} sub={`${totals.published} live`} />
-          <Stat label="Lessons" v={totals.lessons} />
+          <Stat label="Lessons" v={totals.lessons} sub={`${totals.published} live`} />
           <Stat label="With video" v={totals.withVideo} tone={missingVideo > 0 ? "warn" : undefined} />
           <Stat label="Free" v={`${totals.free}/${freeLimit}`} tone={totals.free === freeLimit ? undefined : "warn"} />
           <Stat label="Minutes" v={totals.minutes} />
@@ -89,7 +93,7 @@ export function CatalogueEditor({ catalog, freeLimit }: { catalog: AdminCatalog;
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-baseline gap-3">
-          <h2 className="text-[1.1rem] font-bold">Categories and courses</h2>
+          <h2 className="text-[1.1rem] font-bold">Categories</h2>
           <button
             type="button"
             onClick={() => setAdding((v) => !v)}
@@ -111,91 +115,55 @@ export function CatalogueEditor({ catalog, freeLimit }: { catalog: AdminCatalog;
         ) : null}
 
         <div className="flex flex-col gap-3">
-          {catalog.categories.map((cat) => (
-            <div key={cat.id} className="rounded-card border border-line bg-paper">
-              <div className="flex flex-wrap items-center gap-3 p-4">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[1rem] font-semibold">{cat.nameEn}</p>
-                  <p className="truncate text-[0.82rem] text-ink-3">
-                    {cat.nameHi} · <code className="font-mono">{cat.id}</code> · #{cat.sortOrder}
-                  </p>
-                </div>
-                <span className="flex-none rounded-pill bg-wash px-3 py-1 text-[0.75rem] font-semibold text-ink-3">
-                  {cat.courses.length === 0 ? "Coming soon" : `${cat.courses.length} course${cat.courses.length === 1 ? "" : "s"}`}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setEditing(editing === cat.id ? null : cat.id)}
-                  className="min-h-[40px] flex-none rounded-pill border border-line px-4 text-[0.85rem] font-semibold"
-                >
-                  {editing === cat.id ? "Close" : "Edit"}
-                </button>
-              </div>
-
-              {editing === cat.id ? (
-                <div className="border-t border-line p-4">
-                  <CategoryForm
-                    draft={toDraft(cat)}
-                    onDone={() => {
-                      setEditing(null);
-                      router.refresh();
-                    }}
-                  />
-                </div>
-              ) : null}
-
-              <div className="flex flex-col gap-2 border-t border-line p-4">
-                {cat.courses.map((c) => {
-                  const missing = c.lessons.filter((l) => !l.hasVideo).length;
-                  return (
-                    <Link
-                      key={c.id}
-                      href={`/admin/courses/${c.id}`}
-                      className="flex flex-wrap items-center gap-3 rounded-tile border border-line px-3 py-2.5 transition-colors hover:border-violet"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[0.95rem] font-semibold">{c.titleEn}</span>
-                        <span className="block truncate text-[0.8rem] text-ink-3">
-                          {c.lessons.length} lesson{c.lessons.length === 1 ? "" : "s"}
-                          {missing > 0 ? ` · ${missing} without video` : ""}
-                          {c.lessons.some((l) => l.isFree) ? " · has free" : ""}
-                        </span>
-                      </span>
-                      {!c.isPublished ? (
-                        <span className="flex-none rounded-pill bg-wash px-2.5 py-1 text-[0.72rem] font-semibold text-ink-3">Draft</span>
-                      ) : null}
-                      <span aria-hidden className="flex-none text-ink-3">
-                        ›
-                      </span>
-                    </Link>
-                  );
-                })}
-
-                {addingCourseIn === cat.id ? (
-                  <NewCourseForm
-                    categoryId={cat.id}
-                    sortOrder={(cat.courses.at(-1)?.sortOrder ?? 0) + 1}
-                    onDone={(id) => {
-                      setAddingCourseIn(null);
-                      router.push(`/admin/courses/${id}`);
-                    }}
-                    onCancel={() => setAddingCourseIn(null)}
-                  />
-                ) : (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setAddingCourseIn(cat.id)}
-                      className="min-h-[40px] rounded-pill border border-dashed border-line px-4 text-[0.85rem] font-semibold text-ink-2"
-                    >
-                      Add a course here
-                    </button>
-                    {cat.courses.length === 0 ? <DeleteCategory id={cat.id} onDone={() => router.refresh()} /> : null}
+          {catalog.categories.map((cat) => {
+            const missing = cat.lessons.filter((l) => !l.hasVideo).length;
+            const drafts = cat.lessons.filter((l) => !l.isPublished).length;
+            return (
+              <div key={cat.id} className="rounded-card border border-line bg-paper">
+                <div className="flex flex-wrap items-center gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[1rem] font-semibold">{cat.nameEn}</p>
+                    <p className="truncate text-[0.82rem] text-ink-3">
+                      {cat.nameHi} · <code className="font-mono">{cat.id}</code> · #{cat.sortOrder}
+                    </p>
                   </div>
-                )}
+                  <span className="flex-none rounded-pill bg-wash px-3 py-1 text-[0.75rem] font-semibold text-ink-3">
+                    {cat.lessons.length === 0
+                      ? "Coming soon"
+                      : `${cat.lessons.length} lesson${cat.lessons.length === 1 ? "" : "s"}${missing > 0 ? ` · ${missing} TODO` : ""}${
+                          drafts > 0 ? ` · ${drafts} draft` : ""
+                        }`}
+                  </span>
+                  <Link
+                    href={`/admin/categories/${cat.id}`}
+                    className="min-h-[40px] flex-none rounded-pill bg-fill px-4 py-2 text-[0.85rem] font-semibold text-on-fill"
+                  >
+                    Lessons ›
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(editing === cat.id ? null : cat.id)}
+                    className="min-h-[40px] flex-none rounded-pill border border-line px-4 text-[0.85rem] font-semibold"
+                  >
+                    {editing === cat.id ? "Close" : "Edit"}
+                  </button>
+                </div>
+
+                {editing === cat.id ? (
+                  <div className="flex flex-col gap-3 border-t border-line p-4">
+                    <CategoryForm
+                      draft={toDraft(cat)}
+                      onDone={() => {
+                        setEditing(null);
+                        router.refresh();
+                      }}
+                    />
+                    {cat.lessons.length === 0 ? <DeleteCategory id={cat.id} onDone={() => router.refresh()} /> : null}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>
@@ -245,11 +213,19 @@ function CategoryForm({ draft, isNew, onDone }: { draft: CategoryDraft; isNew?: 
         </Field>
       </Row>
       <Row>
-        <Field label="Blurb (English)" hint="Optional. One line under the heading, for a category that needs explaining.">
+        <Field label="Blurb (English)" hint="Optional. One line beside the heading on the Learn page.">
           <input className={inputClass} value={d.blurbEn} onChange={(e) => set("blurbEn", e.target.value)} />
         </Field>
         <Field label="Blurb (Hindi)">
           <input className={inputClass} value={d.blurbHi} onChange={(e) => set("blurbHi", e.target.value)} />
+        </Field>
+      </Row>
+      <Row>
+        <Field label="Description (English)" hint="The longer text, at the top of the category's own page.">
+          <textarea rows={3} className={cn(inputClass, "py-2")} value={d.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
+        </Field>
+        <Field label="Description (Hindi)">
+          <textarea rows={3} className={cn(inputClass, "py-2")} value={d.descriptionHi} onChange={(e) => set("descriptionHi", e.target.value)} />
         </Field>
       </Row>
       <Row>
@@ -268,79 +244,10 @@ function CategoryForm({ draft, isNew, onDone }: { draft: CategoryDraft; isNew?: 
   );
 }
 
-function NewCourseForm({
-  categoryId,
-  sortOrder,
-  onDone,
-  onCancel,
-}: {
-  categoryId: string;
-  sortOrder: number;
-  onDone: (id: string) => void;
-  onCancel: () => void;
-}) {
-  const [titleEn, setTitleEn] = useState("");
-  const [titleHi, setTitleHi] = useState("");
-  const [id, setId] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-
-  async function save() {
-    setBusy(true);
-    setStatus(null);
-    const body = {
-      id: id || slugify(titleEn),
-      categoryId,
-      titleEn,
-      titleHi,
-      sortOrder,
-      /*
-        New courses start as drafts. A course with no lessons in it should not
-        be reachable from the Learn page while it is still being written.
-      */
-      isPublished: false,
-    };
-    const res = await post<{ error?: string; id?: string }>("/api/admin/courses", body);
-    setBusy(false);
-    if (!res.ok) return setStatus(explain(res.body?.error));
-    onDone(body.id);
-  }
-
-  return (
-    <div className="flex flex-col gap-3 rounded-tile border border-line bg-wash p-3">
-      <Row>
-        <Field label="Course title (English)">
-          <input
-            className={inputClass}
-            value={titleEn}
-            onChange={(e) => {
-              const next = e.target.value;
-              if (id === "" || id === slugify(titleEn)) setId(slugify(next));
-              setTitleEn(next);
-            }}
-          />
-        </Field>
-        <Field label="Course title (Hindi)">
-          <input className={inputClass} value={titleHi} onChange={(e) => setTitleHi(e.target.value)} />
-        </Field>
-      </Row>
-      <Field label="Slug">
-        <input className={cn(inputClass, "font-mono")} value={id} onChange={(e) => setId(slugify(e.target.value))} />
-      </Field>
-      <SaveBar busy={busy} status={status} onSave={() => void save()}>
-        <button type="button" onClick={onCancel} className="min-h-[44px] text-[0.86rem] font-semibold text-ink-3 underline underline-offset-4">
-          Cancel
-        </button>
-        <span className="text-[0.82rem] text-ink-3">Starts as a draft.</span>
-      </SaveBar>
-    </div>
-  );
-}
-
 function DeleteCategory({ id, onDone }: { id: string; onDone: () => void }) {
   const [status, setStatus] = useState<string | null>(null);
   return (
-    <>
+    <div className="flex flex-wrap items-center gap-3">
       <DangerButton
         label="Delete category"
         confirmLabel="Tap again to delete"
@@ -353,6 +260,6 @@ function DeleteCategory({ id, onDone }: { id: string; onDone: () => void }) {
         }}
       />
       {status ? <span className="text-[0.82rem] font-medium text-pink">{status}</span> : null}
-    </>
+    </div>
   );
 }

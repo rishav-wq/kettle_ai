@@ -104,18 +104,14 @@ export function explain(code: string | undefined): string {
   switch (name) {
     case "free_limit":
       return `There are already ${detail} free lessons. Unset one before making another free.`;
-    case "category_has_courses":
-      return `${detail} course${detail === "1" ? "" : "s"} still sit in this category. Move them first.`;
-    case "course_has_lessons":
-      return `${detail} lesson${detail === "1" ? "" : "s"} still sit in this course. Delete them first.`;
+    case "category_has_lessons":
+      return `${detail} lesson${detail === "1" ? "" : "s"} still sit in this category. Move or delete them first.`;
     case "lesson_watched":
       return `${detail} learner${detail === "1" ? " has" : "s have"} watched this. Deleting it would rewrite their progress — do it in the database if you really mean to.`;
     case "unreadable_video":
       return "That is not a YouTube link we can read. Paste the address bar, or type TODO to fill it in later.";
     case "unknown_category":
       return "That category does not exist.";
-    case "unknown_course":
-      return "That course does not exist.";
     case "not_admin":
       return "Your session is no longer an admin session. Sign in again.";
     case "rate_limited":

@@ -3,15 +3,15 @@ import Link from "next/link";
 import { getAdmin } from "@/lib/admin";
 import { withTenant } from "@/lib/db/tenant";
 import { PUBLIC_TENANT } from "@/lib/db/scope";
-import { countFreeLessons, getAdminCourse } from "@/lib/content/admin-queries";
+import { countFreeLessons, getAdminCategory } from "@/lib/content/admin-queries";
 import { slug as slugSchema } from "@/lib/security/validators";
 import { FREE_LESSON_LIMIT } from "@/app/api/admin/lessons/route";
-import { CourseEditor } from "./editor";
+import { CategoryEditor } from "./editor";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Kettle · Admin", robots: { index: false, follow: false } };
 
-export default async function AdminCoursePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function AdminCategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   // Before anything is read. See the note in src/app/admin/page.tsx: the
   // layout's guard does not stop a page's data reaching the RSC payload.
   if (!(await getAdmin())) notFound();
@@ -23,7 +23,7 @@ export default async function AdminCoursePage({ params }: { params: Promise<{ sl
 
   const data = await withTenant(
     PUBLIC_TENANT,
-    async (db) => ({ found: await getAdminCourse(db, slug), freeUsed: await countFreeLessons(db) }),
+    async (db) => ({ found: await getAdminCategory(db, slug), freeUsed: await countFreeLessons(db) }),
     { bypass: true }
   );
   if (!data.found) notFound();
@@ -33,12 +33,7 @@ export default async function AdminCoursePage({ params }: { params: Promise<{ sl
       <Link href="/admin" className="w-fit text-[0.88rem] font-semibold text-ink-3 underline underline-offset-4">
         ← All categories
       </Link>
-      <CourseEditor
-        course={data.found.course}
-        categories={data.found.categories.map((c) => ({ id: c.id, nameEn: c.nameEn }))}
-        freeUsed={data.freeUsed}
-        freeLimit={FREE_LESSON_LIMIT}
-      />
+      <CategoryEditor category={data.found} freeUsed={data.freeUsed} freeLimit={FREE_LESSON_LIMIT} />
     </div>
   );
 }

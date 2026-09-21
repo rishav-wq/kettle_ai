@@ -5,8 +5,8 @@ import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card, Rule } from "@/components/ui";
 import { PlayIcon } from "@/components/icons";
 import { withPublic, withTenant } from "@/lib/db/tenant";
-import { getCourse } from "@/lib/content/queries";
-import { getCourseProgress } from "@/lib/content/progress";
+import { getCategory } from "@/lib/content/queries";
+import { getCategoryProgress } from "@/lib/content/progress";
 import { slug as slugSchema } from "@/lib/security/validators";
 import { getViewer, lockReason } from "@/lib/viewer";
 import { GOLD, formatRupees } from "@/lib/payments/plan";
@@ -14,65 +14,59 @@ import { pageMetadata, SITE_NAME, siteUrl } from "@/lib/seo";
 import { T } from "@/components/bilingual";
 import { getLang } from "@/lib/lang";
 import { pick } from "@/lib/pick";
-import { CourseLessons, ResumePlayButton, StartLessonCta } from "./lessons";
+import { CategoryLessons, ResumePlayButton, StartLessonCta } from "./lessons";
 
 export const dynamic = "force-dynamic";
 
+/*
+  One category, and everything in it.
+
+  This is what a course page used to be. Courses were flattened away, so the
+  category is the only grouping left and this is where a long one — seventeen
+  safety lessons — is read in full rather than through a shelf.
+*/
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const parsed = slugSchema.safeParse(slug);
-  if (!parsed.success) return {};
-
-  const course = await withPublic((tx) => getCourse(tx, parsed.data));
-  if (!course) return {};
-
-  const description = course.descriptionEn ?? `A beginner-friendly AI course from ${SITE_NAME}, taught in short practical lessons.`;
+  if (!slugSchema.safeParse(slug).success) return {};
+  const category = await withPublic((db) => getCategory(db, slug));
+  if (!category) return {};
   return pageMetadata({
-    title: `${course.titleEn} | AI course for beginners`,
-    description,
-    pathname: `/courses/${course.id}`,
+    title: category.nameEn,
+    description: category.descriptionEn ?? category.blurbEn ?? `${category.nameEn} lessons on Kettle.`,
+    pathname: `/learn/${category.id}`,
   });
 }
 
-/*
-  Course detail.
-
-  The third reference screen: a gradient panel with a large play control, a
-  white card overlapping it carrying the title and the facts, then the list.
-
-  The reference shows a star rating and a review count. We have neither, and
-  inventing them would be the same lie as a fabricated testimonial, so the card
-  carries lesson count, running time, and how far through you are instead.
-*/
-export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const parsed = slugSchema.safeParse(slug);
-  if (!parsed.success) notFound();
+  if (!slugSchema.safeParse(slug).success) notFound();
 
   const viewer = await getViewer();
-  const { course, progress } = await withTenant(viewer.tenantId, async (tx) => {
-    const found = await getCourse(tx, parsed.data);
-    if (!found || !viewer.userId) return { course: found, progress: new Map() };
-    return { course: found, progress: await getCourseProgress(tx, viewer.userId, found.id) };
-  });
-  if (!course) notFound();
-
-  const totalMin = Math.round(course.lessons.reduce((n, l) => n + l.durationSec, 0) / 60);
-  const done = course.lessons.filter((l) => progress.get(l.id)?.completed).length;
-  const resume = course.lessons.find((l) => !progress.get(l.id)?.completed) ?? course.lessons[0];
-  const pct = course.lessons.length ? Math.round((done / course.lessons.length) * 100) : 0;
-  const resumeLocked = resume ? lockReason(viewer, resume) : null;
   const lang = await getLang();
+
+  const { category, progress } = await withTenant(viewer.tenantId, async (db) => {
+    const found = await getCategory(db, slug);
+    if (!found || !viewer.userId) return { category: found, progress: new Map() };
+    return { category: found, progress: await getCategoryProgress(db, viewer.userId, found.id) };
+  });
+  if (!category) notFound();
+
+  const totalMin = category.lessons.reduce((n, l) => n + l.minutes, 0);
+  const done = category.lessons.filter((l) => progress.get(l.id)?.completed).length;
+  const resume = category.lessons.find((l) => !progress.get(l.id)?.completed) ?? category.lessons[0];
+  const pct = category.lessons.length ? Math.round((done / category.lessons.length) * 100) : 0;
+  const resumeLocked = resume ? lockReason(viewer, resume) : null;
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Course",
-    name: course.titleEn,
-    description: course.descriptionEn ?? undefined,
-    url: siteUrl(`/courses/${course.id}`).toString(),
+    name: category.nameEn,
+    description: category.descriptionEn ?? undefined,
+    url: siteUrl(`/learn/${category.id}`).toString(),
     inLanguage: "en-IN",
     educationalLevel: "Beginner",
     provider: { "@type": "Organization", name: SITE_NAME, url: siteUrl("/").toString() },
-    isAccessibleForFree: course.lessons.some((lesson) => lesson.isFree),
+    isAccessibleForFree: category.lessons.some((l) => l.isFree),
     hasCourseInstance: {
       "@type": "CourseInstance",
       courseMode: "online",
@@ -85,12 +79,12 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
       viewer={viewer}
       tab="learn"
       header={
-        <GradHeader back={{ href: "/learn", label: pick(lang, "सभी कोर्स", "All courses") }} tall>
+        <GradHeader back={{ href: "/learn", label: pick(lang, "सब कुछ", "Everything") }} tall>
           <div className="grid place-items-center py-6">
             {resume ? (
               <ResumePlayButton
                 href={`/lessons/${resume.id}`}
-                label={pick(lang, `lesson ${resume.sortOrder} चलाइए`, `Play lesson ${resume.sortOrder}`)}
+                label={pick(lang, `${resume.titleHi} चलाइए`, `Play ${resume.titleEn}`)}
                 lockedBecause={resumeLocked}
                 price={formatRupees(GOLD.amountPaise)}
                 months={GOLD.months}
@@ -110,21 +104,23 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           <Rule />
           <div>
             <h1 className="text-[1.4rem] font-bold leading-tight">
-              <T hi={course.titleHi} en={course.titleEn} />
+              <T hi={category.nameHi} en={category.nameEn} />
             </h1>
-            <p className="mt-1 text-[0.9rem] text-ink-3">
-              <T hi={course.categoryNameHi} en={course.categoryNameEn} />
-            </p>
+            {category.blurbEn ? (
+              <p className="mt-1 text-[0.9rem] text-ink-3">
+                <T hi={category.blurbHi ?? category.blurbEn} en={category.blurbEn} />
+              </p>
+            ) : null}
           </div>
 
-          {course.descriptionEn ? (
+          {category.descriptionEn ? (
             <p className="text-[0.95rem] leading-relaxed text-ink-2">
-              <T hi={course.descriptionHi ?? course.descriptionEn} en={course.descriptionEn} />
+              <T hi={category.descriptionHi ?? category.descriptionEn} en={category.descriptionEn} />
             </p>
           ) : null}
 
           <dl className="mt-1 flex items-center gap-6">
-            <Fact v={String(course.lessons.length)} label={<T hi="Lessons" en="Lessons" />} />
+            <Fact v={String(category.lessons.length)} label={<T hi="Lessons" en="Lessons" />} />
             <Fact v={`${totalMin}`} label={<T hi="मिनट" en="Minutes" />} />
             <Fact v={done > 0 ? `${pct}%` : "—"} label={<T hi="पूरा" en="Done" />} />
           </dl>
@@ -140,15 +136,15 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           <h2 className="text-[1.05rem] font-bold">
             <T hi="छोटे lessons" en="Short lessons" />
           </h2>
-          <CourseLessons
-            rows={course.lessons.map((l) => {
+          <CategoryLessons
+            rows={category.lessons.map((l) => {
               const p = progress.get(l.id);
               return {
                 id: l.id,
                 index: l.sortOrder,
                 title: <T hi={l.titleHi} en={l.titleEn} />,
-                meta: metaFor(l.durationSec, l.isFree, p?.watchedSec ?? 0, Boolean(p?.completed)),
-                progress: l.durationSec > 0 ? (p?.watchedSec ?? 0) / l.durationSec : 0,
+                meta: metaFor(l.minutes, l.isFree, p?.watchedSec ?? 0, Boolean(p?.completed), l.hasVideo),
+                progress: l.minutes > 0 ? (p?.watchedSec ?? 0) / (l.minutes * 60) : 0,
                 done: Boolean(p?.completed),
                 current: resume?.id === l.id && done > 0,
                 lockedBecause: lockReason(viewer, l),
@@ -167,9 +163,9 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
             href={`/lessons/${resume.id}`}
             label={
               done > 0 ? (
-                <T hi={`lesson ${resume.sortOrder} जारी रखिए`} en={`Continue lesson ${resume.sortOrder}`} />
+                <T hi="जहाँ छोड़ा था, वहीं से" en="Pick up where you left" />
               ) : (
-                <T hi="lesson 1 शुरू कीजिए" en="Start lesson 1" />
+                <T hi="पहला lesson शुरू कीजिए" en="Start the first lesson" />
               )
             }
             lockedBecause={lockReason(viewer, resume)}
@@ -186,11 +182,11 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
 /* Returns an element rather than a string: this line is assembled from a
    number and a word, and the word is what changes. */
-function metaFor(durationSec: number, isFree: boolean, watchedSec: number, completed: boolean) {
-  const min = Math.max(1, Math.round(durationSec / 60));
+function metaFor(min: number, isFree: boolean, watchedSec: number, completed: boolean, hasVideo: boolean) {
+  if (!hasVideo) return <T hi="video जोड़ी जा रही है" en="Video being added" />;
   if (completed) return <T hi={`${min} मिनट · देख लिया`} en={`${min} min · Watched`} />;
-  if (watchedSec > 0 && durationSec > 0) {
-    const left = Math.max(1, Math.round((durationSec - watchedSec) / 60));
+  if (watchedSec > 0) {
+    const left = Math.max(1, min - Math.round(watchedSec / 60));
     return <T hi={`${min} मिनट · ${left} मिनट बाकी`} en={`${min} min · ${left} min left`} />;
   }
   return isFree ? <T hi={`${min} मिनट · मुफ़्त`} en={`${min} min · Free`} /> : <T hi={`${min} मिनट`} en={`${min} min`} />;

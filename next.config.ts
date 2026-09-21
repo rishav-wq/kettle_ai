@@ -58,6 +58,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+
+  /*
+    Courses are gone; lessons hang off a category directly. Anything that
+    linked to a course page — the old sitemap, a shared link — lands on the
+    catalogue rather than a 404. A slug-to-category map would be more precise
+    but would have to be maintained by hand forever, for URLs that were live
+    for about a week.
+  */
+  async redirects() {
+    return [{ source: "/courses/:slug*", destination: "/learn", permanent: true }];
+  },
 };
 
 export default nextConfig;

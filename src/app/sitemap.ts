@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { withPublic } from "@/lib/db/tenant";
-import type { CourseDoc, LessonDoc } from "@/lib/db/documents";
+import type { CategoryDoc, LessonDoc } from "@/lib/db/documents";
 import { base } from "./robots";
 
 export const revalidate = 3600;
@@ -28,13 +28,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const rows = await withPublic(async (db) => ({
-      c: await db.find<CourseDoc>("courses", { isPublished: true }, { sort: { sortOrder: 1 }, projection: { id: 1 } }),
-      l: await db.find<LessonDoc>("lessons", { isFree: true }, { projection: { id: 1 } }),
+      c: await db.find<CategoryDoc>("categories", {}, { sort: { sortOrder: 1 }, projection: { id: 1 } }),
+      l: await db.find<LessonDoc>("lessons", { isFree: true, isPublished: true }, { projection: { id: 1 } }),
     }));
 
     return [
       ...staticEntries,
-      ...rows.c.map((x) => ({ url: `${root}/courses/${x.id}`, changeFrequency: "weekly" as const, priority: 0.8 })),
+      ...rows.c.map((x) => ({ url: `${root}/learn/${x.id}`, changeFrequency: "weekly" as const, priority: 0.8 })),
       ...rows.l.map((x) => ({ url: `${root}/lessons/${x.id}`, changeFrequency: "monthly" as const, priority: 0.7 })),
     ];
   } catch {

@@ -19,7 +19,7 @@
 import "./load-env";
 import { randomUUID } from "node:crypto";
 import { withTenant } from "../src/lib/db/scope";
-import type { CourseDoc, UserDoc } from "../src/lib/db/documents";
+import type { CategoryDoc, UserDoc } from "../src/lib/db/documents";
 import { getClient, getDb } from "../src/lib/db/mongo";
 
 let pass = 0;
@@ -94,9 +94,9 @@ async function main() {
   const stillThere = await withTenant(B, (db) => db.findOne<UserDoc>("users", { id: userB.id }));
   check(deleted === 0 && stillThere !== null, "one tenant cannot delete another's user");
 
-  // 6. Global content stays visible to everyone. Courses carry tenantId null.
-  const seenFromA = await withTenant(A, (db) => db.countDocuments<CourseDoc>("courses", { isPublished: true }));
-  const seenFromB = await withTenant(B, (db) => db.countDocuments<CourseDoc>("courses", { isPublished: true }));
+  // 6. Global content stays visible to everyone. Categories carry tenantId null.
+  const seenFromA = await withTenant(A, (db) => db.countDocuments<CategoryDoc>("categories", {}));
+  const seenFromB = await withTenant(B, (db) => db.countDocuments<CategoryDoc>("categories", {}));
   check(seenFromA === seenFromB, "global content is visible from every tenant", `${seenFromA} / ${seenFromB}`);
 
   // Clean up after ourselves.

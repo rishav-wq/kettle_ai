@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ForbiddenError, toErrorResponse } from "@/lib/security/request";
 import { deleteInput, lessonInput, parseBody, ValidationError } from "@/lib/security/validators";
 import { withTenant } from "@/lib/db/tenant";
-import type { CourseDoc, LessonDoc, ProgressDoc, VideoAssetDoc } from "@/lib/db/documents";
+import type { CategoryDoc, LessonDoc, ProgressDoc, VideoAssetDoc } from "@/lib/db/documents";
 import { youtubeId } from "@/lib/video/embed";
 import { adminPreamble } from "@/lib/admin";
 import { audit } from "@/lib/audit";
@@ -29,8 +29,8 @@ export async function POST(req: Request) {
     const outcome = await withTenant(
       admin.tenantId,
       async (db) => {
-        const course = await db.findOne<CourseDoc>("courses", { id: body.courseId });
-        if (!course) throw new ValidationError("unknown_course");
+        const category = await db.findOne<CategoryDoc>("categories", { id: body.categoryId });
+        if (!category) throw new ValidationError("unknown_category");
 
         const existing = await db.findOne<LessonDoc>("lessons", { id: body.id });
 
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
           {
             $set: {
               id: body.id,
-              courseId: body.courseId,
+              categoryId: body.categoryId,
               sortOrder: body.sortOrder,
               titleHi: body.titleHi,
               titleEn: body.titleEn,
@@ -76,6 +76,8 @@ export async function POST(req: Request) {
               transcriptHi: body.transcriptHi ?? null,
               transcriptEn: body.transcriptEn ?? null,
               isFree: body.isFree,
+              isPublished: body.isPublished,
+              imageUrl: body.imageUrl ?? null,
             },
           },
           { upsert: true }
@@ -88,7 +90,7 @@ export async function POST(req: Request) {
           targetType: "lesson",
           targetId: body.id,
           ip,
-          meta: { course: body.courseId, ref, free: body.isFree },
+          meta: { category: body.categoryId, ref, free: body.isFree, published: body.isPublished },
         });
 
         return { tooManyFree: 0 };

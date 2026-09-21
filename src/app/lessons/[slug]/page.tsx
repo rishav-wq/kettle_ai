@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!lesson) return {};
 
   return pageMetadata({
-    title: `${lesson.titleEn} | ${lesson.course.titleEn}`,
+    title: `${lesson.titleEn} | ${lesson.category.nameEn}`,
     description: `A short beginner lesson from ${SITE_NAME} about ${lesson.titleEn.toLowerCase()}. Learn practical AI skills step by step.`,
     pathname: `/lessons/${lesson.id}`,
   });
@@ -56,12 +56,12 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       tab="learn"
       header={
         <GradHeader
-          back={{ href: `/courses/${lesson.course.id}`, label: pick(lang, "कोर्स पर वापस", "Back to course") }}
+          back={{ href: `/learn/${lesson.category.id}`, label: pick(lang, lesson.category.nameHi, lesson.category.nameEn) }}
           action={
             <span className="rounded-pill bg-white/18 px-3 py-1.5 text-[0.78rem] font-semibold text-white backdrop-blur-sm">
               <T
-                hi={`${lesson.course.lessonCount} में से lesson ${lesson.sortOrder}`}
-                en={`Lesson ${lesson.sortOrder} of ${lesson.course.lessonCount}`}
+                hi={`${lesson.category.lessonCount} में से lesson ${lesson.sortOrder}`}
+                en={`Lesson ${lesson.sortOrder} of ${lesson.category.lessonCount}`}
               />
             </span>
           }
@@ -106,8 +106,8 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
           </h1>
           <p className="text-[0.88rem] font-medium tabular-nums text-ink-3">
             <T
-              hi={`${lesson.course.titleHi} · ${minutes} मिनट${progress?.completed ? " · देख लिया" : ""}`}
-              en={`${lesson.course.titleEn} · ${minutes} min${progress?.completed ? " · Watched" : ""}`}
+              hi={`${lesson.category.nameHi} · ${minutes} मिनट${progress?.completed ? " · देख लिया" : ""}`}
+              en={`${lesson.category.nameEn} · ${minutes} min${progress?.completed ? " · Watched" : ""}`}
             />
           </p>
         </Card>
@@ -139,11 +139,11 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
                 <T hi="अगला lesson" en="Next lesson" />
               </Button>
             ) : (
-              <Button href={`/courses/${lesson.course.id}`} size="lg" full>
-                <T hi="कोर्स पूरा हुआ" en="Course finished" />
+              <Button href={`/learn/${lesson.category.id}`} size="lg" full>
+                <T hi="सब देख लिया" en="All done here" />
               </Button>
             )}
-            <Button href={`/courses/${lesson.course.id}`} variant="ghost" full>
+            <Button href={`/learn/${lesson.category.id}`} variant="ghost" full>
               <T hi="सभी lessons" en="All lessons" />
             </Button>
           </div>
@@ -152,7 +152,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
              sibling to sit beside: it spans both tracks and centres, rather
              than filling the first one and stopping short of the card above. */
           <Button
-            href={`/courses/${lesson.course.id}`}
+            href={`/learn/${lesson.category.id}`}
             variant="ghost"
             full
             className="lg:col-span-2 lg:mx-auto lg:w-auto lg:min-w-[300px]"

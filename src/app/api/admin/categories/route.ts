@@ -1,7 +1,7 @@
 import { toErrorResponse, ForbiddenError } from "@/lib/security/request";
 import { categoryInput, deleteInput, parseBody } from "@/lib/security/validators";
 import { withTenant } from "@/lib/db/tenant";
-import type { CategoryDoc, CourseDoc } from "@/lib/db/documents";
+import type { CategoryDoc, LessonDoc } from "@/lib/db/documents";
 import { adminPreamble } from "@/lib/admin";
 import { audit } from "@/lib/audit";
 
@@ -27,10 +27,14 @@ export async function POST(req: Request) {
           {
             $set: {
               id: body.id,
+              // Null means global content, visible to every tenant.
+              tenantId: null,
               nameHi: body.nameHi,
               nameEn: body.nameEn,
               blurbHi: body.blurbHi ?? null,
               blurbEn: body.blurbEn ?? null,
+              descriptionHi: body.descriptionHi ?? null,
+              descriptionEn: body.descriptionEn ?? null,
               sortOrder: body.sortOrder,
             },
           },
@@ -55,12 +59,12 @@ export async function POST(req: Request) {
 }
 
 /**
- * Deleting a category refuses while courses still point at it.
+ * Deleting a category refuses while lessons still point at it.
  *
- * Cascading would take the courses and their lessons with it, and a mistyped
- * tap would silently remove hours of filmed work. Orphaning them instead would
- * leave courses that render under no heading. Refusing is the only option that
- * cannot lose anything, and the message says what to move.
+ * Cascading would take them with it, and a mistyped tap would silently remove
+ * hours of filmed work. Orphaning them instead would leave lessons rendering
+ * under no heading. Refusing is the only option that cannot lose anything, and
+ * the message says what to move.
  */
 export async function DELETE(req: Request) {
   try {
@@ -70,8 +74,8 @@ export async function DELETE(req: Request) {
     const result = await withTenant(
       admin.tenantId,
       async (db) => {
-        const courses = await db.find<CourseDoc>("courses", { categoryId: body.id });
-        if (courses.length > 0) return { blocked: courses.length };
+        const lessons = await db.find<LessonDoc>("lessons", { categoryId: body.id });
+        if (lessons.length > 0) return { blocked: lessons.length };
 
         await db.deleteOne<CategoryDoc>("categories", { id: body.id });
         await audit(db, {
@@ -88,7 +92,7 @@ export async function DELETE(req: Request) {
     );
 
     if (result.blocked > 0) {
-      throw new ForbiddenError(`category_has_courses:${result.blocked}`);
+      throw new ForbiddenError(`category_has_lessons:${result.blocked}`);
     }
     return Response.json({ ok: true });
   } catch (err) {

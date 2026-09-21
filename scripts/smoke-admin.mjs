@@ -1,7 +1,7 @@
 /*
   Drives the catalogue editor the way a browser does.
 
-  Signs in as an admin, creates a category, a course and a lesson, proves every
+  Signs in as an admin, creates a category and a lesson, proves every
   invariant that protects the catalogue, checks a draft stays off the Learn
   page until it is published, then deletes everything it made and the account
   it made it with.
@@ -87,28 +87,19 @@ console.log("\n— creating —");
 const cat = { id: "smoke-cat", nameEn: "Smoke category", nameHi: "धुआँ श्रेणी", sortOrder: 900 };
 check((await req("/api/admin/categories", { method: "POST", body: cat })).status === 200, "a category is created");
 
-const course = {
-  id: "smoke-course",
-  categoryId: "smoke-cat",
-  titleEn: "Smoke course",
-  titleHi: "धुआँ कोर्स",
-  sortOrder: 900,
-  isPublished: false,
-};
-check((await req("/api/admin/courses", { method: "POST", body: course })).status === 200, "a course is created as a draft");
-
 const lesson = {
   id: "smoke-lesson",
-  courseId: "smoke-course",
+  categoryId: "smoke-cat",
   titleEn: "Smoke lesson",
   titleHi: "धुआँ पाठ",
   video: "https://www.youtube.com/watch?v=9fKQJcbd-jY&t=42s&list=PLabc",
   durationSec: 300,
   isFree: false,
+  isPublished: false,
   sortOrder: 1,
 };
 const made = await req("/api/admin/lessons", { method: "POST", body: lesson });
-check(made.status === 200, "a lesson is created");
+check(made.status === 200, "a lesson is created as a draft");
 check(made.json?.providerRef === "9fKQJcbd-jY", "and a messy watch URL is stored as the bare id", `→ ${made.json?.providerRef}`);
 
 console.log("\n— the invariants hold —");
@@ -118,19 +109,16 @@ check(badVideo.status === 400, "an unreadable video link is refused", `→ ${bad
 const fifthFree = await req("/api/admin/lessons", { method: "POST", body: { ...lesson, isFree: true } });
 check(fifthFree.status === 403, "a fifth free lesson is refused", `→ ${fifthFree.status}`);
 
-const badCat = await req("/api/admin/courses", { method: "POST", body: { ...course, id: "smoke-orphan", categoryId: "no-such-category" } });
-check(badCat.status === 400, "a course in a category that does not exist is refused", `→ ${badCat.status}`);
+const badCat = await req("/api/admin/lessons", { method: "POST", body: { ...lesson, id: "smoke-orphan", categoryId: "no-such-category" } });
+check(badCat.status === 400, "a lesson in a category that does not exist is refused", `→ ${badCat.status}`);
 
-const catWithCourses = await req("/api/admin/categories", { method: "DELETE", body: { id: "smoke-cat" } });
-check(catWithCourses.status === 403, "a category with courses cannot be deleted", `→ ${catWithCourses.status}`);
-
-const courseWithLessons = await req("/api/admin/courses", { method: "DELETE", body: { id: "smoke-course" } });
-check(courseWithLessons.status === 403, "a course with lessons cannot be deleted", `→ ${courseWithLessons.status}`);
+const catWithLessons = await req("/api/admin/categories", { method: "DELETE", body: { id: "smoke-cat" } });
+check(catWithLessons.status === 403, "a category with lessons cannot be deleted", `→ ${catWithLessons.status}`);
 
 console.log("\n— drafts stay invisible —");
-check(!(await req("/learn")).text.includes("Smoke course"), "an unpublished course is absent from Learn");
-check((await req("/api/admin/courses", { method: "POST", body: { ...course, isPublished: true } })).status === 200, "the course is published");
-check((await req("/learn")).text.includes("Smoke course"), "and now appears on Learn");
+check(!(await req("/learn")).text.includes("Smoke lesson"), "an unpublished lesson is absent from Learn");
+check((await req("/api/admin/lessons", { method: "POST", body: { ...lesson, isPublished: true } })).status === 200, "the lesson is published");
+check((await req("/learn")).text.includes("Smoke lesson"), "and now appears on Learn");
 
 /*
   The editor can watch what they publish, and nobody else inherits it.
@@ -183,9 +171,8 @@ check(
 
 console.log("\n— cleaning up —");
 check((await req("/api/admin/lessons", { method: "DELETE", body: { id: "smoke-lesson" } })).status === 200, "lesson deleted");
-check((await req("/api/admin/courses", { method: "DELETE", body: { id: "smoke-course" } })).status === 200, "course deleted");
 check((await req("/api/admin/categories", { method: "DELETE", body: { id: "smoke-cat" } })).status === 200, "category deleted");
-check(!(await req("/learn")).text.includes("Smoke course"), "and Learn is back to what it was");
+check(!(await req("/learn")).text.includes("Smoke lesson"), "and Learn is back to what it was");
 check((await req("/api/account", { method: "DELETE" })).status === 200, "the admin test account is removed");
 
 console.log(`\n${fail === 0 ? "All admin checks passed." : `${fail} FAILED, ${pass} passed.`}`);

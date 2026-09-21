@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AppShell, GradHeader } from "@/components/app-shell";
 import { Button, Card, LessonRow } from "@/components/ui";
 import { withTenant } from "@/lib/db/tenant";
-import { getContinue, getCourseCompletion } from "@/lib/content/progress";
+import { getCategoryCompletion, getContinue } from "@/lib/content/progress";
 import { getViewer } from "@/lib/viewer";
 import { T } from "@/components/bilingual";
 
@@ -31,13 +31,13 @@ export default async function MinePage() {
     );
   }
 
-  const { current, courses } = await withTenant(viewer.tenantId, async (tx) => ({
+  const { current, categories } = await withTenant(viewer.tenantId, async (tx) => ({
     current: await getContinue(tx, viewer.userId!),
-    courses: await getCourseCompletion(tx, viewer.userId!),
+    categories: await getCategoryCompletion(tx, viewer.userId!),
   }));
 
-  const finished = courses.filter((c) => c.done >= c.total);
-  const started = courses.filter((c) => c.done < c.total);
+  const finished = categories.filter((c) => c.done >= c.total);
+  const started = categories.filter((c) => c.done < c.total);
 
   return (
     <AppShell
@@ -67,8 +67,8 @@ export default async function MinePage() {
               title={<T hi={current.lessonTitleHi} en={current.lessonTitleEn} />}
               meta={
                 <T
-                  hi={`${current.courseTitleHi} · ${current.lessonCount} में से ${current.sortOrder}`}
-                  en={`${current.courseTitleEn} · ${current.sortOrder} of ${current.lessonCount}`}
+                  hi={`${current.categoryNameHi} · ${current.lessonCount} में से ${current.sortOrder}`}
+                  en={`${current.categoryNameEn} · ${current.sortOrder} of ${current.lessonCount}`}
                 />
               }
               progress={current.durationSec > 0 ? current.watchedSec / current.durationSec : 0}
@@ -85,7 +85,7 @@ export default async function MinePage() {
             </h2>
             <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
               {started.map((c) => (
-                <CourseProgress key={c.courseId} {...c} />
+                <CategoryProgress key={c.categoryId} {...c} />
               ))}
             </div>
           </section>
@@ -101,37 +101,37 @@ export default async function MinePage() {
             </div>
             <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
               {finished.map((c) => (
-                <CourseProgress key={c.courseId} {...c} />
+                <CategoryProgress key={c.categoryId} {...c} />
               ))}
             </div>
           </section>
         ) : null}
 
-        {!current && courses.length === 0 ? <Empty signedIn /> : null}
+        {!current && categories.length === 0 ? <Empty signedIn /> : null}
       </div>
     </AppShell>
   );
 }
 
-function CourseProgress({
-  courseId,
-  titleHi,
-  titleEn,
+function CategoryProgress({
+  categoryId,
+  nameHi,
+  nameEn,
   done,
   total,
 }: {
-  courseId: string;
-  titleHi: string;
-  titleEn: string;
+  categoryId: string;
+  nameHi: string;
+  nameEn: string;
   done: number;
   total: number;
 }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
-    <Link href={`/courses/${courseId}`} className="flex flex-col gap-3 rounded-tile bg-paper p-4 shadow-s transition-shadow hover:shadow-m">
+    <Link href={`/learn/${categoryId}`} className="flex flex-col gap-3 rounded-tile bg-paper p-4 shadow-s transition-shadow hover:shadow-m">
       <div className="flex items-baseline gap-3">
         <span className="min-w-0 flex-1 truncate text-[0.98rem] font-semibold">
-          <T hi={titleHi} en={titleEn} />
+          <T hi={nameHi} en={nameEn} />
         </span>
         <span className="flex-none text-[0.82rem] font-medium tabular-nums text-ink-3">
           {done} / {total}

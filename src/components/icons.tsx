@@ -112,3 +112,26 @@ export function ChatIcon({ className }: Props) {
     </svg>
   );
 }
+
+export function HelpIcon({ className }: Props) {
+  // A question mark inside a ring. The sidebar drew a literal "?" character
+  // next to five SVG icons, which sat on a different baseline and carried the
+  // body font's weight rather than the icon set's.
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <circle cx="12" cy="12" r="9" {...stroke} />
+      <path d="M9.4 9.3a2.7 2.7 0 1 1 3.3 2.9c-.5.2-.8.6-.8 1.1v.6" {...stroke} />
+      <circle cx="12" cy="16.8" r="1.05" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function PencilIcon({ className }: Props) {
+  // The catalogue editor. Same reason as HelpIcon: it was a "✎" glyph.
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path d="M4 20h4L19.2 8.8a2.1 2.1 0 0 0 0-3L18.2 4.8a2.1 2.1 0 0 0-3 0L4 16v4Z" {...stroke} />
+      <path d="M14.5 5.5 18.5 9.5" {...stroke} />
+    </svg>
+  );
+}

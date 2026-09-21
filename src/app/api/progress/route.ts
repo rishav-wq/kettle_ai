@@ -3,7 +3,7 @@ import { LIMITS, enforceRate } from "@/lib/security/rate-limit";
 import { assertSameOrigin, toErrorResponse } from "@/lib/security/request";
 import { parseBody, slug } from "@/lib/security/validators";
 import { withTenant } from "@/lib/db/tenant";
-import type { CourseDoc, LessonDoc, VideoAssetDoc } from "@/lib/db/documents";
+import type { CategoryDoc, LessonDoc, VideoAssetDoc } from "@/lib/db/documents";
 import { recordBeat } from "@/lib/content/progress";
 import { FREE_LESSON_LIMIT, canWatch, getViewer } from "@/lib/viewer";
 
@@ -29,14 +29,14 @@ export async function POST(req: Request) {
     await enforceRate(`beat:${viewer.userId}`, LIMITS.progressBeat);
 
     const result = await withTenant(viewer.tenantId, async (db) => {
-      const lesson = await db.findOne<LessonDoc>("lessons", { id: body.lessonId });
+      const lesson = await db.findOne<LessonDoc>("lessons", { id: body.lessonId, isPublished: true });
       if (!lesson) return { error: "not_found" as const };
 
-      // The lesson only exists as far as this request is concerned if its
-      // course is published and visible to this tenant. The INNER JOIN used to
-      // say that; here it has to be asked for.
-      const course = await db.findOne<CourseDoc>("courses", { id: lesson.courseId, isPublished: true });
-      if (!course) return { error: "not_found" as const };
+      // A lesson whose category this tenant cannot see does not exist as far
+      // as this request is concerned. The INNER JOIN used to say that; here it
+      // has to be asked for.
+      const category = await db.findOne<CategoryDoc>("categories", { id: lesson.categoryId });
+      if (!category) return { error: "not_found" as const };
 
       const asset = lesson.videoAssetId ? await db.findOne<VideoAssetDoc>("video_assets", { id: lesson.videoAssetId }) : null;
       if (!canWatch(viewer, lesson)) return { error: "locked" as const };

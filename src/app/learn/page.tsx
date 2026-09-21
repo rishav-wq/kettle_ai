@@ -12,19 +12,20 @@ import { pick } from "@/lib/pick";
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
   title: "AI courses for beginners",
-  description: "Explore practical AI courses for everyday life, online safety, messages, letters, planning, travel, and work.",
+  description: "Explore practical AI lessons for everyday life, online safety, messages, letters, planning, travel, and work.",
   pathname: "/learn",
 });
 
+/** How many lessons a shelf shows before it is worth offering the whole category. */
+const SHELF = 6;
+
 /*
-  Categories.
+  Categories, each a shelf of lessons.
 
-  The second reference screen: a gradient header carrying the title and the
-  search field, then a two-column grid of white illustration cards that starts
-  by overlapping the header.
-
-  The category chosen at onboarding is floated to the top, which is the one
-  thing the reference does not do and this product needs.
+  Two levels: tap a category heading's "See all" for the rest, or tap a lesson
+  and it plays. Courses used to sit in between and were removed — in eight of
+  the eleven filled categories there was exactly one, so it was a tap to a page
+  that repeated the category under a near-identical name.
 */
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const viewer = await getViewer();
@@ -33,26 +34,23 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
   const lang = await getLang();
 
   /*
-    The search box posted ?q= and nothing read it, so typing and pressing go
-    reloaded the same page. Matching happens here rather than in the database:
-    the whole catalogue is sixteen courses, already loaded, and a round trip to
-    Atlas to filter sixteen strings would be slower than filtering them.
+    Matching happens here rather than in the database: the whole catalogue is
+    sixty-seven lessons, already loaded, and a round trip to Atlas to filter
+    sixty-seven strings would be slower than filtering them.
 
-    Category names count as matches too — someone typing "safe" means the
-    category as often as a course title.
+    Both languages are searched whichever one the interface is in. Someone
+    reading in Hindi may well type "scam", and someone reading in English may
+    type a Devanagari word off the card they just saw.
   */
   const query = (q ?? "").trim().toLowerCase();
-  /* Both languages are searched whichever one the interface is in. Someone
-     reading in Hindi may well type "scam", and someone reading in English may
-     type a Devanagari word off the course card they just saw. */
   const has = (...fields: string[]) => fields.some((f) => f.toLowerCase().includes(query));
   const searched = query
     ? catalog
         .map((c) => ({
           ...c,
-          courses: has(c.nameEn, c.nameHi) ? c.courses : c.courses.filter((course) => has(course.titleEn, course.titleHi)),
+          lessons: has(c.nameEn, c.nameHi) ? c.lessons : c.lessons.filter((l) => has(l.titleEn, l.titleHi)),
         }))
-        .filter((c) => c.courses.length > 0)
+        .filter((c) => c.lessons.length > 0)
     : catalog;
 
   const preferred = viewer.preferredCategoryId;
@@ -66,13 +64,6 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
       viewer={viewer}
       tab="learn"
       header={
-        /*
-          Greeted by name once we know it. "Namaste, Sunita ji" is how this
-          audience is addressed by anyone they trust, and it is the one place a
-          signed-in page can say something a logged-out one cannot. Before
-          then it asks the question instead, which is also what the page is
-          for.
-        */
         <GradHeader
           title={
             viewer.name ? (
@@ -98,7 +89,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               // search does not mean retyping it.
               defaultValue={q ?? ""}
               placeholder={pick(lang, "खोजिए: चिट्ठी, WhatsApp, सुरक्षा…", "Search: letters, WhatsApp, safety…")}
-              aria-label={pick(lang, "कोर्स खोजिए", "Search courses")}
+              aria-label={pick(lang, "कोर्स खोजिए", "Search lessons")}
               className="h-[54px] w-full rounded-pill bg-paper pl-12 pr-4 text-[0.95rem] text-ink shadow-m outline-none placeholder:text-ink-3"
             />
           </form>
@@ -115,8 +106,6 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               <h2 className="text-[1.15rem] font-bold">
                 <T hi={cat.nameHi} en={cat.nameEn} />
               </h2>
-              {/* Only the categories that carry one. Seventeen explanations
-                  would explain nothing. */}
               {cat.blurbEn ? (
                 <p className="text-[0.85rem] font-medium text-ink-3">
                   <T hi={cat.blurbHi ?? cat.blurbEn} en={cat.blurbEn} />
@@ -127,26 +116,27 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                   <T hi="आपकी पसंद" en="Your pick" />
                 </span>
               ) : null}
-              {/* "See all" only where there is more than the shelf shows. A link
-                  that goes somewhere no larger than the row it sits above is
+              {/* "See all" only where the shelf does not already show
+                  everything. A link to no more than is already on screen is
                   just another thing to read. */}
-              {cat.courses.length > 2 ? (
+              {cat.lessons.length > SHELF ? (
                 <a
-                  href={`/learn?q=${encodeURIComponent(cat.nameEn)}`}
+                  href={`/learn/${cat.id}`}
                   className="ml-auto flex-none text-[0.85rem] font-semibold text-violet underline underline-offset-4"
                 >
-                  <T hi="सभी देखिए" en="See all" />
+                  <T hi={`सभी ${cat.lessons.length}`} en={`All ${cat.lessons.length}`} />
                 </a>
               ) : (
                 <span className="ml-auto text-[0.82rem] font-medium tabular-nums text-ink-3">
-                  {cat.courses.length > 0 ? cat.courses.length : null}
+                  {cat.lessons.length > 0 ? cat.lessons.length : null}
                 </span>
               )}
             </div>
 
-            {cat.courses.length === 0 ? (
-              /* Nothing filmed here yet. Said plainly rather than hidden, so the
-                 shape of the finished product is visible from the first visit. */
+            {cat.lessons.length === 0 ? (
+              /* Nothing filmed here yet. Said plainly rather than hidden, so
+                 the shape of the finished product is visible from the first
+                 visit. */
               <div className="flex items-center gap-3 rounded-card border border-dashed border-line bg-paper/60 px-5 py-6">
                 <span className="text-[0.9rem] text-ink-3">
                   <T hi="जल्द आ रहा है" en="Coming soon" />
@@ -155,23 +145,17 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             ) : (
               /* A shelf rather than a grid. Seventeen categories stacked as
                  grids is a very long page; a row that scrolls sideways keeps
-                 each category one glance tall. The negative margin lets the
-                 first and last card meet the screen edge while the page keeps
-                 its gutter. */
+                 each category one glance tall. scroll-px-5 matches the gutter
+                 so the mandatory snap does not scroll it out of view. */
               <div className="no-bar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:scroll-px-0 lg:px-0">
-                {cat.courses.map((c) => (
+                {cat.lessons.slice(0, SHELF).map((l) => (
                   <Tile
-                    key={c.id}
-                    href={`/courses/${c.id}`}
-                    image={c.imageUrl ?? undefined}
-                    title={<T hi={c.titleHi} en={c.titleEn} />}
-                    meta={
-                      <T
-                        hi={`${c.lessonCount} lessons · ${c.minutes} मिनट`}
-                        en={`${c.lessonCount} lessons · ${c.minutes} min`}
-                      />
-                    }
-                    badge={c.hasFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
+                    key={l.id}
+                    href={`/lessons/${l.id}`}
+                    image={l.imageUrl ?? undefined}
+                    title={<T hi={l.titleHi} en={l.titleEn} />}
+                    meta={<T hi={`${l.minutes} मिनट`} en={`${l.minutes} min`} />}
+                    badge={l.isFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
                     className="w-[calc((100%-1rem)/2)] flex-none snap-start sm:w-[200px] lg:w-[230px]"
                   />
                 ))}
@@ -194,14 +178,14 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               />
             </p>
             <Button href="/learn" variant="soft">
-              <T hi="सभी कोर्स दिखाइए" en="Show all courses" />
+              <T hi="सभी कोर्स दिखाइए" en="Show everything" />
             </Button>
           </div>
         ) : null}
 
         {catalog.length === 0 ? (
           <p className="rounded-card bg-paper px-5 py-8 text-center text-ink-3 shadow-s">
-            No courses yet. Run <code className="font-mono text-[0.85em]">npm run db:seed</code>.
+            No lessons yet. Run <code className="font-mono text-[0.85em]">npm run db:seed</code>.
           </p>
         ) : null}
       </div>

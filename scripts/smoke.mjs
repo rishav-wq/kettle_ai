@@ -27,9 +27,18 @@ const monthsFromNow = (iso) => (new Date(iso).getTime() - Date.now()) / (30.4 * 
   the same places the product reads them.
 */
 const content = JSON.parse(readFileSync(new URL("../content/kettle-content.json", import.meta.url), "utf8"));
-const allLessons = content.courses.flatMap((c) => c.lessons.map((l) => ({ ...l, courseId: c.id })));
+const allLessons = content.categories.flatMap((c) => c.lessons.map((l) => ({ ...l, categoryId: c.id })));
 const freeIds = allLessons.filter((l) => l.isFree).map((l) => l.id);
-const lockedLesson = allLessons.find((l) => !l.isFree);
+/*
+  Prefer a paid lesson that has a transcript.
+
+  Two checks depend on this one lesson and they are a pair: locked must
+  withhold the transcript, unlocked must deliver it. Picking merely the first
+  paid lesson made the first vacuous and the second fail, which is the wrong
+  half to notice.
+*/
+const lockedLesson = allLessons.find((l) => !l.isFree && (l.transcriptHi || l.transcriptEn)) ?? allLessons.find((l) => !l.isFree);
+const lockedHasTranscript = Boolean(lockedLesson.transcriptHi || lockedLesson.transcriptEn);
 
 /** GOLD_MONTHS, from the environment or the default in src/lib/env.ts. */
 const goldMonths = (() => {
@@ -119,7 +128,7 @@ check((await req("/lessons/does-not-exist")).status === 404, "unknown lesson is 
 check((await req("/i/NOPE99")).status === 307, "unknown referral code redirects home");
 
 console.log(`\n— things that must be refused —`);
-check((await req("/api/progress", { method: "POST", body: { lessonId: "talk-to-ai-1", positionSec: 10 } })).status === 401, "progress without a session is 401");
+check((await req("/api/progress", { method: "POST", body: { lessonId: freeIds[0], positionSec: 10 } })).status === 401, "progress without a session is 401");
 check((await req("/api/account", { method: "DELETE" })).status === 401, "account deletion without a session is 401");
 check((await req("/api/auth/otp/send", { method: "POST", body: { phone }, origin: "https://evil.example" })).status === 403, "cross-origin OTP send is 403");
 check((await req("/api/webhooks/razorpay", { method: "POST", body: { event: "payment.captured" }, headers: { "x-razorpay-signature": "deadbeef" } })).status !== 200, "unsigned webhook is refused");
@@ -200,12 +209,13 @@ check(order.status === 200 && order.json?.simulated === true, "order created in 
 check((await req("/api/payments/simulate", { method: "POST" })).status === 200, "the webhook stand-in activates the membership");
 const status = await req("/api/payments/status");
 check(status.json?.state === "gold", "viewer state is now gold", `→ ${status.json?.state}`);
-const unlocked = await req("/lessons/talk-to-ai-3");
+const unlocked = await req(`/lessons/${lockedLesson.id}`);
 // Every seeded video id is a TODO placeholder, so the player renders "being added"
 // rather than an iframe. What matters here is that the lock is gone and the
 // lesson content, the transcript, is now delivered.
 check(unlocked.status === 200 && !unlocked.text.includes("This lesson is for Gold members"), "the paid lesson is no longer locked");
-check(unlocked.text.includes("Read along"), "the paid lesson now delivers its transcript");
+if (lockedHasTranscript) check(unlocked.text.includes("Read along"), "the paid lesson now delivers its transcript");
+else console.log("WARN: the same lesson has no transcript, so delivery of it is not exercised either");
 check((await req("/invite")).status === 200, "invite page opens for a gold member");
 check((await req("/api/payments/order", { method: "POST" })).status === 409, "a gold member cannot order again");
 
@@ -307,16 +317,25 @@ check(editorPage.status === 404, "a signed-in learner gets 404 from /admin", `�
   not a leak. What matters is that no course, no draft and no admin phone
   comes back, and that what does come back is the ordinary 404.
 */
-check(!editorPage.text.includes("talk-to-ai") && !editorPage.text.includes("Start with AI"), "and no catalogue content comes back");
+check(!editorPage.text.includes(freeIds[0]) && !editorPage.text.includes("Coming soon"), "and no catalogue content comes back");
 check(!editorPage.text.includes(phoneB), "and no admin allow-list is disclosed");
 check(editorPage.text.includes("could not find"), "it is the ordinary not-found page");
 
 for (const [path, body] of [
   ["/api/admin/categories", { id: "evil", nameHi: "x", nameEn: "x", sortOrder: 1 }],
-  ["/api/admin/courses", { id: "evil", categoryId: "start", titleHi: "x", titleEn: "x", sortOrder: 1, isPublished: true }],
   [
     "/api/admin/lessons",
-    { id: "evil", courseId: "talk-to-ai", titleHi: "x", titleEn: "x", video: "TODO", durationSec: 1, isFree: true, sortOrder: 99 },
+    {
+      id: "evil",
+      categoryId: lockedLesson.categoryId ?? "start",
+      titleHi: "x",
+      titleEn: "x",
+      video: "TODO",
+      durationSec: 1,
+      isFree: true,
+      isPublished: true,
+      sortOrder: 99,
+    },
   ],
   ["/api/admin/video", { video: "https://youtu.be/9fKQJcbd-jY" }],
 ]) {
@@ -330,9 +349,9 @@ const junk = await req("/api/admin/lessons", { method: "POST", body: { nonsense:
 check(junk.status === 403, "and refuses before validating the body", `→ ${junk.status}`);
 
 // Deletes too. A separate verb is a separate door.
-const del = await req("/api/admin/courses", { method: "DELETE", body: { id: "talk-to-ai" } });
-check(del.status === 403, "/api/admin/courses refuses a learner's DELETE", `→ ${del.status}`);
-check((await req("/courses/talk-to-ai")).status === 200, "and the course it aimed at is still there");
+const del = await req("/api/admin/lessons", { method: "DELETE", body: { id: lockedLesson.id } });
+check(del.status === 403, "/api/admin/lessons refuses a learner's DELETE", `→ ${del.status}`);
+check((await req(`/lessons/${lockedLesson.id}`)).status === 200, "and the lesson it aimed at is still there");
 
 console.log(`\n— account —`);
 check((await req("/api/account", { method: "PATCH", body: { name: "Sunita Devi" } })).status === 200, "profile update saves");

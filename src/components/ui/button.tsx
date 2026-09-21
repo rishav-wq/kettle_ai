@@ -17,7 +17,7 @@ const variants: Record<Variant, string> = {
   primary: "bg-fill text-on-fill shadow-m hover:shadow-l",
   soft: "bg-wash text-violet hover:bg-line",
   ghost: "border-2 border-line text-ink hover:border-violet hover:text-violet",
-  onGrad: "bg-white/18 text-white backdrop-blur-sm hover:bg-white/28",
+  onGrad: "bg-white text-violet shadow-m hover:bg-white/90",
 };
 
 const sizes: Record<Size, string> = {

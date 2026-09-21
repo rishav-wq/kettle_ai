@@ -70,7 +70,7 @@ export function Section({
 */
 const FLOOR = { learners: 500, lessons: 10, minutes: 100, freeLessons: 4 };
 
-export function Stats({ stats }: { stats: { courses: number; lessons: number; minutes: number; freeLessons: number; learners: number } }) {
+export function Stats({ stats }: { stats: { categories: number; lessons: number; minutes: number; freeLessons: number; learners: number } }) {
   /*
     Four tiles, always four. The old strip hid any zero and sized its grid by
     what survived; with floors nothing is ever zero, so the row is fixed and

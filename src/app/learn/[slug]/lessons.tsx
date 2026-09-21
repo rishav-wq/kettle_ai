@@ -31,7 +31,7 @@ export type LessonRowData = {
   The lesson page still refuses a locked lesson on its own. Someone can type
   the URL, and entitlement is not a navigation decision.
 */
-export function CourseLessons({
+export function CategoryLessons({
   rows,
   price,
   months,
@@ -79,7 +79,7 @@ export function CourseLessons({
   The big button under the list.
 
   Same rule as a row: if the lesson it points at is locked, it must not
-  pretend to be a way in. A free viewer looking at a paid course would
+  pretend to be a way in. A free viewer looking at a paid category would
   otherwise be sent to a player that opens a shop.
 */
 export function StartLessonCta({
