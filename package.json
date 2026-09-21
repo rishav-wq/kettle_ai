@@ -16,7 +16,8 @@
     "smoke:admin": "node scripts/smoke-admin.mjs",
     "db:flatten": "tsx --conditions=react-server scripts/flatten-courses.ts",
     "db:move-art": "tsx --conditions=react-server scripts/move-art.ts",
-    "check:legal": "node scripts/check-legal.mjs"
+    "check:legal": "node scripts/check-legal.mjs",
+    "smoke:review": "tsx --conditions=react-server scripts/smoke-review.ts"
   },
   "dependencies": {
     "mongodb": "^7.6.0",

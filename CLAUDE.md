@@ -34,6 +34,7 @@ Everyday AI video courses in Hindi for Indians over 40. Mobile-first PWA. One Ne
 - **Unfilled landing content is flagged, not faked.** `content/kettle-site.json` holds the teacher, testimonials and FAQ. Any entry with `"placeholder": true` renders with a dashed border and an EXAMPLE chip so it cannot ship unnoticed. Replace with real people and real photographs, then drop the flag.
 - **No urgency, ever.** No countdown, no "offer ends", no struck-through price. Most comparable products do this; it is the visual grammar of the scams our first course warns about.
 - **Entitlement flips only from the server.** Payment success is confirmed by the Razorpay webhook writing to `memberships`. The client polls `/api/payments/status`, it never asserts. `/api/payments/simulate` stands in for the webhook locally and refuses to exist once real keys are set or in production.
+- **The review account is the one fixed credential, and it is deliberately narrow.** `src/lib/auth/review.ts`. Razorpay will not approve a website without testing checkout and their form asks for a password, which this product does not have. The nominated phone goes through the entire ordinary path — challenge row, expiry, attempt cap, both rate limits, constant-time compare — and exactly two things differ: the code is fixed rather than random, and no SMS is sent. It refuses to work if the number is also in `ADMIN_PHONES`, `REVIEW_UNTIL` expires it on its own, and it warns loudly at boot. `npm run smoke:review` proves the narrowness, not just that it works.
 - **Sessions are documents, not signed tokens.** The cookie holds an opaque secret; the database holds only its SHA-256 hash. That makes revocation and account deletion real. `src/lib/auth/session.ts` is one of the few places that touches the database outside `withTenant()`, because the tenant is not known until the session is read.
 - **Secrets resolve on use, not on import.** `getAuthSecret()` and the SMS sender are lazy, because `next build` evaluates every route with `NODE_ENV=production` before secrets are necessarily in scope. A module-level throw breaks the build; a lazy one still refuses a real request.
 - **Swapping the SMS provider is one file.** `src/lib/auth/sms.ts` holds the interface, the dev sender that prints to the log, and the MSG91 implementation. India needs DLT registration per template per language.
@@ -60,6 +61,7 @@ npm run build        # what Vercel runs
 npm run typecheck && npm run lint
 npm run check:tenancy # proves tenant isolation through the scoped handle
 npm run check:legal   # what is still unfilled before Razorpay will approve a live account
+npm run smoke:review -- http://localhost:3080   # the reviewer sign-in; needs REVIEW_* set on the dev server
 npm run smoke -- http://localhost:3080 <path-to-dev-log>   # walks the whole product
 npm run smoke:admin -- http://localhost:3080 <path-to-dev-log>   # drives /admin; needs ADMIN_PHONES set on the dev server
 npm run db:flatten              # one-time: category > course > lesson becomes category > lesson (dry run; --write to apply)

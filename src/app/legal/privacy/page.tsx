@@ -1,4 +1,4 @@
-import { Governing, H1, H2, LastUpdated, P, Pending, UL } from "../parts";
+import { Governing, H1, H2, LastUpdated, P, UL, has } from "../parts";
 import { T } from "@/components/bilingual";
 import { getSiteContent } from "@/lib/content/site";
 
@@ -104,15 +104,15 @@ export default function Privacy() {
           en="If you are unhappy with how your information has been handled, write to our grievance officer and we will respond."
         />
       </P>
-      {business ? (
+      {business && has(business.grievanceEmail) ? (
         <P muted>
-          <Pending when={business.placeholder === true}>
-            {business.grievanceName}
-            <br />
-            {business.grievanceEmail}
-            <br />
-            {business.legalName}, {business.city}, {business.state} {business.postcode}
-          </Pending>
+          {has(business.grievanceName) ? (
+            <>
+              {business.grievanceName}
+              <br />
+            </>
+          ) : null}
+          {business.grievanceEmail}
         </P>
       ) : null}
     </>

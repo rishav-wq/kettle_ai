@@ -1,4 +1,5 @@
 import "server-only";
+import { reviewCodeFor } from "@/lib/auth/review";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { getDb } from "@/lib/db/mongo";
 import type { OtpChallengeDoc } from "@/lib/db/documents";
@@ -71,7 +72,13 @@ export async function issueCode(phone: string, referredByCode?: string): Promise
     }
   }
 
-  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  /*
+    The review account's code does not change. Everything else about the
+    challenge is identical — same hash, same expiry, same attempt cap — so
+    verification needs no special case and cannot be weakened by one.
+  */
+  const fixed = reviewCodeFor(phone);
+  const code = fixed ?? String(randomInt(0, 1_000_000)).padStart(6, "0");
   const doc: OtpChallengeDoc = {
     phone,
     codeHash: hashCode(phone, code),

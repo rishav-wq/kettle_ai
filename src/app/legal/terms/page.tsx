@@ -1,4 +1,4 @@
-import { Governing, H1, H2, LastUpdated, P, Pending, UL } from "../parts";
+import { Governing, H1, H2, LastUpdated, P, UL, has } from "../parts";
 import { T } from "@/components/bilingual";
 import { getSiteContent } from "@/lib/content/site";
 
@@ -24,12 +24,11 @@ export default function Terms() {
           en="Kettle sells access to video courses that teach everyday uses of artificial intelligence. Four lessons are free to watch without an account. The rest open with a Gold membership. All prices are in Indian rupees (INR)."
         />
       </P>
-      {business ? (
+      {business && has(business.legalName) ? (
         <P muted>
-          <Pending when={business.placeholder === true}>
-            <T hi="यह सेवा चलाई जाती है " en="This service is operated by " />
-            {business.legalName} ({business.entityType}), {business.city}, {business.state}.
-          </Pending>
+          <T hi="यह सेवा चलाई जाती है " en="This service is operated by " />
+          {business.legalName}
+          {has(business.entityType) ? " (" + business.entityType + ")" : ""}.
         </P>
       ) : null}
 
@@ -120,14 +119,10 @@ export default function Terms() {
       <H2>
         <T hi="लागू कानून" en="Governing law" />
       </H2>
-      {business ? (
-        <P muted>
-          <Pending when={business.placeholder === true}>
-            <T hi="ये शर्तें भारत के कानून से चलती हैं। अधिकार-क्षेत्र: " en="These terms are governed by the laws of India. Jurisdiction: " />
-            {business.jurisdiction}. {business.legalName} ({business.entityType}).
-          </Pending>
-        </P>
-      ) : null}
+      <P muted>
+        <T hi="ये शर्तें भारत के कानून से चलती हैं।" en="These terms are governed by the laws of India." />
+        {business && has(business.jurisdiction) ? " " + business.jurisdiction + "." : ""}
+      </P>
     </>
   );
 }

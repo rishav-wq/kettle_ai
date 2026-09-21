@@ -5,6 +5,7 @@ import { smsIsDev } from "@/lib/auth/sms";
 import { widgetIsConfigured } from "@/lib/auth/msg91-widget";
 import { env } from "@/lib/env";
 import { getLang } from "@/lib/lang";
+import { reviewPhone } from "@/lib/auth/review";
 import { SignInFlow } from "./flow";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,17 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
       {/* The language already chosen on the landing page comes with them, so
           the account is created reading the way they were reading. Onboarding
           asks again, with this as the answer already selected. */}
-      <SignInFlow next={safeNext(next)} referralCode={ref ?? null} devMode={smsIsDev() && !widget} widget={widget} lang={await getLang()} />
+      {/* The review phone bypasses the MSG91 widget and uses the app's own
+          OTP endpoints, which is where its fixed code lives. The number is
+          not a secret; the code is, and the code stays on the server. */}
+      <SignInFlow
+        next={safeNext(next)}
+        referralCode={ref ?? null}
+        devMode={smsIsDev() && !widget}
+        widget={widget}
+        lang={await getLang()}
+        reviewPhone={reviewPhone()}
+      />
     </AppShell>
   );
 }

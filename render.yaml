@@ -59,6 +59,16 @@ services:
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
 
+      # The reviewer sign-in, for Razorpay website approval only. A fixed code,
+      # so it is never an admin and REVIEW_UNTIL expires it on its own. Remove
+      # all three once the website is approved. See src/lib/auth/review.ts.
+      - key: REVIEW_PHONE
+        sync: false
+      - key: REVIEW_CODE
+        sync: false
+      - key: REVIEW_UNTIL
+        sync: false
+
       # Who may edit the catalogue at /admin. Comma separated phone numbers,
       # any readable Indian format. Unset means nobody and /admin 404s for
       # everyone, which is correct anywhere but Rishav own service.

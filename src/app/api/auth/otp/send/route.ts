@@ -5,6 +5,7 @@ import { indianPhone, lang as langSchema, parseBody, referralCode } from "@/lib/
 import { issueCode } from "@/lib/auth/otp";
 import { sms } from "@/lib/auth/sms";
 import { recordSend } from "@/lib/auth/sms-delivery";
+import { reviewCodeFor } from "@/lib/auth/review";
 
 const Body = z.object({
   phone: indianPhone,
@@ -44,14 +45,22 @@ export async function POST(req: Request) {
     // that is exactly what it is.
     if (!issued.ok) throw new RateLimited(issued.retryAfterSec);
 
-    // A failed send throws SmsError, which answers 502 send_failed rather than
-    // a bare 500: the caller should be told to try again, not that we broke.
-    const providerMessageId = await sms.sendOtp(phone, issued.code, lang);
+    /*
+      The review account is told nothing. Its code is fixed and already
+      known to whoever is reviewing, the number may not receive SMS at all,
+      and every send costs money. The challenge row above was still written,
+      so verification is the ordinary path.
+    */
+    if (reviewCodeFor(phone) === null) {
+      // A failed send throws SmsError, which answers 502 send_failed rather
+      // than a bare 500: the caller should be told to try again, not that we broke.
+      const providerMessageId = await sms.sendOtp(phone, issued.code, lang);
 
-    // Only reached once the provider has accepted it. Accepted is not
-    // delivered; the delivery report that arrives at /api/webhooks/msg91
-    // updates this row with what actually happened.
-    await recordSend({ provider: sms.name, providerMessageId, phone });
+      // Only reached once the provider has accepted it. Accepted is not
+      // delivered; the delivery report that arrives at /api/webhooks/msg91
+      // updates this row with what actually happened.
+      await recordSend({ provider: sms.name, providerMessageId, phone });
+    }
 
     return Response.json({ ok: true });
   } catch (err) {

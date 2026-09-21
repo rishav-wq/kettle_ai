@@ -69,6 +69,19 @@ const schema = z.object({
   */
   ADMIN_PHONES: z.string().optional(),
 
+  /*
+    The account a payment provider's reviewer signs in with, because
+    Razorpay's form asks for a password and this product has none.
+
+    A fixed code on a live site. Unset means it does not exist, which is
+    correct everywhere except the deployment under review. REVIEW_UNTIL is
+    a plain date, YYYY-MM-DD, after which it stops working by itself —
+    forgetting to remove it should expire, not persist. See src/lib/auth/review.ts.
+  */
+  REVIEW_PHONE: z.string().optional(),
+  REVIEW_CODE: z.string().optional(),
+  REVIEW_UNTIL: z.string().optional(),
+
   SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),

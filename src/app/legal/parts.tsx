@@ -60,6 +60,17 @@ export function Governing() {
   in a grep.
 */
 
+/**
+ * Is this field actually filled in?
+ *
+ * Blank and "TO CONFIRM" both mean absent. A page renders nothing rather
+ * than a placeholder, because a policy page that says TO CONFIRM is worse
+ * than one that is briefer.
+ */
+export function has(v: string | undefined | null): v is string {
+  return typeof v === "string" && v.trim() !== "" && !/TO CONFIRM/i.test(v);
+}
+
 /** Wraps unfinished detail so it cannot be mistaken for the real thing. */
 export function Pending({ children, when }: { children: ReactNode; when: boolean }) {
   if (!when) return <>{children}</>;
@@ -71,63 +82,77 @@ export function Pending({ children, when }: { children: ReactNode; when: boolean
   );
 }
 
-/** The registered entity and its full postal address, as Razorpay requires it. */
+/**
+ * The entity and its postal address.
+ *
+ * Renders nothing when there is no address to give. Razorpay's documented
+ * checklist asks for one; the site already approved on this same account
+ * publishes only an email, so an absent address is not automatically a
+ * rejection. Fill it the day they ask.
+ */
 export function RegisteredAddress({ business }: { business: Business }) {
-  const pending = business.placeholder === true;
+  const lines = (business.addressLines ?? []).filter(has);
+  const anyAddress = lines.length > 0 || has(business.city) || has(business.postcode);
+  if (!has(business.legalName) && !anyAddress) return null;
+
   return (
     <P muted>
-      <Pending when={pending}>
-        {business.legalName} ({business.entityType})
-        <br />
-        {business.addressLines.filter(Boolean).map((line) => (
-          <span key={line}>
-            {line}
-            <br />
-          </span>
-        ))}
-        {business.city}, {business.state} {business.postcode}
-        <br />
-        {business.country}
-      </Pending>
+      {has(business.legalName) ? (
+        <>
+          {business.legalName}
+          {has(business.entityType) ? " (" + business.entityType + ")" : ""}
+          <br />
+        </>
+      ) : null}
+      {lines.map((line) => (
+        <span key={line}>
+          {line}
+          <br />
+        </span>
+      ))}
+      {anyAddress ? (
+        <>
+          {[business.city, business.state, business.postcode].filter(has).join(", ")}
+          <br />
+          {business.country}
+        </>
+      ) : null}
     </P>
   );
 }
 
-/** Email and a telephone number. Razorpay asks for both, publicly reachable. */
+/** Whichever contact routes exist. An email on its own is a valid answer. */
 export function ContactLines({ business }: { business: Business }) {
-  const pending = business.placeholder === true;
   return (
     <>
-      <P muted>
-        <Pending when={pending}>
+      {has(business.email) ? (
+        <P muted>
           <T hi="ईमेल: " en="Email: " />
           {business.email}
-        </Pending>
-      </P>
-      <P muted>
-        <Pending when={pending}>
+        </P>
+      ) : null}
+      {has(business.phone) ? (
+        <P muted>
           <T hi="फ़ोन: " en="Telephone: " />
           {business.phone}
-        </Pending>
-      </P>
-      <P muted>
-        <Pending when={pending}>
+        </P>
+      ) : null}
+      {has(business.whatsapp) ? (
+        <P muted>
           <T hi="WhatsApp: " en="WhatsApp: " />
           {business.whatsapp}
-        </Pending>
-      </P>
+        </P>
+      ) : null}
     </>
   );
 }
 
 /** "Last updated", from the one place that holds the date. */
 export function LastUpdated({ business }: { business: Business }) {
-  const pending = business.placeholder === true;
+  if (!has(business.updated)) return null;
   return (
     <P muted>
-      <Pending when={pending}>
-        <T hi={`आख़िरी बदलाव: ${business.updated}`} en={`Last updated: ${business.updated}`} />
-      </Pending>
+      <T hi={`आख़िरी बदलाव: ${business.updated}`} en={`Last updated: ${business.updated}`} />
     </P>
   );
 }

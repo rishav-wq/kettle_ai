@@ -28,6 +28,7 @@ export function SignInFlow({
   devMode,
   widget,
   lang,
+  reviewPhone,
 }: {
   next: string | null;
   referralCode: string | null;
@@ -36,6 +37,11 @@ export function SignInFlow({
   lang: Lang;
   /** Null when no widget is configured, in which case our own OTP endpoints are used. */
   widget: { id: string; token: string } | null;
+  /**
+   * The one number that skips the widget, or null when no review account is
+   * configured. Everyone else signs in exactly as before.
+   */
+  reviewPhone: string | null;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("phone");
@@ -59,6 +65,14 @@ export function SignInFlow({
   const ready = digits.length >= 10 && name.trim().length > 0;
 
   /*
+    Compared on the last ten digits so it matches however it was typed.
+    When true the widget is skipped entirely and the app's own OTP
+    endpoints are used, which is where the fixed code is checked.
+  */
+  const isReview = reviewPhone !== null && digits.slice(-10) === reviewPhone.slice(-10);
+  const useWidget = widget !== null && !isReview;
+
+  /*
     Two ways to prove the number, one screen.
 
     With a widget configured, MSG91 sends and checks the code and we exchange
@@ -72,7 +86,7 @@ export function SignInFlow({
     setBusy(true);
     setError(null);
 
-    if (widget) {
+    if (useWidget) {
       try {
         await widgetSend(toIdentifier(phone));
       } catch {
@@ -93,7 +107,7 @@ export function SignInFlow({
   }
 
   async function resend() {
-    if (!widget) return send();
+    if (!useWidget) return send();
     setBusy(true);
     setError(null);
     try {
@@ -109,7 +123,7 @@ export function SignInFlow({
     setBusy(true);
     setError(null);
 
-    if (widget) {
+    if (useWidget) {
       let accessToken: string;
       try {
         accessToken = await widgetVerify(value);
@@ -156,7 +170,7 @@ export function SignInFlow({
        appeared to have been exited — unsettling for an audience who are not
        sure what they just tapped. The frame stays; only the panel changes. */
     <div className="mx-auto w-full max-w-[460px] pt-2">
-      {widget ? (
+      {useWidget ? (
         <Script
           src={WIDGET_SCRIPT}
           strategy="afterInteractive"
