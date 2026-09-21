@@ -25,6 +25,7 @@ export type AdminLesson = {
   provider: string | null;
   providerRef: string | null;
   durationSec: number;
+  orientation: "landscape" | "portrait";
   /** False while the reference is missing or still says TODO. */
   hasVideo: boolean;
 };
@@ -58,6 +59,7 @@ function toLesson(l: LessonDoc, assets: Map<string, VideoAssetDoc>): AdminLesson
     provider: asset?.provider ?? null,
     providerRef: ref,
     durationSec: asset?.durationSec ?? 0,
+    orientation: asset?.orientation ?? "landscape",
     hasVideo: Boolean(ref && !ref.startsWith("TODO")),
   };
 }

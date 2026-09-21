@@ -73,6 +73,18 @@ export type VideoAssetDoc = {
   /** For YouTube the video id. For signed providers, the playback id. */
   providerRef: string;
   durationSec: number;
+  /**
+   * Which way up the video was shot.
+   *
+   * These are filmed on a phone and watched on a phone, so most are portrait.
+   * The stage used to be 16:9 for everything, which letterboxed a 9:16 video
+   * into a thin strip with black down both sides — the video occupied about a
+   * third of the box it was given.
+   *
+   * Optional, defaulting to landscape, so an asset written before this field
+   * existed still renders the way it always did.
+   */
+  orientation?: "landscape" | "portrait";
 };
 
 /*

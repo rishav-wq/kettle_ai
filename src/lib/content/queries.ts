@@ -137,7 +137,12 @@ export type LessonDetail = {
   isFree: boolean;
   transcriptHi: string | null;
   transcriptEn: string | null;
-  video: { provider: "youtube" | "bunny" | "cloudflare"; providerRef: string; durationSec: number } | null;
+  video: {
+    provider: "youtube" | "bunny" | "cloudflare";
+    providerRef: string;
+    durationSec: number;
+    orientation: "landscape" | "portrait";
+  } | null;
   category: { id: string; nameHi: string; nameEn: string; lessonCount: number };
   next: { id: string; titleHi: string; titleEn: string } | null;
 };
@@ -162,7 +167,14 @@ export async function getLesson(db: Scoped, lessonId: string): Promise<LessonDet
     isFree: lesson.isFree,
     transcriptHi: lesson.transcriptHi,
     transcriptEn: lesson.transcriptEn,
-    video: asset ? { provider: asset.provider, providerRef: asset.providerRef, durationSec: asset.durationSec } : null,
+    video: asset
+      ? {
+          provider: asset.provider,
+          providerRef: asset.providerRef,
+          durationSec: asset.durationSec,
+          orientation: asset.orientation ?? "landscape",
+        }
+      : null,
     category: { id: category.id, nameHi: category.nameHi, nameEn: category.nameEn, lessonCount: siblings.length },
     next: next ? { id: next.id, titleHi: next.titleHi, titleEn: next.titleEn } : null,
   };

@@ -71,6 +71,8 @@ export const lessonInput = z.object({
   transcriptEn: optionalLongText,
   isFree: z.boolean(),
   isPublished: z.boolean(),
+  /* Which way up it was shot. Most of these are filmed on a phone. */
+  orientation: z.enum(["landscape", "portrait"]).default("portrait"),
   imageUrl: z.string().trim().max(300).optional().or(z.literal("").transform(() => undefined)),
   sortOrder: z.coerce.number().int().min(0).max(9999),
 });

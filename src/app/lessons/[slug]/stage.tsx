@@ -1,5 +1,7 @@
 "use client";
 
+import { stageClass } from "@/lib/video/embed";
+import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { Button } from "@/components/ui";
 import { Player } from "@/components/player";
@@ -31,7 +33,12 @@ export function LessonStage({ lessonId, locked, playable, durationSec, startAtSe
   if (locked) {
     return (
       <>
-        <div className="relative grid aspect-video place-items-center overflow-hidden rounded-card bg-violet-deep px-6 text-center shadow-l">
+        <div
+          className={cn(
+            "relative grid place-items-center overflow-hidden rounded-card bg-violet-deep px-6 text-center shadow-l",
+            stageClass(playable.portrait)
+          )}
+        >
           <div className="flex flex-col items-center gap-3">
             <span aria-hidden className="grid h-14 w-14 place-items-center rounded-full bg-white/18 text-[1.4rem] backdrop-blur-sm">
               🔒

@@ -6,7 +6,11 @@
   change the rows in video_assets. No page changes.
 */
 
-export type VideoAsset = { provider: "youtube" | "bunny" | "cloudflare"; providerRef: string };
+export type VideoAsset = {
+  provider: "youtube" | "bunny" | "cloudflare";
+  providerRef: string;
+  orientation?: "landscape" | "portrait";
+};
 
 /** A YouTube id: exactly eleven characters of this alphabet, nothing else. */
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
@@ -44,6 +48,21 @@ export function youtubeId(input: string): string | null {
   return YOUTUBE_ID.test(candidate) ? candidate : null;
 }
 
+/**
+ * The stage, sized for the video rather than for 16:9.
+ *
+ * Portrait is bounded by height and landscape by width, which is the
+ * constraint each one actually has. For portrait the width is capped so the
+ * resulting height cannot exceed 68% of the viewport — a 9:16 box at full
+ * phone width stands taller than the screen and pushes the lesson title out
+ * of sight, which is the whole reason the landscape cap existed too.
+ */
+export function stageClass(portrait: boolean): string {
+  return portrait
+    ? "mx-auto w-full max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
+    : "mx-auto w-full max-w-[min(1080px,calc(66dvh*16/9))] aspect-video";
+}
+
 /** A stable YouTube preview image for course cards and lesson previews. */
 export function youtubeThumbnail(
   provider: VideoAsset["provider"] | null,
@@ -55,16 +74,19 @@ export function youtubeThumbnail(
 }
 
 export type Playable =
-  | { kind: "iframe"; src: string; title: string; poster?: string }
-  | { kind: "pending"; reason: string };
+  | { kind: "iframe"; src: string; title: string; poster?: string; portrait: boolean }
+  | { kind: "pending"; reason: string; portrait: boolean };
 
 export function toPlayable(asset: VideoAsset | null, title: string): Playable {
-  if (!asset) return { kind: "pending", reason: "no_asset" };
-  if (asset.providerRef.startsWith("TODO")) return { kind: "pending", reason: "not_linked" };
+  // A box that has not been told otherwise stays the shape it always was.
+  const portrait = asset?.orientation === "portrait";
+
+  if (!asset) return { kind: "pending", reason: "no_asset", portrait: false };
+  if (asset.providerRef.startsWith("TODO")) return { kind: "pending", reason: "not_linked", portrait };
 
   switch (asset.provider) {
     case "youtube": {
-      if (!YOUTUBE_ID.test(asset.providerRef)) return { kind: "pending", reason: "bad_ref" };
+      if (!YOUTUBE_ID.test(asset.providerRef)) return { kind: "pending", reason: "bad_ref", portrait };
       /*
         The player's own chrome and caption preference follow the interface,
         which is English. These said "hi" from before the English-only pivot,
@@ -85,11 +107,12 @@ export function toPlayable(asset: VideoAsset | null, title: string): Playable {
         src: `https://www.youtube-nocookie.com/embed/${asset.providerRef}?${params}`,
         title,
         poster: youtubeThumbnail("youtube", asset.providerRef) ?? undefined,
+        portrait,
       };
     }
     case "bunny":
     case "cloudflare":
       // Signed playback arrives with the paid-video move. Until then these assets cannot render.
-      return { kind: "pending", reason: "provider_not_wired" };
+      return { kind: "pending", reason: "provider_not_wired", portrait };
   }
 }

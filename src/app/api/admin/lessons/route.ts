@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         await db.updateOne<VideoAssetDoc>(
           "video_assets",
           { id: assetId },
-          { $set: { id: assetId, provider: "youtube", providerRef: ref, durationSec: body.durationSec } },
+          { $set: { id: assetId, provider: "youtube", providerRef: ref, durationSec: body.durationSec, orientation: body.orientation } },
           { upsert: true }
         );
 

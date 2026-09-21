@@ -145,6 +145,7 @@ type LessonDraft = {
   imageUrl: string;
   isFree: boolean;
   isPublished: boolean;
+  orientation: "landscape" | "portrait";
   sortOrder: number;
 };
 
@@ -170,6 +171,7 @@ function LessonForm({
     transcriptHi: lesson?.transcriptHi ?? "",
     transcriptEn: lesson?.transcriptEn ?? "",
     imageUrl: lesson?.imageUrl ?? "",
+    orientation: lesson?.orientation ?? "portrait",
     isFree: lesson?.isFree ?? false,
     isPublished: lesson?.isPublished ?? false,
     sortOrder: lesson?.sortOrder ?? nextOrder,
@@ -257,8 +259,27 @@ function LessonForm({
         <Field label="Length in seconds" hint="Read it off the player. YouTube does not give us this without an API key.">
           <input type="number" className={inputClass} value={d.durationSec} onChange={(e) => set("durationSec", Number(e.target.value))} />
         </Field>
+        <Field
+          label="Shape"
+          hint="Filmed on a phone held upright is Portrait. Get this wrong and the video sits in a letterbox with black down both sides."
+        >
+          <select
+            className={inputClass}
+            value={d.orientation}
+            onChange={(e) => set("orientation", e.target.value as "landscape" | "portrait")}
+          >
+            <option value="portrait">Portrait — tall, filmed on a phone</option>
+            <option value="landscape">Landscape — wide, 16:9</option>
+          </select>
+        </Field>
+      </Row>
+
+      <Row>
         <Field label="Order" hint="Low numbers first within the category.">
           <input type="number" className={inputClass} value={d.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} />
+        </Field>
+        <Field label="Card image" hint="Usually blank — the YouTube thumbnail is used. This is the override, and the art while the video is TODO.">
+          <input className={cn(inputClass, "font-mono")} value={d.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} />
         </Field>
       </Row>
 
@@ -270,10 +291,6 @@ function LessonForm({
           <textarea rows={4} className={cn(inputClass, "py-2")} value={d.transcriptHi} onChange={(e) => set("transcriptHi", e.target.value)} />
         </Field>
       </Row>
-
-      <Field label="Card image" hint="Usually blank — the YouTube thumbnail is used. This is the override, and the art while the video is TODO.">
-        <input className={cn(inputClass, "font-mono")} value={d.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} />
-      </Field>
 
       <label className="flex items-start gap-3 rounded-tile border border-line p-3">
         <input

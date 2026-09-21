@@ -65,28 +65,22 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
               />
             </span>
           }
-          tall
         >
           {/*
-            The stage is bounded by height, not width.
-
-            A 16:9 video is only ever too wide because of what that does
-            vertically: filling the 1168px panel would stand it 657px tall and
-            push the lesson title off a laptop screen. So the cap is expressed
-            the way the constraint actually works — a share of the viewport
-            height, converted back into a width — with a hard ceiling so it
-            stops growing before it dominates a tall monitor.
-
-            66% is chosen so a 1080p screen reaches that ceiling rather than
-            stopping just short of it, while a 1366x768 laptop still gets a
-            video sized to the screen it has instead of one that pushes the
-            lesson title out of sight.
+            The stage sizes itself now — see stageClass in src/lib/video/embed.ts.
+            It has to, because the cap depends on which way up the video is and
+            only the asset knows that. This wrapper used to hard-code the 16:9
+            measure, which made a portrait video impossible to fit.
           */}
-          <div className="mx-auto w-full max-w-[min(1080px,calc(66dvh*16/9))]">
+          <div className="w-full">
           <LessonStage
             lessonId={lesson.id}
             locked={reason}
-            playable={reason ? { kind: "pending", reason: "locked" } : toPlayable(lesson.video, pick(lang, lesson.titleHi, lesson.titleEn))}
+            playable={
+              reason
+                ? { kind: "pending", reason: "locked", portrait: lesson.video?.orientation === "portrait" }
+                : toPlayable(lesson.video, pick(lang, lesson.titleHi, lesson.titleEn))
+            }
             durationSec={lesson.video?.durationSec ?? 0}
             startAtSec={progress?.watchedSec ?? 0}
             tracking={Boolean(viewer.userId)}

@@ -1,5 +1,7 @@
 "use client";
 
+import { stageClass } from "@/lib/video/embed";
+import { cn } from "@/lib/cn";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlayIcon } from "@/components/icons";
@@ -64,7 +66,7 @@ export function Player({ lessonId, playable, durationSec, startAtSec, tracking, 
 
   if (playable.kind === "pending") {
     return (
-      <Frame>
+      <Frame portrait={playable.portrait}>
         <p className="px-6 text-center text-[0.95rem] font-medium text-white/85">
           <T hi="यह video जोड़ी जा रही है।" en="This video is being added." />
         </p>
@@ -75,7 +77,7 @@ export function Player({ lessonId, playable, durationSec, startAtSec, tracking, 
   if (!playing) {
     const pct = durationSec > 0 ? Math.min(100, (startAtSec / durationSec) * 100) : 0;
     return (
-      <Frame>
+      <Frame portrait={playable.portrait}>
         {playable.kind === "iframe" && playable.poster ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={playable.poster} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
@@ -99,7 +101,7 @@ export function Player({ lessonId, playable, durationSec, startAtSec, tracking, 
   }
 
   return (
-    <div className="relative aspect-video overflow-hidden rounded-card bg-violet-deep shadow-l">
+    <div className={cn("relative overflow-hidden rounded-card bg-violet-deep shadow-l", stageClass(playable.portrait))}>
       <iframe
         src={`${playable.src}&autoplay=1`}
         title={playable.title}
@@ -112,8 +114,10 @@ export function Player({ lessonId, playable, durationSec, startAtSec, tracking, 
 }
 
 /** The video surface: a deep violet card, so it sits inside the gradient header rather than fighting it. */
-function Frame({ children }: { children: React.ReactNode }) {
+function Frame({ children, portrait }: { children: React.ReactNode; portrait: boolean }) {
   return (
-    <div className="relative grid aspect-video place-items-center overflow-hidden rounded-card bg-violet-deep shadow-l">{children}</div>
+    <div className={cn("relative grid place-items-center overflow-hidden rounded-card bg-violet-deep shadow-l", stageClass(portrait))}>
+      {children}
+    </div>
   );
 }
