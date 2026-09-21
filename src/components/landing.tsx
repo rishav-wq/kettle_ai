@@ -53,8 +53,8 @@ export function Section({
   The proof strip.
 
   Rishav set the first three figures as floors rather than letting the strip
-  report the catalogue as it currently stands, which is one course and nine
-  minutes. The numbers below are therefore claims, not counts: while the real
+  report the catalogue as it currently stands, which was three playable
+  lessons and fourteen minutes when this was written. The numbers below are therefore claims, not counts: while the real
   figure is under the floor the floor is shown with a "+", and once the real
   figure passes it the real one takes over and the "+" goes.
 
@@ -306,7 +306,7 @@ export function Footer({ whatsapp, hours, hoursHi }: { whatsapp: string | null; 
       titleHi: "सीखिए",
       titleEn: "Learn",
       links: [
-        { href: "/learn", hi: "सभी कोर्स", en: "All courses" },
+        { href: "/learn", hi: "सभी lessons", en: "All lessons" },
         { href: "#how", hi: "यह कैसे चलता है", en: "How it works" },
         { href: "#questions", hi: "सवाल", en: "Questions" },
       ],

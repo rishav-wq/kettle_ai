@@ -30,7 +30,7 @@
   nothing, so it is safe on either side.
 */
 export const GOLD_INCLUDES = [
-  { hi: "सारे कोर्स खुल जाते हैं", en: "Get access to all courses" },
+  { hi: "हर lesson खुल जाता है", en: "Every lesson unlocked" },
   { hi: "12 महीने तक सब कुछ unlocked", en: "Everything unlocked for 12 months" },
   { hi: "Priority support, 24x7 — आपका सवाल पहले", en: "Priority support, 24x7 — your questions answered first" },
   { hi: "हर हफ़्ते live session, आपके सवालों के लिए", en: "A live session every week, for your questions" },

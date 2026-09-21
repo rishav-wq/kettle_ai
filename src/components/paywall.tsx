@@ -147,7 +147,7 @@ export function Paywall({
           {reason === "free_limit_reached" ? (
             <T hi="आपने चारों मुफ़्त lessons पूरे कर लिए। आगे बढ़ते रहिए।" en="You finished the four free lessons. Keep going." />
           ) : (
-            <T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />
+            <T hi="हर lesson खोल लीजिए" en="Open every lesson" />
           )}
         </h2>
         <p className="max-w-[40ch] text-[0.92rem] leading-relaxed text-on-gold/80">

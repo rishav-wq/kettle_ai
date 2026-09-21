@@ -180,8 +180,8 @@ export default async function Home() {
         {/* The catalog, as a horizontal shelf so breadth is felt rather than claimed. */}
         <Reveal>
         <Section
-          id="courses"
-          eyebrow={<T hi="कोर्स" en="The courses" />}
+          id="lessons"
+          eyebrow={<T hi="Lessons" en="The lessons" />}
           title={<T hi="अपने दिन में फ़िट बैठने वाले lesson से शुरू कीजिए" en="Start with a lesson that fits your day" />}
         >
           <div className="no-bar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">
@@ -206,7 +206,7 @@ export default async function Home() {
           */}
           <div className="flex flex-col items-center gap-2.5">
             <Button href="/signin?next=/learn" full size="lg" className="lg:w-auto lg:min-w-[280px]">
-              <T hi="सभी कोर्स देखिए" en="Browse all courses" /> <span aria-hidden>→</span>
+              <T hi="सभी lessons देखिए" en="Browse all lessons" /> <span aria-hidden>→</span>
             </Button>
             <p className="text-center text-[0.85rem] text-ink-3">
               <T hi="पहले 4 वीडियो बिना खाते के चलते हैं।" en="The first 4 videos play without an account." />

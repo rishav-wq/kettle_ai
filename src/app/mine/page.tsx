@@ -160,7 +160,7 @@ function Empty({ signedIn }: { signedIn?: boolean }) {
         )}
       </p>
       <Button href={signedIn ? "/learn" : "/signin?next=/mine"} full>
-        {signedIn ? <T hi="कोर्स देखिए" en="See courses" /> : <T hi="साइन इन कीजिए" en="Sign in" />}
+        {signedIn ? <T hi="lessons देखिए" en="See the lessons" /> : <T hi="साइन इन कीजिए" en="Sign in" />}
       </Button>
     </Card>
   );

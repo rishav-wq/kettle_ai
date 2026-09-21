@@ -8,7 +8,7 @@ export const revalidate = 3600;
 const STATIC = ["", "/learn", "/gold", "/help", "/legal/privacy", "/legal/terms", "/legal/refunds", "/legal/contact"];
 
 /**
- * Published courses and free lessons only.
+ * Categories and free lessons only.
  *
  * A paid lesson has nothing a visitor can read, so listing it would send people
  * from a search result to a lock screen. That is a poor first impression and a

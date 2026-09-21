@@ -21,7 +21,7 @@ import { T } from "@/components/bilingual";
 */
 
 const LINKS = [
-  { href: "#courses", hi: "कोर्स", en: "Courses" },
+  { href: "#lessons", hi: "Lessons", en: "Lessons" },
   { href: "#how", hi: "यह कैसे चलता है", en: "How it works" },
   { href: "#questions", hi: "सवाल", en: "Questions" },
   { href: "/gold", hi: "क़ीमत", en: "Pricing" },

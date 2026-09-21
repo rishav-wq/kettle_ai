@@ -30,7 +30,7 @@ export default async function GoldPage() {
         <GradHeader
           tone="gold"
           eyebrow="Kettle Gold"
-          title={<T hi="सारे कोर्स खोल लीजिए" en="Get access to all courses" />}
+          title={<T hi="हर lesson खोल लीजिए" en="Open every lesson" />}
           subtitle={<T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />}
         >
           <div className="mt-4 flex items-baseline gap-2">

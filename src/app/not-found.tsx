@@ -16,12 +16,12 @@ export default function NotFound() {
       <p className="max-w-[32ch] leading-relaxed text-ink-2">
         <T
           hi="पता बदल गया होगा, या link अधूरा रह गया होगा। नीचे से कोर्स देखिए।"
-          en="The address may have changed, or the link may be incomplete. Try the courses below."
+          en="The address may have changed, or the link may be incomplete. Try the lessons below."
         />
       </p>
       <div className="flex w-full max-w-[320px] flex-col gap-2.5 pt-2">
         <Button href="/learn" full size="lg">
-          <T hi="कोर्स देखिए" en="See the courses" />
+          <T hi="lessons देखिए" en="See the lessons" />
         </Button>
         <Button href="/help" variant="soft" full>
           <T hi="मदद लीजिए" en="Get help" />

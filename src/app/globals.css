@@ -217,11 +217,42 @@ p {
   margin: 0;
 }
 
-/* Keyboard focus stays obvious. */
+/*
+  Keyboard focus stays obvious.
+
+  This is the accessibility floor and it is not optional: a keyboard user has
+  nothing else telling them where they are. It is Pine at full strength on
+  purpose — a faint focus ring is the same as no focus ring for the person who
+  needs it.
+
+  Two things to know about it, both learned the hard way.
+
+  It is unlayered, so it beats every Tailwind utility including outline-none.
+  A component cannot opt out by adding a class to the control; it has to go
+  through .focus-host or .self-ring below, which is why those exist.
+
+  And it stacks. A field wrapper that draws its own ring on focus-within, with
+  this drawing an outline on the input inside it, gives two concentric
+  near-black rectangles — which is not a focus indicator, it is a black box
+  pasted over the form. Hence the suppressions.
+*/
 :focus-visible {
-  outline: 3px solid var(--violet);
+  outline: 2px solid var(--violet);
   outline-offset: 2px;
   border-radius: 6px;
+}
+
+/*
+  Anything already showing focus another way opts out of the global outline.
+
+  .focus-host goes on a wrapper that rings itself on focus-within — the field
+  boxes on sign-in and the account screen. .self-ring goes on a control that
+  rings itself directly. Neither removes the indicator; both stop there being
+  two of it.
+*/
+.focus-host:focus-within :is(input, textarea, select):focus-visible,
+.self-ring:focus-visible {
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

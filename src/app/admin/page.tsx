@@ -12,8 +12,8 @@ export const dynamic = "force-dynamic";
   The catalogue, top level.
 
   Read with the public tenant and the bypass because the catalogue is global
-  content: courses carry no tenant, and an admin editing from their own tenant
-  would otherwise be shown nothing.
+  content: categories carry no tenant, and an admin editing from their own
+  tenant would otherwise be shown nothing.
 
   The guard is repeated here, and it is not belt-and-braces — the layout's
   guard alone did not hold. A layout and its page render in parallel, so

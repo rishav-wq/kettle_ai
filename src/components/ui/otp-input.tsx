@@ -30,7 +30,7 @@ export function OtpInput({ length = 6, value, onChange, disabled }: { length?: n
         disabled={disabled}
         onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, length))}
         aria-label={pick(useLangValue, "SMS से आया code", "Code from SMS")}
-        className="absolute inset-0 z-[1] w-full opacity-0"
+        className="self-ring absolute inset-0 z-[1] w-full opacity-0"
       />
       <div className="flex gap-2" aria-hidden onClick={() => ref.current?.focus()}>
         {Array.from({ length }).map((_, i) => {

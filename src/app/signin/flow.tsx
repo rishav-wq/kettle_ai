@@ -343,7 +343,7 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
   return (
     <label className="flex flex-col gap-2">
       <span className="text-[0.82rem] font-medium text-ink-3">{label}</span>
-      <span className="flex min-h-[60px] items-center gap-3 rounded-tile border border-line bg-paper px-4 transition-shadow focus-within:ring-2 focus-within:ring-violet/35 [&_input]:outline-none [&_input]:focus-visible:outline-none">
+      <span className="focus-host flex min-h-[60px] items-center gap-3 rounded-tile border border-line bg-paper px-4 transition-shadow focus-within:ring-2 focus-within:ring-violet/35">
         {children}
       </span>
     </label>

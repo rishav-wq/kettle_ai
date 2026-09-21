@@ -11,7 +11,7 @@ import { pick } from "@/lib/pick";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
-  title: "AI courses for beginners",
+  title: "AI lessons for beginners",
   description: "Explore practical AI lessons for everyday life, online safety, messages, letters, planning, travel, and work.",
   pathname: "/learn",
 });
@@ -90,7 +90,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               defaultValue={q ?? ""}
               placeholder={pick(lang, "खोजिए: चिट्ठी, WhatsApp, सुरक्षा…", "Search: letters, WhatsApp, safety…")}
               aria-label={pick(lang, "कोर्स खोजिए", "Search lessons")}
-              className="h-[54px] w-full rounded-pill bg-paper pl-12 pr-4 text-[0.95rem] text-ink shadow-m outline-none placeholder:text-ink-3"
+              className="self-ring h-[54px] w-full rounded-pill bg-paper pl-12 pr-4 text-[0.95rem] text-ink shadow-m focus:ring-2 focus:ring-white/70 placeholder:text-ink-3"
             />
           </form>
         </GradHeader>

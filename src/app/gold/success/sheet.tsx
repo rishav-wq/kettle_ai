@@ -60,7 +60,7 @@ export function SuccessSheet({ name, alreadyGold }: { name: string | null; alrea
               />
             </h1>
             <p className="leading-relaxed text-ink-2">
-              <T hi="हर कोर्स खुल गया है। जहाँ रुके थे वहीं से आगे बढ़िए।" en="Every course is open. Carry on from where you stopped." />
+              <T hi="हर lesson खुल गया है। जहाँ रुके थे वहीं से आगे बढ़िए।" en="Every lesson is open. Carry on from where you stopped." />
             </p>
             <Button href="/learn" full size="lg">
               <T hi="सीखना शुरू कीजिए" en="Start learning" />

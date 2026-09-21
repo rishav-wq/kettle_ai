@@ -32,7 +32,7 @@ export const lang = z.enum(["hi", "en"]);
 /*
   Catalogue editing.
 
-  Bilingual fields come in pairs and both halves are required: a course with a
+  Bilingual fields come in pairs and both halves are required: a lesson with a
   title in one language renders an empty heading in the other, and the person
   who would notice is not the one editing. Hindi is not optional here even
   though the interface falls back to English elsewhere — a fallback is for

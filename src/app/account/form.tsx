@@ -162,7 +162,7 @@ export function AccountForm({ name: initialName, phone, city: initialCity, lang 
             value={typed}
             onChange={(e) => setTyped(e.target.value.toUpperCase())}
             placeholder="DELETE"
-            className="min-h-[56px] rounded-tile border border-line bg-wash px-4 text-[1rem] font-semibold tracking-[0.1em] outline-none focus:ring-2 focus:ring-violet/35"
+            className="self-ring min-h-[56px] rounded-tile border border-line bg-wash px-4 text-[1rem] font-semibold tracking-[0.1em] focus:ring-2 focus:ring-violet/35"
           />
         </label>
         <Button full disabled={typed !== "DELETE" || busy} onClick={() => void remove()}>
@@ -187,7 +187,7 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
   return (
     <label className="flex flex-col gap-2">
       <span className="text-[0.82rem] font-medium text-ink-3">{label}</span>
-      <span className="flex min-h-[60px] items-center gap-3 rounded-tile border border-line bg-paper px-4 shadow-s transition-shadow focus-within:ring-2 focus-within:ring-violet/35 [&_input]:outline-none [&_input]:focus-visible:outline-none">
+      <span className="focus-host flex min-h-[60px] items-center gap-3 rounded-tile border border-line bg-paper px-4 shadow-s transition-shadow focus-within:ring-2 focus-within:ring-violet/35">
         {children}
       </span>
     </label>

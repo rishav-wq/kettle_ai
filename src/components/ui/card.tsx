@@ -36,7 +36,7 @@ export function Rule({ className }: { className?: string }) {
   return <span aria-hidden className={cn("block h-[3px] w-6 rounded-full bg-pink", className)} />;
 }
 
-/** A course or category tile: illustration, rule, title, one line of meta. */
+/** A lesson or category tile: illustration, rule, title, one line of meta. */
 export function Tile({
   href,
   image,
@@ -47,9 +47,9 @@ export function Tile({
 }: {
   href: string;
   image?: string;
-  /* ReactNode, so a caller can pass <T hi en /> and let CSS pick. The course
-     titles are bilingual in the database; rendering only titleEn threw half of
-     that away. */
+  /* ReactNode, so a caller can pass <T hi en /> and let CSS pick. Titles are
+     bilingual in the database; rendering only titleEn threw half of that
+     away. */
   title: ReactNode;
   meta: ReactNode;
   badge?: ReactNode;
