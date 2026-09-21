@@ -59,6 +59,18 @@ services:
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
 
-      # Canonical origin, used by robots.txt and the sitemap.
+      # Who may edit the catalogue at /admin. Comma separated phone numbers,
+      # any readable Indian format. Unset means nobody and /admin 404s for
+      # everyone, which is correct anywhere but Rishav own service.
+      - key: ADMIN_PHONES
+        sync: false
+
+      # Canonical origin. Read by robots.txt, the sitemap, every canonical
+      # link and every Open Graph tag.
+      #
+      # NEXT_PUBLIC_ variables are inlined at build time, not read at runtime,
+      # so changing this needs a rebuild rather than a restart. On Render that
+      # means Manual Deploy, and "Clear build cache & deploy" if the old value
+      # still shows up in page source afterwards.
       - key: NEXT_PUBLIC_SITE_URL
         sync: false
