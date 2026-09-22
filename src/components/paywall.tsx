@@ -78,7 +78,15 @@ export function Paywall({
         currency: res.body.currency,
         name: "Kettle",
         description: `Kettle Gold · ${months} months`,
-        theme: { color: "#6C5CE7" },
+        /*
+          Pine. Razorpay takes a hex literal rather than a CSS variable, so this
+          is the one place a brand colour is repeated outside globals.css and
+          the one place it can drift. It was #6C5CE7, a purple inherited from
+          the design this started as, which survives nowhere else in the
+          product — so the checkout sheet, the single screen that asks for
+          money, was the only surface not wearing the brand.
+        */
+        theme: { color: "#00311F" },
         // Success is confirmed by the webhook, never by this callback.
         handler: () => router.push("/gold/success"),
         modal: { ondismiss: () => setBusy(false) },
