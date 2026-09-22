@@ -94,15 +94,53 @@ function wrongMode(keyId: string): string | null {
   return null;
 }
 
+/*
+  Both naming forms set, to different values, is not a preference to resolve.
+
+  The undecorated name wins, because it has to for the deployments that predate
+  the split. But a leftover RAZORPAY_WEBHOOK_SECRET from a previous Razorpay
+  account silently beats the RAZORPAY_LIVE_WEBHOOK_SECRET someone just set, and
+  nothing about that is visible: the key id in the boot log can look right while
+  the webhook secret is the stale one. The payment then succeeds at Razorpay,
+  the callback fails signature verification, and the charge is real with no
+  membership behind it.
+
+  That is the single most expensive thing this file can get wrong, so it is
+  refused rather than resolved. Identical values are fine — that is one variable
+  written twice, not two answers.
+*/
+function conflict(name: string, undecorated: string | undefined, decorated: string | undefined): boolean {
+  const a = undecorated?.trim();
+  const b = decorated?.trim();
+  if (!a || !b || a === b) return false;
+  console.error(
+    `[razorpay] RAZORPAY_${name} and RAZORPAY_${razorpayMode.toUpperCase()}_${name} are both set to different values. ` +
+      `The undecorated one would win and the other would be silently ignored. Remove whichever is stale.`
+  );
+  return true;
+}
+
 function resolve(): Keys | null {
-  const keyId = firstSet(
-    env.RAZORPAY_KEY_ID,
-    razorpayMode === "live" ? env.RAZORPAY_LIVE_KEY_ID : env.RAZORPAY_TEST_KEY_ID
-  );
-  const keySecret = firstSet(
-    env.RAZORPAY_KEY_SECRET,
-    razorpayMode === "live" ? env.RAZORPAY_LIVE_KEY_SECRET : env.RAZORPAY_TEST_KEY_SECRET
-  );
+  const live = razorpayMode === "live";
+
+  const ambiguous =
+    [
+      conflict("KEY_ID", env.RAZORPAY_KEY_ID, live ? env.RAZORPAY_LIVE_KEY_ID : env.RAZORPAY_TEST_KEY_ID),
+      conflict("KEY_SECRET", env.RAZORPAY_KEY_SECRET, live ? env.RAZORPAY_LIVE_KEY_SECRET : env.RAZORPAY_TEST_KEY_SECRET),
+      conflict(
+        "WEBHOOK_SECRET",
+        env.RAZORPAY_WEBHOOK_SECRET,
+        live ? env.RAZORPAY_LIVE_WEBHOOK_SECRET : env.RAZORPAY_TEST_WEBHOOK_SECRET
+      ),
+    ].filter(Boolean).length > 0;
+
+  if (ambiguous) {
+    console.error("[razorpay] Payments are unavailable until the duplicate variables are sorted out.");
+    return null;
+  }
+
+  const keyId = firstSet(env.RAZORPAY_KEY_ID, live ? env.RAZORPAY_LIVE_KEY_ID : env.RAZORPAY_TEST_KEY_ID);
+  const keySecret = firstSet(env.RAZORPAY_KEY_SECRET, live ? env.RAZORPAY_LIVE_KEY_SECRET : env.RAZORPAY_TEST_KEY_SECRET);
 
   if (!keyId || !keySecret) return null;
 
@@ -116,10 +154,8 @@ function resolve(): Keys | null {
     keyId,
     keySecret,
     webhookSecret:
-      firstSet(
-        env.RAZORPAY_WEBHOOK_SECRET,
-        razorpayMode === "live" ? env.RAZORPAY_LIVE_WEBHOOK_SECRET : env.RAZORPAY_TEST_WEBHOOK_SECRET
-      ) ?? null,
+      firstSet(env.RAZORPAY_WEBHOOK_SECRET, live ? env.RAZORPAY_LIVE_WEBHOOK_SECRET : env.RAZORPAY_TEST_WEBHOOK_SECRET) ??
+      null,
   };
 }
 
