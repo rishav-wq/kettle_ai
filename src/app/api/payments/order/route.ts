@@ -6,6 +6,8 @@ import { withTenant } from "@/lib/db/tenant";
 import type { MembershipDoc, PaymentDoc } from "@/lib/db/documents";
 import { GOLD } from "@/lib/payments/plan";
 import { createOrder, razorpayPublicKeyId } from "@/lib/payments/razorpay";
+import { razorpayWebhookSecret } from "@/lib/payments/keys";
+import { isProd } from "@/lib/env";
 import { audit } from "@/lib/audit";
 import { getViewer } from "@/lib/viewer";
 
@@ -22,6 +24,24 @@ export async function POST(req: Request) {
     const viewer = await getViewer();
     if (!viewer.userId) return Response.json({ error: "not_signed_in" }, { status: 401 });
     if (viewer.state === "gold") return Response.json({ error: "already_gold" }, { status: 409 });
+
+    /*
+      Never take money we have no way to fulfil.
+
+      The webhook is the only thing that grants Gold. Without its secret, a
+      payment succeeds at Razorpay, the charge is real, and this application
+      answers the callback with a 503 and grants nothing — leaving a learner
+      who has paid on the wrong side of the paywall, and a refund to process by
+      hand. Refusing the order is the cheap end of that failure.
+
+      Production only. In development the stand-in settles payments instead, so
+      no webhook secret is needed and requiring one would only break the local
+      walk-through of the paid flow.
+    */
+    if (isProd && !razorpayWebhookSecret()) {
+      console.error("payment order refused: no webhook secret in production, so a payment could not be fulfilled");
+      return Response.json({ error: "payments_unavailable" }, { status: 503 });
+    }
 
     await enforceRate(`order:${viewer.userId}`, LIMITS.orderCreate);
 
