@@ -1,29 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { Button, Sheet } from "@/components/ui";
 import { Price } from "@/components/price";
 import { ShieldIcon } from "@/components/icons";
-import { post } from "@/lib/http";
+import { useGoldCheckout } from "@/components/use-gold-checkout";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
 import type { LockReason } from "@/lib/viewer";
 import { T } from "@/components/bilingual";
 import { useLang } from "@/components/lang-provider";
 import { pick } from "@/lib/pick";
 
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
-  }
-}
-
 /**
  * The paywall.
  *
- * Raised by a locked lesson, by the Gold tab, and by the fourth free lesson
- * finishing. It states the price plainly and says who handles the money,
- * because for this audience those are the actual objections.
+ * Raised by a locked lesson and by the fourth free lesson finishing. It states
+ * the price plainly and says who handles the money, because for this audience
+ * those are the actual objections.
+ *
+ * Not raised by /gold. That page is already the pitch — the same gold panel,
+ * the same price, the same five lines — so opening a sheet that repeats it put
+ * the whole pitch on screen twice before anyone reached checkout. Its button
+ * goes straight to Razorpay through the same hook this uses.
  *
  * It asks for money only from someone who has an account. A signed-out
  * visitor tapping a locked lesson used to get the full price pitch and was
@@ -38,7 +36,6 @@ export function Paywall({
   reason,
   price,
   listPrice,
-  from = "lesson",
   months,
   signedIn,
 }: {
@@ -48,108 +45,34 @@ export function Paywall({
   /* Both formatted on the server. The browser must not resolve a price. */
   price: string;
   listPrice: string | null;
-  /**
-   * Where the sheet was opened from. The signed-out copy has to know, because
-   * on a lesson there is a lesson to name and on /gold there is not — and the
-   * Gold page was passing reason="locked_lesson" regardless, so a reader who
-   * tapped Become a Gold member was told to sign in "to watch this lesson"
-   * without having chosen one.
-   */
-  from?: "lesson" | "gold";
   months: number;
   signedIn: boolean;
 }) {
   const router = useRouter();
   const lang = useLang();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
-
-  async function pay() {
-    if (!signedIn) return router.push("/signin?next=/gold");
-    setBusy(true);
-    setError(false);
-
-    const res = await post<{ orderId: string; amountPaise: number; currency: string; keyId: string | null; simulated: boolean }>("/api/payments/order");
-    if (!res.ok || !res.body) {
-      setBusy(false);
-      setError(true);
-      return;
-    }
-
-    // No keys yet: walk the same route the webhook would, so the flow is testable.
-    if (res.body.simulated) {
-      await post("/api/payments/simulate");
-      router.push("/gold/success");
-      return;
-    }
-
-    const openCheckout = () => {
-      new window.Razorpay!({
-        key: res.body.keyId,
-        order_id: res.body.orderId,
-        amount: res.body.amountPaise,
-        currency: res.body.currency,
-        name: "Kettle",
-        description: `Kettle Gold · ${months} months`,
-        /*
-          Pine. Razorpay takes a hex literal rather than a CSS variable, so this
-          is the one place a brand colour is repeated outside globals.css and
-          the one place it can drift. It was #6C5CE7, a purple inherited from
-          the design this started as, which survives nowhere else in the
-          product — so the checkout sheet, the single screen that asks for
-          money, was the only surface not wearing the brand.
-        */
-        theme: { color: "#00311F" },
-        // Success is confirmed by the webhook, never by this callback.
-        handler: () => router.push("/gold/success"),
-        modal: { ondismiss: () => setBusy(false) },
-      }).open();
-    };
-
-    if (window.Razorpay) return openCheckout();
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = openCheckout;
-    script.onerror = () => {
-      setBusy(false);
-      setError(true);
-    };
-    document.body.appendChild(script);
-  }
+  const { pay, busy, error } = useGoldCheckout({ signedIn, months });
 
   /*
     Signed out: invite, do not sell. The lesson they tapped is the reason they
     are here, so the copy names that rather than the plan.
   */
   if (!signedIn) {
-    const onLesson = from === "lesson";
     return (
       <Sheet open={open} onClose={onClose} title={pick(lang, "साइन इन", "Sign in")}>
         <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-violet">
           <T hi="शुरू करना मुफ़्त है" en="Free to start" />
         </span>
         <h2 className="text-[1.35rem] font-bold leading-tight">
-          {onLesson ? (
-            <T hi="यह lesson देखने के लिए साइन इन कीजिए" en="Sign in to watch this lesson" />
-          ) : (
-            <T hi="पहले साइन इन कीजिए" en="Sign in first" />
-          )}
+          <T hi="यह lesson देखने के लिए साइन इन कीजिए" en="Sign in to watch this lesson" />
         </h2>
         <p className="text-[0.95rem] leading-relaxed text-ink-2">
-          {onLesson ? (
-            <T
-              hi="चार lessons मुफ़्त हैं, और हम याद रखते हैं कि आप कहाँ रुके थे। कार्ड की ज़रूरत नहीं।"
-              en="Four lessons are free, and we remember where you stopped. No card needed."
-            />
-          ) : (
-            <T
-              hi="Gold लेने से पहले एक बार साइन इन। चार lessons वैसे भी मुफ़्त हैं।"
-              en="Sign in once before taking Gold. Four lessons are free anyway."
-            />
-          )}
+          <T
+            hi="चार lessons मुफ़्त हैं, और हम याद रखते हैं कि आप कहाँ रुके थे। कार्ड की ज़रूरत नहीं।"
+            en="Four lessons are free, and we remember where you stopped. No card needed."
+          />
         </p>
 
-        <Button full size="lg" onClick={() => router.push(`/signin?next=${onLesson ? "/learn" : "/gold"}`)}>
+        <Button full size="lg" onClick={() => router.push("/signin?next=/learn")}>
           <T hi="साइन इन कीजिए" en="Sign in" />
         </Button>
         <button

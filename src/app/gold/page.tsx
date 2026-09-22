@@ -63,7 +63,9 @@ export default async function GoldPage() {
         </Card>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-8">
-          <GoldCta months={GOLD.months} price={formatRupees(GOLD.amountPaise)} listPrice={goldListPrice()} signedIn={Boolean(viewer.userId)} />
+          {/* Straight to checkout. The page above is the pitch; a sheet
+              repeating it was the whole pitch twice before Razorpay appeared. */}
+          <GoldCta months={GOLD.months} signedIn={Boolean(viewer.userId)} />
 
           <p className="flex items-center justify-center gap-1.5 px-2 text-center text-[0.84rem] leading-relaxed text-ink-3">
             <ShieldIcon className="h-4 w-4 flex-none text-gold-deep" />
