@@ -5,18 +5,33 @@ import { validUntilFrom } from "@/lib/payments/plan";
 import { audit } from "@/lib/audit";
 import { grantReferralReward } from "@/lib/referral";
 import { isProd } from "@/lib/env";
-import { razorpayConfigured } from "@/lib/payments/razorpay";
+import { razorpayMode } from "@/lib/payments/keys";
 import { getViewer } from "@/lib/viewer";
 
 /**
- * Stands in for the Razorpay webhook while there are no keys, so the whole
- * purchase flow can be walked end to end locally.
+ * Stands in for the Razorpay webhook, so the whole purchase flow can be walked
+ * end to end locally without a public URL for Razorpay to call back to.
  *
- * Refuses to exist in production, and refuses to run once real keys are
- * present, so it cannot become a way to grant a free membership.
+ * It refuses to exist in production. That is the whole of what has to be
+ * true: this grants a membership row in whatever database it is pointed at,
+ * and production is the only database where that is a real entitlement.
+ *
+ * It used to refuse whenever any keys were configured. That was the wrong
+ * test. Test keys grant play money through a real integration, and a machine
+ * that holds them is exactly where this is wanted — so the effect was that
+ * configuring Razorpay for testing switched off the one path npm run smoke
+ * uses to get past the paywall, and the suite failed on a working system.
+ *
+ * Nor does it check whether live keys are merely PRESENT. They sit in
+ * .env.local beside the test pair on the developer's machine, where
+ * src/lib/payments/keys.ts already refuses to use them at all. Refusing here
+ * too would disable local testing to guard against a key that cannot fire.
+ *
+ * The razorpayMode check below is belt and braces rather than an independent
+ * guarantee — it derives from NODE_ENV, same as isProd.
  */
 export async function POST(req: Request) {
-  if (isProd || razorpayConfigured) {
+  if (isProd || razorpayMode === "live") {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
   try {

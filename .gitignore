@@ -45,3 +45,7 @@ next-env.d.ts
 
 # local database
 /.data
+
+# Dev server output. Holds the OTP codes the smoke suites read, so it must
+# never be committed.
+.dev.log

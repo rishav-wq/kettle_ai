@@ -1,5 +1,6 @@
 import "server-only";
 import { env } from "@/lib/env";
+import { razorpayConfigured, razorpayKeys } from "@/lib/payments/keys";
 import { GOLD } from "./plan";
 
 /*
@@ -15,7 +16,7 @@ import { GOLD } from "./plan";
 
 export type Order = { orderId: string; amountPaise: number; currency: string; keyId: string | null; simulated: boolean };
 
-export const razorpayConfigured = Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET);
+export { razorpayConfigured, razorpayMode, razorpayPublicKeyId } from "@/lib/payments/keys";
 
 export async function createOrder(receipt: string, notes: Record<string, string>): Promise<Order> {
   if (!razorpayConfigured) {
@@ -23,7 +24,8 @@ export async function createOrder(receipt: string, notes: Record<string, string>
     return { orderId: `order_sim_${receipt}`, amountPaise: GOLD.amountPaise, currency: GOLD.currency, keyId: null, simulated: true };
   }
 
-  const auth = Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString("base64");
+  const { keyId, keySecret } = razorpayKeys();
+  const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
   const res = await fetch("https://api.razorpay.com/v1/orders", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Basic ${auth}` },
@@ -41,5 +43,13 @@ export async function createOrder(receipt: string, notes: Record<string, string>
     throw new Error(`razorpay_order_failed:${res.status}`);
   }
   const body = (await res.json()) as { id: string; amount: number; currency: string };
-  return { orderId: body.id, amountPaise: body.amount, currency: body.currency, keyId: env.RAZORPAY_KEY_ID!, simulated: false };
+  /*
+    The key id the browser must open checkout with — from the resolver, not
+    from env.RAZORPAY_KEY_ID. Those stopped being the same thing when the test
+    and live pairs got their own names: a deployment configured with
+    RAZORPAY_TEST_KEY_ID would have created a perfectly good order here and
+    then handed the client a null key, so checkout would never open and the
+    failure would look like Razorpay's rather than ours.
+  */
+  return { orderId: body.id, amountPaise: body.amount, currency: body.currency, keyId, simulated: false };
 }

@@ -4,7 +4,7 @@ import { verifyWebhookSignature } from "@/lib/payments/razorpay-signature";
 import { validUntilFrom } from "@/lib/payments/plan";
 import { audit } from "@/lib/audit";
 import { grantReferralReward } from "@/lib/referral";
-import { env } from "@/lib/env";
+import { razorpayMode, razorpayWebhookSecret } from "@/lib/payments/keys";
 
 /*
   The only place entitlement is granted.
@@ -27,10 +27,19 @@ type Payload = {
 export async function POST(req: Request) {
   const raw = await req.text();
   const signature = req.headers.get("x-razorpay-signature");
-  const secret = env.RAZORPAY_WEBHOOK_SECRET;
+  const secret = razorpayWebhookSecret();
 
   if (!secret) {
-    console.error("razorpay webhook received but RAZORPAY_WEBHOOK_SECRET is not set");
+    /*
+      Name the variable this mode actually reads. There are three now, and a
+      message naming the wrong one sends whoever is debugging to a dashboard
+      they have already filled in. This is the failure that loses a payment:
+      Razorpay took the money, called here, and got a 503 — so the charge is
+      real and the membership was never granted.
+    */
+    console.error(
+      `razorpay webhook received but no ${razorpayMode} webhook secret is set. Set RAZORPAY_${razorpayMode.toUpperCase()}_WEBHOOK_SECRET (or RAZORPAY_WEBHOOK_SECRET). THIS PAYMENT WAS NOT GRANTED.`
+    );
     return Response.json({ error: "not_configured" }, { status: 503 });
   }
   if (!verifyWebhookSignature(raw, signature, secret)) {

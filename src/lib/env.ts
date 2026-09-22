@@ -56,9 +56,29 @@ const schema = z.object({
   GOLD_PRICE_PAISE: z.coerce.number().int().positive().default(349900),
   GOLD_MONTHS: z.coerce.number().int().positive().default(12),
 
+  /*
+    Razorpay, in two sets.
+
+    RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are the canonical pair and what a
+    deployment carrying only one set should use — render.yaml describes those.
+    The TEST_ and LIVE_ pairs let one machine hold both without the two ever
+    being confused: src/lib/payments/keys.ts picks by NODE_ENV and refuses a
+    live key outside production outright.
+
+    Each mode has its own webhook secret, because Razorpay issues a separate
+    one per webhook and the test and live dashboards are separate.
+  */
   RAZORPAY_KEY_ID: z.string().min(1).optional(),
   RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+  RAZORPAY_TEST_KEY_ID: z.string().min(1).optional(),
+  RAZORPAY_TEST_KEY_SECRET: z.string().min(1).optional(),
+  RAZORPAY_TEST_WEBHOOK_SECRET: z.string().min(1).optional(),
+
+  RAZORPAY_LIVE_KEY_ID: z.string().min(1).optional(),
+  RAZORPAY_LIVE_KEY_SECRET: z.string().min(1).optional(),
+  RAZORPAY_LIVE_WEBHOOK_SECRET: z.string().min(1).optional(),
 
   /*
     Who may edit the catalogue: a comma separated list of phone numbers in

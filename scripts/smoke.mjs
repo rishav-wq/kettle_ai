@@ -203,9 +203,25 @@ if (lockedLesson.transcriptHi || lockedLesson.transcriptEn) {
 }
 check(lockedPage.text.includes("Gold"), "the locked page offers Gold");
 
+/*
+  The order is real whenever test keys are configured and simulated when they
+  are not, and this suite accepts both. What it walks is the ground the two
+  share: an order exists, the webhook settles it, and the lock lifts.
+
+  Settlement always goes through /api/payments/simulate, which stands in for
+  the webhook so that no public callback URL is needed. It settles whichever
+  payment row is outstanding, so it does not care which kind of order made it.
+
+  That endpoint refuses to exist in production or beside live credentials,
+  but not merely because test keys are present, which is why configuring
+  Razorpay for testing does not switch this section off.
+
+  npm run smoke:payments is the other half, and covers the part this cannot
+  reach: a genuine order plus a webhook signed the way Razorpay signs one.
+*/
 console.log(`\n— payment —`);
 const order = await req("/api/payments/order", { method: "POST" });
-check(order.status === 200 && order.json?.simulated === true, "order created in simulation");
+check(order.status === 200, "an order was created", order.json?.simulated === true ? "-> simulated" : `-> real ${order.json?.orderId ?? ""}`);
 check((await req("/api/payments/simulate", { method: "POST" })).status === 200, "the webhook stand-in activates the membership");
 const status = await req("/api/payments/status");
 check(status.json?.state === "gold", "viewer state is now gold", `→ ${status.json?.state}`);

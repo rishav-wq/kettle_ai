@@ -18,7 +18,8 @@
     "db:move-art": "tsx --conditions=react-server scripts/move-art.ts",
     "check:legal": "node scripts/check-legal.mjs",
     "smoke:review": "tsx --conditions=react-server scripts/smoke-review.ts",
-    "db:orientation": "tsx --conditions=react-server scripts/set-orientation.ts"
+    "db:orientation": "tsx --conditions=react-server scripts/set-orientation.ts",
+    "smoke:payments": "tsx --conditions=react-server scripts/smoke-payments.ts"
   },
   "dependencies": {
     "mongodb": "^7.6.0",

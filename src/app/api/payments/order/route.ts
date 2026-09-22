@@ -5,7 +5,7 @@ import { assertSameOrigin, clientIp, toErrorResponse } from "@/lib/security/requ
 import { withTenant } from "@/lib/db/tenant";
 import type { MembershipDoc, PaymentDoc } from "@/lib/db/documents";
 import { GOLD } from "@/lib/payments/plan";
-import { createOrder } from "@/lib/payments/razorpay";
+import { createOrder, razorpayPublicKeyId } from "@/lib/payments/razorpay";
 import { audit } from "@/lib/audit";
 import { getViewer } from "@/lib/viewer";
 
@@ -38,7 +38,11 @@ export async function POST(req: Request) {
 
     if (existing?.razorpayOrderId && existing.status === "created") {
       const order = { orderId: existing.razorpayOrderId, amountPaise: GOLD.amountPaise, currency: GOLD.currency };
-      return Response.json({ ...order, keyId: process.env.RAZORPAY_KEY_ID ?? null, simulated: existing.razorpayOrderId.startsWith("order_sim_") });
+      return Response.json({
+        ...order,
+        keyId: razorpayPublicKeyId(),
+        simulated: existing.razorpayOrderId.startsWith("order_sim_"),
+      });
     }
 
     const order = await createOrder(receipt, { userId: viewer.userId, plan: "gold" });
