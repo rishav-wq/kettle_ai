@@ -52,6 +52,30 @@ services:
 
       # Razorpay. Until these are set, payment is unavailable —
       # /api/payments/simulate refuses to exist in production by design.
+      #
+      # This service runs with NODE_ENV=production, so src/lib/payments/keys.ts
+      # resolves to LIVE and will refuse a test key here outright rather than
+      # let payments appear to work and settle nothing. Set the LIVE trio.
+      #
+      # The undecorated pair below still works and is checked first, so an
+      # existing deployment carrying only those keeps working. Set one pair or
+      # the other, not both.
+      - key: RAZORPAY_LIVE_KEY_ID
+        sync: false
+      - key: RAZORPAY_LIVE_KEY_SECRET
+        sync: false
+      # The secret typed into the webhook at
+      #   https://getkettleai.com/api/webhooks/razorpay
+      # in Razorpay's LIVE dashboard, subscribed to payment.captured.
+      #
+      # Without it the webhook answers 503 and grants nothing, which would mean
+      # a real charge and no membership. /api/payments/order refuses to create
+      # an order at all while this is missing, so that cannot happen — but it
+      # also means the Gold button stays unavailable until this is set.
+      - key: RAZORPAY_LIVE_WEBHOOK_SECRET
+        sync: false
+
+      # The single-set form. Leave unset if the LIVE trio above is used.
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
