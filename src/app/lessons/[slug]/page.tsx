@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { AppShell, GradHeader } from "@/components/app-shell";
 import { Button, Card, Rule } from "@/components/ui";
 import { withPublic, withTenant } from "@/lib/db/tenant";
-import { getLesson } from "@/lib/content/queries";
+import { getCatalogStats, getLesson } from "@/lib/content/queries";
 import { getLessonProgress } from "@/lib/content/progress";
 import { slug as slugSchema } from "@/lib/security/validators";
 import { toPlayable } from "@/lib/video/embed";
@@ -38,6 +38,9 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   if (!parsed.success) notFound();
 
   const viewer = await getViewer();
+  /* How much of the catalogue plays today, for the paywall sheet. Counted, not claimed. */
+  const stats = await withTenant(viewer.tenantId, getCatalogStats);
+
   const { lesson, progress } = await withTenant(viewer.tenantId, async (tx) => {
     const found = await getLesson(tx, parsed.data);
     if (!found || !viewer.userId) return { lesson: found, progress: null };
@@ -91,6 +94,8 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
             months={GOLD.months}
             price={formatRupees(GOLD.amountPaise)}
             listPrice={goldListPrice()}
+            ready={stats.lessons}
+            coming={stats.comingSoon}
           />
           </div>
         </GradHeader>

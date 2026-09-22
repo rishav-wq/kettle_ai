@@ -5,7 +5,7 @@ import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card, Rule } from "@/components/ui";
 import { PlayIcon } from "@/components/icons";
 import { withPublic, withTenant } from "@/lib/db/tenant";
-import { getCategory } from "@/lib/content/queries";
+import { getCatalogStats, getCategory } from "@/lib/content/queries";
 import { getCategoryProgress } from "@/lib/content/progress";
 import { slug as slugSchema } from "@/lib/security/validators";
 import { getViewer, lockReason } from "@/lib/viewer";
@@ -43,6 +43,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
   const viewer = await getViewer();
   const lang = await getLang();
+
+  /* How much of the catalogue plays today, for the paywall sheet. Counted, not claimed. */
+  const stats = await withTenant(viewer.tenantId, getCatalogStats);
 
   const { category, progress } = await withTenant(viewer.tenantId, async (db) => {
     const found = await getCategory(db, slug);
@@ -89,6 +92,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 months={GOLD.months}
                 price={formatRupees(GOLD.amountPaise)}
                 listPrice={goldListPrice()}
+                ready={stats.lessons}
+                coming={stats.comingSoon}
                 signedIn={Boolean(viewer.userId)}
                 className="grid h-[88px] w-[88px] place-items-center rounded-full border-2 border-white/45 text-white transition-transform hover:scale-105"
               >
@@ -154,6 +159,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             months={GOLD.months}
             price={formatRupees(GOLD.amountPaise)}
             listPrice={goldListPrice()}
+            ready={stats.lessons}
+            coming={stats.comingSoon}
             signedIn={Boolean(viewer.userId)}
           />
         </section>
@@ -174,6 +181,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             months={GOLD.months}
             price={formatRupees(GOLD.amountPaise)}
             listPrice={goldListPrice()}
+            ready={stats.lessons}
+            coming={stats.comingSoon}
             signedIn={Boolean(viewer.userId)}
             className="lg:order-3 lg:w-auto lg:min-w-[320px] lg:justify-self-start"
           />

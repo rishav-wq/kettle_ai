@@ -4,6 +4,9 @@ import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { ShieldIcon } from "@/components/icons";
 import { GOLD, formatRupees, goldListPrice } from "@/lib/payments/plan";
+import { getCatalogStats } from "@/lib/content/queries";
+import { withTenant } from "@/lib/db/tenant";
+import { CatalogueStatus } from "@/components/catalogue-status";
 import { Price } from "@/components/price";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
 import { getViewer } from "@/lib/viewer";
@@ -16,6 +19,9 @@ export const metadata = { title: "Kettle Gold" };
 export default async function GoldPage() {
   const viewer = await getViewer();
   if (viewer.state === "gold") redirect("/invite");
+
+  /* How much of the catalogue plays today, counted rather than claimed. */
+  const stats = await withTenant(viewer.tenantId, getCatalogStats);
 
   return (
     <AppShell
@@ -60,10 +66,18 @@ export default async function GoldPage() {
               </li>
             ))}
           </ul>
+          <CatalogueStatus ready={stats.lessons} coming={stats.comingSoon} className="mt-4" />
         </Card>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-8">
-          <GoldCta months={GOLD.months} price={formatRupees(GOLD.amountPaise)} listPrice={goldListPrice()} signedIn={Boolean(viewer.userId)} />
+          <GoldCta
+            months={GOLD.months}
+            price={formatRupees(GOLD.amountPaise)}
+            listPrice={goldListPrice()}
+            ready={stats.lessons}
+            coming={stats.comingSoon}
+            signedIn={Boolean(viewer.userId)}
+          />
 
           <p className="flex items-center justify-center gap-1.5 px-2 text-center text-[0.84rem] leading-relaxed text-ink-3">
             <ShieldIcon className="h-4 w-4 flex-none text-gold-deep" />
