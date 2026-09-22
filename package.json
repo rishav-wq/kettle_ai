@@ -20,7 +20,8 @@
     "smoke:review": "tsx --conditions=react-server scripts/smoke-review.ts",
     "db:orientation": "tsx --conditions=react-server scripts/set-orientation.ts",
     "smoke:payments": "tsx --conditions=react-server scripts/smoke-payments.ts",
-    "db:first-course": "tsx --conditions=react-server scripts/set-first-course.ts"
+    "db:first-course": "tsx --conditions=react-server scripts/set-first-course.ts",
+    "db:hide-todo": "tsx --conditions=react-server scripts/hide-todo-lessons.ts"
   },
   "dependencies": {
     "mongodb": "^7.6.0",

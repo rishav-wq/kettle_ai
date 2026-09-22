@@ -18,9 +18,16 @@
   fabrication, not a placeholder. content/kettle-content.json still holds every
   original, so nothing here is lost.
 
-  Orientation is not guessed. Video 1 is a Short — https://www.youtube.com/shorts/<id>
-  answers 200 for it and 303s to /watch for the other three — so it is portrait
-  and the other three are landscape. stageClass reads this to size the frame.
+  Orientation comes from the video's own pixel dimensions, read off the watch
+  page: all four are 2160x3840, so all four are portrait. stageClass reads this
+  to size the frame.
+
+  The first attempt asked whether youtube.com/shorts/<id> redirects, and got
+  three of the four wrong. That test does not measure shape. A video over three
+  minutes is never classified as a Short however it was filmed, and three of
+  these run past four minutes — so they answered like landscape videos while
+  being 9:16, and were framed as landscape until Rishav said the shelf looked
+  inconsistent. Ask the file how big it is; do not ask YouTube what it calls it.
 
   Durations are the real lengthSeconds from each watch page, not the seeded
   round numbers, because the card prints them.
@@ -54,16 +61,23 @@ const TARGETS: Target[] = [
   {
     sortOrder: 2,
     providerRef: "TJprkNM_epk",
-    orientation: "landscape",
+    orientation: "portrait",
     durationSec: 247,
     titleEn: "How to talk to AI",
     titleHi: "AI से बात कैसे कीजिए",
-    transcriptFrom: 3,
+    /*
+      Was 3, the lesson this video's transcript was written for. The move has
+      happened, so it is 2 now: re-running must not read lesson 3 again, which
+      is empty since its own transcript went with a video that no longer sits
+      there. A migration that destroys on second run is a trap for whoever
+      reaches for it next.
+    */
+    transcriptFrom: 2,
   },
   {
     sortOrder: 3,
     providerRef: "QPW-TLSua7I",
-    orientation: "landscape",
+    orientation: "portrait",
     durationSec: 247,
     titleEn: "Digital fraud, and where AI comes into it",
     titleHi: "Digital fraud, और उसमें AI कहाँ आता है",
@@ -72,7 +86,7 @@ const TARGETS: Target[] = [
   {
     sortOrder: 4,
     providerRef: "tAbkikHYC2Q",
-    orientation: "landscape",
+    orientation: "portrait",
     durationSec: 286,
     titleEn: "Where AI helps in real life, and what next",
     titleHi: "असल ज़िंदगी में AI कहाँ काम आता है, और आगे क्या",

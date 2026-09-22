@@ -37,8 +37,33 @@ const freeIds = allLessons.filter((l) => l.isFree).map((l) => l.id);
   paid lesson made the first vacuous and the second fail, which is the wrong
   half to notice.
 */
-const lockedLesson = allLessons.find((l) => !l.isFree && (l.transcriptHi || l.transcriptEn)) ?? allLessons.find((l) => !l.isFree);
-const lockedHasTranscript = Boolean(lockedLesson.transcriptHi || lockedLesson.transcriptEn);
+const lockedCandidates = [
+  ...allLessons.filter((l) => !l.isFree && (l.transcriptHi || l.transcriptEn)),
+  ...allLessons.filter((l) => !l.isFree),
+];
+/*
+  Resolved against the running server, not decided here.
+
+  The file is the bootstrap; the database is the catalogue. /admin writes to it
+  and so do the content scripts, so the two drift by design — unpublishing the
+  unfilmed lessons left this file still naming talk-to-ai-5 as a paid lesson
+  while the server answered 404 for it, and five checks failed against a product
+  that was working. An unpublished lesson is 404 for everyone, so asking the
+  server which candidate it actually serves is the whole test.
+*/
+let lockedLesson = lockedCandidates[0];
+let lockedHasTranscript = false;
+
+async function resolveLockedLesson() {
+  for (const candidate of lockedCandidates) {
+    if ((await req(`/lessons/${candidate.id}`)).status === 200) {
+      lockedLesson = candidate;
+      lockedHasTranscript = Boolean(candidate.transcriptHi || candidate.transcriptEn);
+      return;
+    }
+  }
+  console.log("WARN: no paid lesson from the bootstrap file is published, so the lock checks cannot run");
+}
 
 /** GOLD_MONTHS, from the environment or the default in src/lib/env.ts. */
 const goldMonths = (() => {
@@ -172,6 +197,8 @@ check((await req("/onboarding")).status === 200, "onboarding renders for a new a
 check((await req("/api/onboarding", { method: "POST", body: { lang: "hi", categoryId: "start" } })).status === 200, "onboarding saves");
 const afterOnboard = await req("/");
 check(afterOnboard.status === 307 && afterOnboard.location?.endsWith("/learn"), "landing now redirects a signed-in user to Learn");
+
+await resolveLockedLesson();
 
 console.log(`\n— the four free lessons —`);
 check(freeIds.length === 4, "exactly four lessons are free", `→ ${freeIds.length}`);
