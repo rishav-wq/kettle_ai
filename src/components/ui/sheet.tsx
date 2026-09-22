@@ -59,8 +59,21 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         Two gold surfaces at similar strength read as one repeated by mistake.
         A 2px blur left the one behind perfectly legible; at 10px it becomes
         ground and the sheet becomes the subject.
+
+        Paper rather than ink. A dark scrim over the gold hero turned the strip
+        above the sheet a murky olive — not a colour in this palette, and the
+        first thing on screen above a panel asking for money. Tinting toward the
+        page's own ground keeps that strip the same white as the sheet, so the
+        sheet reads as the page lifting rather than as a window cut into a dim
+        overlay. It is --paper, not white, so Night mode still darkens.
+
+        The sheet is the same token, so the edge between them is carried by
+        shadow-l alone, and at 92 there is almost nothing behind to see. That is
+        deliberate: a partly-visible page under a panel asking for money is busy
+        rather than layered, and this audience is better served by one thing on
+        screen at a time. The shadow is what keeps the sheet a sheet.
       */
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 backdrop-blur-[10px] sm:items-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-paper/92 backdrop-blur-[14px] sm:items-center sm:p-6"
       onClick={onClose}
       role="presentation"
     >

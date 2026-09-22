@@ -54,7 +54,25 @@ function write(p: Prefs) {
   else r.removeAttribute("data-textsize");
   if (p.theme) r.setAttribute("data-theme", p.theme);
   else r.removeAttribute("data-theme");
+  syncThemeColor(p.theme === "dark");
   listeners.forEach((l) => l());
+}
+
+/*
+  Keeps the browser's own strip above the page in step with the Night chip.
+
+  themeColor in the layout is a static tag and cannot read data-theme, so on its
+  own it would leave a white strip above a dark page the moment Night is turned
+  on. This is the only way the two can agree, since the thing that decides the
+  theme is a click rather than a media query.
+
+  --paper for each mode, read off globals.css rather than computed, because
+  these two values are the ground the page is painted on and a near-match reads
+  as a seam.
+*/
+function syncThemeColor(dark: boolean) {
+  const tag = document.querySelector('meta[name="theme-color"]');
+  if (tag) tag.setAttribute("content", dark ? "#0d2118" : "#ffffff");
 }
 
 export function ComfortChips({ className, onGrad }: { className?: string; onGrad?: boolean }) {

@@ -52,10 +52,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#07150f" },
-  ],
+  /*
+    One colour, and it is the light one.
+
+    This used to answer prefers-color-scheme, which made the browser's own strip
+    above the page go near-black on any phone set to dark mode — while the page
+    under it stayed white, because the stylesheet deliberately does not follow
+    that query. Night here is opt-in, set by the Night chip, and a phone being
+    in dark mode is not the same thing as a reader asking for a dark screen on a
+    cheap display in daylight.
+
+    So the two disagreed, and the black strip was the first thing on screen. The
+    chip keeps this in step at runtime — see syncThemeColor in
+    src/components/ui/comfort-chips.tsx — which a media query cannot do, since
+    it cannot see data-theme.
+  */
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
