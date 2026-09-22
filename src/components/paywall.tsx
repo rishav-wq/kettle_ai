@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Sheet } from "@/components/ui";
 import { Price } from "@/components/price";
-import { CatalogueStatus } from "@/components/catalogue-status";
 import { ShieldIcon } from "@/components/icons";
 import { post } from "@/lib/http";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
@@ -39,8 +38,6 @@ export function Paywall({
   reason,
   price,
   listPrice,
-  ready,
-  coming,
   from = "lesson",
   months,
   signedIn,
@@ -51,9 +48,6 @@ export function Paywall({
   /* Both formatted on the server. The browser must not resolve a price. */
   price: string;
   listPrice: string | null;
-  /* Counted on the server. See src/components/catalogue-status.tsx. */
-  ready: number;
-  coming: number;
   /**
    * Where the sheet was opened from. The signed-out copy has to know, because
    * on a lesson there is a lesson to name and on /gold there is not — and the
@@ -205,8 +199,6 @@ export function Paywall({
           </li>
         ))}
       </ul>
-
-      <CatalogueStatus ready={ready} coming={coming} />
 
       {error ? (
         <p role="alert" className="rounded-tile bg-pink/10 px-4 py-3 text-[0.9rem] font-medium text-pink">

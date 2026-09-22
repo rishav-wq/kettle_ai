@@ -211,14 +211,6 @@ export type CatalogStats = {
   lessons: number;
   minutes: number;
   freeLessons: number;
-  /**
-   * Published lessons that do not play yet.
-   *
-   * Gold unlocks these as they are filmed, which is the plan — but it means a
-   * member today pays for a catalogue that is mostly still being made. Counted
-   * so the Gold page can say the number rather than leave a buyer to find out.
-   */
-  comingSoon: number;
   /** Real active memberships. Zero until someone actually pays. */
   learners: number;
 };
@@ -250,7 +242,6 @@ export async function getCatalogStats(db: Scoped): Promise<CatalogStats> {
     lessons: playable.length,
     minutes: Math.round(seconds / 60),
     freeLessons: playable.filter((l) => l.isFree).length,
-    comingSoon: lessons.length - playable.length,
     learners,
   };
 }

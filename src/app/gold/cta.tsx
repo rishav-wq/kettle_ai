@@ -9,15 +9,11 @@ export function GoldCta({
   signedIn,
   price,
   listPrice,
-  ready,
-  coming,
 }: {
   months: number;
   signedIn: boolean;
   price: string;
   listPrice: string | null;
-  ready: number;
-  coming: number;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -32,8 +28,6 @@ export function GoldCta({
         from="gold"
         price={price}
         listPrice={listPrice}
-        ready={ready}
-        coming={coming}
         months={months}
         signedIn={signedIn}
       />
