@@ -238,6 +238,7 @@ export function GradHeader({
   children,
   tall,
   tone = "pine",
+  gutter = "normal",
 }: {
   /* ReactNode rather than string, so a page can pass <T hi en /> and let CSS
      choose. A string still works and is still the common case. */
@@ -250,12 +251,19 @@ export function GradHeader({
   children?: ReactNode;
   tall?: boolean;
   tone?: "pine" | "gold";
+  /**
+   * "narrow" trims the side padding so the panel's content can be wider. The
+   * lesson stage uses it: on a phone the video is the page, and 8px a side is
+   * 16px more picture.
+   */
+  gutter?: "normal" | "narrow";
 }) {
   const gold = tone === "gold";
   return (
     <header
       className={cn(
-        "relative min-h-0 rounded-b-[34px] px-5 pt-[calc(16px+env(safe-area-inset-top))] lg:min-h-[240px] lg:rounded-[26px] lg:px-9 lg:pt-8",
+        "relative min-h-0 rounded-b-[34px] pt-[calc(16px+env(safe-area-inset-top))] lg:min-h-[240px] lg:rounded-[26px] lg:px-9 lg:pt-8",
+        gutter === "narrow" ? "px-3" : "px-5",
         gold ? "gold-surface text-on-gold" : "grad text-white",
         tall ? "pb-16" : "pb-8 lg:pb-9"
       )}
@@ -263,12 +271,20 @@ export function GradHeader({
       {back || action ? (
         <div className="flex min-h-[44px] items-center gap-3">
           {back ? (
+            /*
+              The circle is 36px; the link around it stays 44px. Tap targets
+              never drop below 44px here — this audience taps with a thumb on a
+              cheap screen — but the target does not have to be the drawing.
+              Painting all 44px made a back arrow heavier than the title.
+            */
             <Link
               href={back.href}
               aria-label={back.label}
-              className="grid h-11 w-11 flex-none place-items-center rounded-pill bg-white/18 text-lg backdrop-blur-sm transition-colors hover:bg-white/28"
+              className="group grid h-11 w-11 flex-none place-items-center"
             >
-              ←
+              <span className="grid h-9 w-9 place-items-center rounded-pill bg-white/18 text-base backdrop-blur-sm transition-colors group-hover:bg-white/28">
+                ←
+              </span>
             </Link>
           ) : null}
           {action ? <div className="ml-auto">{action}</div> : null}

@@ -11,7 +11,15 @@ export function GoldCta({ price, months, signedIn }: { price: string; months: nu
       <Button full size="lg" onClick={() => setOpen(true)}>
         Become a Gold member
       </Button>
-      <Paywall open={open} onClose={() => setOpen(false)} reason="locked_lesson" price={price} months={months} signedIn={signedIn} />
+      <Paywall
+        open={open}
+        onClose={() => setOpen(false)}
+        reason="locked_lesson"
+        from="gold"
+        price={price}
+        months={months}
+        signedIn={signedIn}
+      />
     </>
   );
 }

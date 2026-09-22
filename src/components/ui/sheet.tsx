@@ -53,7 +53,14 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 backdrop-blur-[2px] sm:items-center sm:p-6"
+      /*
+        The scrim has to do more work on /gold than anywhere else, because the
+        page behind it is itself a gold panel and the sheet opens another one.
+        Two gold surfaces at similar strength read as one repeated by mistake.
+        A 2px blur left the one behind perfectly legible; at 10px it becomes
+        ground and the sheet becomes the subject.
+      */
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 backdrop-blur-[10px] sm:items-center sm:p-6"
       onClick={onClose}
       role="presentation"
     >

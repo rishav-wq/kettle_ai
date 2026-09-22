@@ -35,6 +35,7 @@ export function Paywall({
   open,
   onClose,
   reason,
+  from = "lesson",
   price,
   months,
   signedIn,
@@ -42,6 +43,14 @@ export function Paywall({
   open: boolean;
   onClose: () => void;
   reason: LockReason;
+  /**
+   * Where the sheet was opened from. The signed-out copy has to know, because
+   * on a lesson there is a lesson to name and on /gold there is not — and the
+   * Gold page was passing reason="locked_lesson" regardless, so a reader who
+   * tapped Become a Gold member was told to sign in "to watch this lesson"
+   * without having chosen one.
+   */
+  from?: "lesson" | "gold";
   price: string;
   months: number;
   signedIn: boolean;
@@ -109,22 +118,34 @@ export function Paywall({
     are here, so the copy names that rather than the plan.
   */
   if (!signedIn) {
+    const onLesson = from === "lesson";
     return (
-      <Sheet open={open} onClose={onClose} title={pick(lang, "आगे बढ़ने के लिए साइन इन", "Sign in to continue")}>
+      <Sheet open={open} onClose={onClose} title={pick(lang, "साइन इन", "Sign in")}>
         <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-violet">
           <T hi="शुरू करना मुफ़्त है" en="Free to start" />
         </span>
         <h2 className="text-[1.35rem] font-bold leading-tight">
-          <T hi="यह lesson देखने के लिए साइन इन कीजिए" en="Sign in to watch this lesson" />
+          {onLesson ? (
+            <T hi="यह lesson देखने के लिए साइन इन कीजिए" en="Sign in to watch this lesson" />
+          ) : (
+            <T hi="पहले साइन इन कीजिए" en="Sign in first" />
+          )}
         </h2>
         <p className="text-[0.95rem] leading-relaxed text-ink-2">
-          <T
-            hi="चार lessons मुफ़्त हैं, और हम याद रखते हैं कि आप कहाँ रुके थे। कार्ड की ज़रूरत नहीं।"
-            en="Four lessons are free, and we remember where you stopped. No card needed."
-          />
+          {onLesson ? (
+            <T
+              hi="चार lessons मुफ़्त हैं, और हम याद रखते हैं कि आप कहाँ रुके थे। कार्ड की ज़रूरत नहीं।"
+              en="Four lessons are free, and we remember where you stopped. No card needed."
+            />
+          ) : (
+            <T
+              hi="Gold लेने से पहले एक बार साइन इन। चार lessons वैसे भी मुफ़्त हैं।"
+              en="Sign in once before taking Gold. Four lessons are free anyway."
+            />
+          )}
         </p>
 
-        <Button full size="lg" onClick={() => router.push("/signin?next=/learn")}>
+        <Button full size="lg" onClick={() => router.push(`/signin?next=${onLesson ? "/learn" : "/gold"}`)}>
           <T hi="साइन इन कीजिए" en="Sign in" />
         </Button>
         <button

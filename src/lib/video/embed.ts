@@ -78,7 +78,7 @@ export function stageClass(portrait: boolean): string {
       still sat over the card on a shorter handset, because a proportion of a
       small screen is small while the tab bar is the same size on every one.
     */
-    ? "mx-auto w-full max-w-[min(100%,calc((100dvh-20rem)*9/16),calc(62dvh*9/16))] sm:max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
+    ? "mx-auto w-full max-w-[min(100%,calc((100dvh-18rem)*9/16),calc(62dvh*9/16))] sm:max-w-[min(100%,calc(68dvh*9/16))] aspect-[9/16]"
     : "mx-auto w-full max-w-[min(1080px,calc(66dvh*16/9))] aspect-video";
 }
 

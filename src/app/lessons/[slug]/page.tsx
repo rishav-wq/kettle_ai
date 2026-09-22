@@ -56,9 +56,12 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       tab="learn"
       header={
         <GradHeader
+          gutter="narrow"
           back={{ href: `/learn/${lesson.category.id}`, label: pick(lang, lesson.category.nameHi, lesson.category.nameEn) }}
           action={
-            <span className="rounded-pill bg-white/18 px-3 py-1.5 text-[0.78rem] font-semibold text-white backdrop-blur-sm">
+            /* Secondary information, sized like it. It tells you where you
+               are in the category; it is not a thing to read first. */
+            <span className="rounded-pill bg-white/14 px-2.5 py-1 text-[0.72rem] font-semibold text-white/90 backdrop-blur-sm">
               <T
                 hi={`${lesson.category.lessonCount} में से lesson ${lesson.sortOrder}`}
                 en={`Lesson ${lesson.sortOrder} of ${lesson.category.lessonCount}`}
