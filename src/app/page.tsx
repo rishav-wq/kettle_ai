@@ -193,6 +193,9 @@ export default async function Home() {
                 title={<T hi={l.titleHi} en={l.titleEn} />}
                 meta={<T hi={`${l.minutes} मिनट`} en={`${l.minutes} min`} />}
                 badge={l.isFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
+                /* Signed-out visitors only reach this page — it redirects when
+                   there is a session — so a paid lesson is always locked here. */
+                locked={!l.isFree}
                 className="w-[calc((100%-1rem)/2)] flex-none snap-start sm:w-[200px] lg:w-auto"
               />
             ))}

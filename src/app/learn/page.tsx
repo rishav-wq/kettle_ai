@@ -17,7 +17,7 @@ export const metadata = pageMetadata({
 });
 
 /** How many lessons a shelf shows before it is worth offering the whole category. */
-const SHELF = 6;
+const SHELF = 4;
 
 /*
   Categories, each a shelf of lessons.
@@ -156,6 +156,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                     title={<T hi={l.titleHi} en={l.titleEn} />}
                     meta={<T hi={`${l.minutes} मिनट`} en={`${l.minutes} min`} />}
                     badge={l.isFree ? <T hi="मुफ़्त" en="Free" /> : undefined}
+                    locked={!l.isFree && viewer.state !== "gold"}
                     className="w-[calc((100%-1rem)/2)] flex-none snap-start sm:w-[200px] lg:w-[230px]"
                   />
                 ))}

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LockIcon } from "@/components/icons";
+import { T } from "@/components/bilingual";
 import { cn } from "@/lib/cn";
 
 /*
@@ -43,6 +45,7 @@ export function Tile({
   title,
   meta,
   badge,
+  locked,
   className,
 }: {
   href: string;
@@ -53,6 +56,15 @@ export function Tile({
   title: ReactNode;
   meta: ReactNode;
   badge?: ReactNode;
+  /**
+   * This viewer cannot open this lesson yet.
+   *
+   * The padlock is always drawn, not revealed on hover. Most of this audience
+   * is on a phone, where there is no hover at all, so a hover-only lock would
+   * be invisible to the people it is for. Hover adds a scrim and the word Gold
+   * on the machines that have a pointer; it is not what carries the meaning.
+   */
+  locked?: boolean;
   className?: string;
 }) {
   return (
@@ -69,6 +81,21 @@ export function Tile({
             loading="lazy"
             decoding="async"
           />
+        ) : null}
+        {locked ? (
+          <>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-ink/0 transition-colors duration-200 group-hover:bg-ink/30"
+            />
+            <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-pill bg-ink/75 px-2 py-1 text-[0.7rem] font-semibold text-white backdrop-blur-sm">
+              <LockIcon className="h-3.5 w-3.5" />
+              <span className="hidden group-hover:inline">Gold</span>
+              <span className="sr-only">
+                <T hi="सिर्फ़ Gold सदस्यों के लिए" en="Gold members only" />
+              </span>
+            </span>
+          </>
         ) : null}
         {badge ? (
           <span className="absolute left-3 top-3 rounded-pill bg-white/95 px-2.5 py-1 text-[0.7rem] font-semibold text-violet shadow-s">
