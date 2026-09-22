@@ -9,7 +9,7 @@ import { getCategory } from "@/lib/content/queries";
 import { getCategoryProgress } from "@/lib/content/progress";
 import { slug as slugSchema } from "@/lib/security/validators";
 import { getViewer, lockReason } from "@/lib/viewer";
-import { GOLD } from "@/lib/payments/plan";
+import { GOLD, formatRupees, goldListPrice } from "@/lib/payments/plan";
 import { pageMetadata, SITE_NAME, siteUrl } from "@/lib/seo";
 import { T } from "@/components/bilingual";
 import { getLang } from "@/lib/lang";
@@ -87,6 +87,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 label={pick(lang, `${resume.titleHi} चलाइए`, `Play ${resume.titleEn}`)}
                 lockedBecause={resumeLocked}
                 months={GOLD.months}
+                price={formatRupees(GOLD.amountPaise)}
+                listPrice={goldListPrice()}
                 signedIn={Boolean(viewer.userId)}
                 className="grid h-[88px] w-[88px] place-items-center rounded-full border-2 border-white/45 text-white transition-transform hover:scale-105"
               >
@@ -150,6 +152,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
               };
             })}
             months={GOLD.months}
+            price={formatRupees(GOLD.amountPaise)}
+            listPrice={goldListPrice()}
             signedIn={Boolean(viewer.userId)}
           />
         </section>
@@ -168,6 +172,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             }
             lockedBecause={lockReason(viewer, resume)}
             months={GOLD.months}
+            price={formatRupees(GOLD.amountPaise)}
+            listPrice={goldListPrice()}
             signedIn={Boolean(viewer.userId)}
             className="lg:order-3 lg:w-auto lg:min-w-[320px] lg:justify-self-start"
           />

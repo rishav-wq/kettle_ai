@@ -19,6 +19,8 @@ type Props = {
   tracking: boolean;
   signedIn: boolean;
   months: number;
+  price: string;
+  listPrice: string | null;
 };
 
 /**
@@ -26,7 +28,7 @@ type Props = {
  * paywall is open. It opens on arrival for a locked lesson, and mid-lesson
  * when the server says the fourth free lesson has just been finished.
  */
-export function LessonStage({ lessonId, locked, playable, durationSec, startAtSec, tracking, signedIn, months }: Props) {
+export function LessonStage({ lessonId, locked, playable, durationSec, startAtSec, tracking, signedIn, months, price, listPrice }: Props) {
   const [paywall, setPaywall] = useState<LockReason | null>(locked);
 
   if (locked) {
@@ -56,7 +58,7 @@ export function LessonStage({ lessonId, locked, playable, durationSec, startAtSe
             <T hi="Gold सदस्य बनिए" en="Become a Gold member" />
           </Button>
         </div>
-        <Paywall open={paywall !== null} onClose={() => setPaywall(null)} reason={paywall ?? locked} months={months} signedIn={signedIn} />
+        <Paywall open={paywall !== null} onClose={() => setPaywall(null)} reason={paywall ?? locked} months={months} price={price} listPrice={listPrice} signedIn={signedIn} />
       </>
     );
   }
@@ -76,6 +78,8 @@ export function LessonStage({ lessonId, locked, playable, durationSec, startAtSe
         onClose={() => setPaywall(null)}
         reason={paywall ?? "free_limit_reached"}
         months={months}
+        price={price}
+        listPrice={listPrice}
         signedIn={signedIn}
       />
     </>

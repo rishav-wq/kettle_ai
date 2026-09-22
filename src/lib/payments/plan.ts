@@ -29,6 +29,41 @@ export function formatRupees(paise: number): string {
   return `₹${Number.isInteger(rupees) ? rupees : rupees.toFixed(2)}`;
 }
 
+let warnedAboutList = false;
+
+/*
+  The regular price to show struck through, already formatted, or null.
+
+  Server only, because it reads env — see the note in src/components/price.tsx
+  for what happened when the browser tried to work this out for itself.
+
+  A list price at or below the amount actually charged is a mistake rather than
+  a decision, so it is dropped and explained. Almost always the same mistake:
+  the variable is in paise and someone typed rupees, so 5999 means fifty nine
+  rupees. The symptom is a number that simply does not appear anywhere on the
+  page, which on its own tells you nothing.
+*/
+export function goldListPrice(): string | null {
+  const list = GOLD.listPaise;
+  if (!list) return null;
+
+  if (list <= GOLD.amountPaise) {
+    if (!warnedAboutList) {
+      warnedAboutList = true;
+      const ifRupees = list * 100;
+      console.error(
+        `[plan] GOLD_LIST_PRICE_PAISE is ${list} paise, which is ${formatRupees(list)}. ` +
+          `That is not above GOLD_PRICE_PAISE (${GOLD.amountPaise} paise, ${formatRupees(GOLD.amountPaise)}), ` +
+          `so no regular price is shown.` +
+          (ifRupees > GOLD.amountPaise ? ` This value is in PAISE, not rupees. Did you mean ${ifRupees}?` : "")
+      );
+    }
+    return null;
+  }
+
+  return formatRupees(list);
+}
+
 export function validUntilFrom(start: Date): Date {
   const end = new Date(start);
   end.setMonth(end.getMonth() + GOLD.months);

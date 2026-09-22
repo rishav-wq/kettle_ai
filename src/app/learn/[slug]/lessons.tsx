@@ -34,10 +34,14 @@ export type LessonRowData = {
 export function CategoryLessons({
   rows,
   months,
+  price,
+  listPrice,
   signedIn,
 }: {
   rows: LessonRowData[];
   months: number;
+  price: string;
+  listPrice: string | null;
   signedIn: boolean;
 }) {
   const [reason, setReason] = useState<LockReason | null>(null);
@@ -66,6 +70,8 @@ export function CategoryLessons({
         onClose={() => setReason(null)}
         reason={reason ?? "locked_lesson"}
         months={months}
+        price={price}
+        listPrice={listPrice}
         signedIn={signedIn}
       />
     </>
@@ -84,6 +90,8 @@ export function StartLessonCta({
   label,
   lockedBecause,
   months,
+  price,
+  listPrice,
   signedIn,
   className,
 }: {
@@ -92,6 +100,8 @@ export function StartLessonCta({
   label: ReactNode;
   lockedBecause: LockReason | null;
   months: number;
+  price: string;
+  listPrice: string | null;
   signedIn: boolean;
   className?: string;
 }) {
@@ -110,7 +120,7 @@ export function StartLessonCta({
       <Button size="lg" full className={className} onClick={() => setOpen(true)}>
         {label}
       </Button>
-      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} months={months} signedIn={signedIn} />
+      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} months={months} price={price} listPrice={listPrice} signedIn={signedIn} />
     </>
   );
 }
@@ -124,6 +134,8 @@ export function ResumePlayButton({
   label,
   lockedBecause,
   months,
+  price,
+  listPrice,
   signedIn,
   children,
   className,
@@ -132,6 +144,8 @@ export function ResumePlayButton({
   label: string;
   lockedBecause: LockReason | null;
   months: number;
+  price: string;
+  listPrice: string | null;
   signedIn: boolean;
   children: React.ReactNode;
   className: string;
@@ -151,7 +165,7 @@ export function ResumePlayButton({
       <button type="button" aria-label={`${label} — Kettle Gold`} onClick={() => setOpen(true)} className={className}>
         {children}
       </button>
-      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} months={months} signedIn={signedIn} />
+      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} months={months} price={price} listPrice={listPrice} signedIn={signedIn} />
     </>
   );
 }

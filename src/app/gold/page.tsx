@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { ShieldIcon } from "@/components/icons";
-import { GOLD } from "@/lib/payments/plan";
+import { GOLD, formatRupees, goldListPrice } from "@/lib/payments/plan";
 import { Price } from "@/components/price";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
 import { getViewer } from "@/lib/viewer";
@@ -34,7 +34,7 @@ export default async function GoldPage() {
           title={<T hi="हर lesson खोल लीजिए" en="Open every lesson" />}
           subtitle={<T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />}
         >
-          <Price size="page" />
+          <Price size="page" price={formatRupees(GOLD.amountPaise)} listPrice={goldListPrice()} />
         </GradHeader>
       }
     >
@@ -63,7 +63,7 @@ export default async function GoldPage() {
         </Card>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-8">
-          <GoldCta months={GOLD.months} signedIn={Boolean(viewer.userId)} />
+          <GoldCta months={GOLD.months} price={formatRupees(GOLD.amountPaise)} listPrice={goldListPrice()} signedIn={Boolean(viewer.userId)} />
 
           <p className="flex items-center justify-center gap-1.5 px-2 text-center text-[0.84rem] leading-relaxed text-ink-3">
             <ShieldIcon className="h-4 w-4 flex-none text-gold-deep" />

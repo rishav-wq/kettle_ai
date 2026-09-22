@@ -36,6 +36,8 @@ export function Paywall({
   open,
   onClose,
   reason,
+  price,
+  listPrice,
   from = "lesson",
   months,
   signedIn,
@@ -43,6 +45,9 @@ export function Paywall({
   open: boolean;
   onClose: () => void;
   reason: LockReason;
+  /* Both formatted on the server. The browser must not resolve a price. */
+  price: string;
+  listPrice: string | null;
   /**
    * Where the sheet was opened from. The signed-out copy has to know, because
    * on a lesson there is a lesson to name and on /gold there is not — and the
@@ -181,7 +186,7 @@ export function Paywall({
         <p className="max-w-[40ch] text-[0.92rem] leading-relaxed text-on-gold/80">
           <T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />
         </p>
-        <Price />
+        <Price price={price} listPrice={listPrice} />
       </div>
 
       <ul className="flex flex-col gap-2.5 pt-1">

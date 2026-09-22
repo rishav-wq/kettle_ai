@@ -4,7 +4,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui";
 import { Paywall } from "@/components/paywall";
 
-export function GoldCta({ months, signedIn }: { months: number; signedIn: boolean }) {
+export function GoldCta({
+  months,
+  signedIn,
+  price,
+  listPrice,
+}: {
+  months: number;
+  signedIn: boolean;
+  price: string;
+  listPrice: string | null;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -16,6 +26,8 @@ export function GoldCta({ months, signedIn }: { months: number; signedIn: boolea
         onClose={() => setOpen(false)}
         reason="locked_lesson"
         from="gold"
+        price={price}
+        listPrice={listPrice}
         months={months}
         signedIn={signedIn}
       />
