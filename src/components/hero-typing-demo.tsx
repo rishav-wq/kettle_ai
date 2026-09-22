@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 import { T } from "@/components/bilingual";
 import { useLang } from "@/components/lang-provider";
 import { pick } from "@/lib/pick";
+import { siteHost } from "@/lib/seo";
 
 /*
   This is the one place bilingual copy cannot be two hidden spans.
@@ -234,7 +235,7 @@ function BrowserBar() {
         <span className="flex h-3 w-2.5 flex-none items-end justify-center rounded-[2px] border border-ink-3/60">
           <i className="mb-[1px] block h-[3px] w-[3px] rounded-full bg-ink-3" />
         </span>
-        kettle.ai
+        {siteHost()}
       </span>
     </div>
   );
