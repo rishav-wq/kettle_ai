@@ -54,26 +54,27 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return createPortal(
     <div
       /*
-        The scrim has to do more work on /gold than anywhere else, because the
-        page behind it is itself a gold panel and the sheet opens another one.
-        Two gold surfaces at similar strength read as one repeated by mistake.
-        A 2px blur left the one behind perfectly legible; at 10px it becomes
-        ground and the sheet becomes the subject.
+        Two grounds, because a phone and a desktop are asking for different
+        things here.
 
-        Paper rather than ink. A dark scrim over the gold hero turned the strip
-        above the sheet a murky olive — not a colour in this palette, and the
-        first thing on screen above a panel asking for money. Tinting toward the
-        page's own ground keeps that strip the same white as the sheet, so the
-        sheet reads as the page lifting rather than as a window cut into a dim
-        overlay. It is --paper, not white, so Night mode still darkens.
+        On a phone the scrim is solid --paper and nothing else. Every translucent
+        version was tried and every one was worse: ink at 55% over the gold hero
+        mixed to a murky olive that is not a colour in this palette, and paper
+        at 92% with a blur left ghost smears of the page showing through that
+        read as a rendering fault. Half-seeing the page under a panel asking
+        for money is busy, not layered. Solid means the strip above the sheet
+        is simply the page's own white, and the sheet is the one thing on
+        screen. --paper rather than white, so Night mode still darkens it.
 
-        The sheet is the same token, so the edge between them is carried by
-        shadow-l alone, and at 92 there is almost nothing behind to see. That is
-        deliberate: a partly-visible page under a panel asking for money is busy
-        rather than layered, and this audience is better served by one thing on
-        screen at a time. The shadow is what keeps the sheet a sheet.
+        From sm the sheet is a centred card on a large screen, where a plain
+        white void around it would read as the page having vanished. There the
+        conventional dimmed overlay is right, with enough blur that the gold
+        hero behind /gold becomes ground rather than a second gold panel.
+
+        No blur on the phone: it does nothing behind an opaque layer and costs
+        GPU on exactly the devices this audience owns.
       */
-      className="fixed inset-0 z-50 flex items-end justify-center bg-paper/92 backdrop-blur-[14px] sm:items-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-paper sm:items-center sm:bg-ink/55 sm:p-6 sm:backdrop-blur-[10px]"
       onClick={onClose}
       role="presentation"
     >
@@ -84,7 +85,13 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         onClick={(e) => e.stopPropagation()}
         /* text-ink explicitly: a dialog should never depend on what it was
            opened from for something as basic as whether its words are legible. */
-        className="flex max-h-full w-full max-w-[520px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-paper px-5 pb-[calc(20px+env(safe-area-inset-bottom))] pt-4 text-ink shadow-l sm:rounded-[28px] sm:px-7 sm:pb-7 sm:pt-6"
+        /*
+          Outlined, because on a phone the ground behind it is the same white.
+          shadow-l is offset downward and cannot mark a top edge, so without the
+          hairline the sheet's rounded top would dissolve into the page. Large
+          blocks in this product are outlined rather than filled anyway.
+        */
+        className="flex max-h-full w-full max-w-[520px] flex-col gap-4 overflow-y-auto rounded-t-[28px] border border-line bg-paper px-5 pb-[calc(20px+env(safe-area-inset-bottom))] pt-4 text-ink shadow-l sm:rounded-[28px] sm:px-7 sm:pb-7 sm:pt-6"
       >
         {/* The grab handle is a phone affordance. On a desktop dialog nobody
             drags, it just reads as a stray line. */}
