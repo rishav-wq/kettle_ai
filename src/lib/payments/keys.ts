@@ -28,7 +28,52 @@ import { env } from "@/lib/env";
 
 export type RazorpayMode = "test" | "live";
 
-export const razorpayMode: RazorpayMode = env.NODE_ENV === "production" ? "live" : "test";
+/*
+  Production normally means live keys. RAZORPAY_TEST_MODE_UNTIL is the one way
+  to say otherwise, and it is deliberately awkward: a date, not a flag.
+
+  The reason it exists is that a webhook has to be delivered to a public URL,
+  and the only public URL this product has is the deployed site. Walking the
+  paid flow on the real domain, with the real webhook, before real money is
+  switched on, otherwise needs a tunnel to a laptop — which tests a machine
+  that is not the one customers will use.
+
+  The reason it is a date is that the failure it invites is forgetting. A site
+  left on test keys takes no money and looks like it is working, which is the
+  quietest possible way to lose every sale. This turns itself off.
+*/
+function resolveMode(): RazorpayMode {
+  if (env.NODE_ENV !== "production") return "test";
+
+  const raw = env.RAZORPAY_TEST_MODE_UNTIL;
+  if (!raw) return "live";
+
+  // End of that day, India time, matching how REVIEW_UNTIL is read.
+  const until = new Date(`${raw}T23:59:59+05:30`);
+  if (Number.isNaN(until.getTime())) {
+    console.error(
+      `[razorpay] RAZORPAY_TEST_MODE_UNTIL is not a date like 2026-10-05: ${JSON.stringify(raw)}. Staying on LIVE keys.`
+    );
+    return "live";
+  }
+  if (until.getTime() < Date.now()) {
+    console.warn(`[razorpay] test mode in production expired on ${raw}. Back on LIVE keys. Remove RAZORPAY_TEST_MODE_UNTIL.`);
+    return "live";
+  }
+
+  /*
+    Loud on purpose, same reason as the review account. While this is on, the
+    deployed site cannot take a real payment from a real customer, and nothing
+    on the page says so.
+  */
+  console.warn(
+    `[razorpay] TEST MODE IN PRODUCTION until ${raw}. This site is taking play money and CANNOT be paid by a real customer. ` +
+      `Remove RAZORPAY_TEST_MODE_UNTIL and set the live keys when the walk-through is done.`
+  );
+  return "test";
+}
+
+export const razorpayMode: RazorpayMode = resolveMode();
 
 type Keys = { keyId: string; keySecret: string; webhookSecret: string | null };
 
@@ -39,7 +84,9 @@ function firstSet(...candidates: (string | undefined)[]): string | undefined {
 /** Refuses a key from the wrong half of the account. Returns why, or null if it is fine. */
 function wrongMode(keyId: string): string | null {
   if (razorpayMode === "test" && keyId.startsWith("rzp_live")) {
-    return "a LIVE key is configured but NODE_ENV is not production. Refusing: this would take real money from a development machine.";
+    return env.NODE_ENV === "production"
+      ? "test mode is on in production but the key resolved to a LIVE one. Refusing: set RAZORPAY_TEST_KEY_ID, or remove RAZORPAY_TEST_MODE_UNTIL."
+      : "a LIVE key is configured but NODE_ENV is not production. Refusing: this would take real money from a development machine.";
   }
   if (razorpayMode === "live" && keyId.startsWith("rzp_test")) {
     return "a test key is configured in production. Refusing: payments would appear to work and settle nothing.";

@@ -75,6 +75,27 @@ services:
       - key: RAZORPAY_LIVE_WEBHOOK_SECRET
         sync: false
 
+      # Walking the paid flow on the real domain before real money is on.
+      #
+      # A date, like 2026-10-05. While it is in the future this service runs on
+      # the TEST trio instead, so Razorpay's test checkout opens on
+      # getkettleai.com and the test webhook already registered against that
+      # URL delivers to it. Set RAZORPAY_TEST_KEY_ID, RAZORPAY_TEST_KEY_SECRET
+      # and RAZORPAY_TEST_WEBHOOK_SECRET alongside it.
+      #
+      # It is a date rather than a flag because the failure it invites is
+      # forgetting. A site left on test keys takes no money and looks like it
+      # is working, which is the quietest way to lose every sale. Past the date
+      # it returns to the live keys on its own and says so in the log.
+      - key: RAZORPAY_TEST_MODE_UNTIL
+        sync: false
+      - key: RAZORPAY_TEST_KEY_ID
+        sync: false
+      - key: RAZORPAY_TEST_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_TEST_WEBHOOK_SECRET
+        sync: false
+
       # The single-set form. Leave unset if the LIVE trio above is used.
       - key: RAZORPAY_KEY_ID
         sync: false

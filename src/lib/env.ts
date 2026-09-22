@@ -81,6 +81,13 @@ const schema = z.object({
   RAZORPAY_LIVE_WEBHOOK_SECRET: z.string().min(1).optional(),
 
   /*
+    A date, like 2026-10-05. Lets the deployed site run on TEST keys until then,
+    so the paid flow can be walked on the real domain before real money is
+    switched on. Expires on its own, the way REVIEW_UNTIL does.
+  */
+  RAZORPAY_TEST_MODE_UNTIL: z.string().min(1).optional(),
+
+  /*
     Who may edit the catalogue: a comma separated list of phone numbers in
     E.164, exactly as they are stored. Unset means nobody, which is the right
     default for every environment that is not yours.
