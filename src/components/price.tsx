@@ -46,8 +46,18 @@ export function listPricePaise(): number | null {
   if (list <= GOLD.amountPaise) {
     if (!warned) {
       warned = true;
+      /*
+        Almost always the same mistake: the variable is in paise and someone
+        typed rupees, so 5999 means fifty nine rupees and lands under the price
+        being charged. Say which it is, because the symptom is a number that
+        simply does not appear anywhere.
+      */
+      const ifRupees = list * 100;
       console.error(
-        `[plan] GOLD_LIST_PRICE_PAISE (${list}) is not above GOLD_PRICE_PAISE (${GOLD.amountPaise}), so no regular price is shown.`
+        `[plan] GOLD_LIST_PRICE_PAISE is ${list} paise, which is ${formatRupees(list)}. ` +
+          `That is not above GOLD_PRICE_PAISE (${GOLD.amountPaise} paise, ${formatRupees(GOLD.amountPaise)}), ` +
+          `so no regular price is shown.` +
+          (ifRupees > GOLD.amountPaise ? ` This value is in PAISE, not rupees. Did you mean ${ifRupees}?` : "")
       );
     }
     return null;
