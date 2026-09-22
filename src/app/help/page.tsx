@@ -6,6 +6,7 @@ import { getSiteContent } from "@/lib/content/site";
 import { getViewer } from "@/lib/viewer";
 import { T } from "@/components/bilingual";
 import { cn } from "@/lib/cn";
+import { has } from "@/app/legal/parts";
 import { getLang } from "@/lib/lang";
 import { pick } from "@/lib/pick";
 import { pageMetadata } from "@/lib/seo";
@@ -73,6 +74,23 @@ export default async function HelpPage() {
               <ChatIcon className="h-5 w-5" />
               <T hi="WhatsApp पर संदेश भेजिए" en="Message us on WhatsApp" />
             </Button>
+            {site.business && (has(site.business.email) || has(site.business.phone)) ? (
+              <p className="flex flex-col gap-1 pt-1 text-[0.88rem] text-ink-2">
+                {has(site.business.email) ? (
+                  <a href={`mailto:${site.business.email}`} className="min-h-[36px] w-fit py-1.5 underline underline-offset-4">
+                    {site.business.email}
+                  </a>
+                ) : null}
+                {has(site.business.phone) ? (
+                  <a
+                    href={`tel:${site.business.phone.replace(/\s+/g, "")}`}
+                    className="min-h-[36px] w-fit py-1.5 tabular-nums underline underline-offset-4"
+                  >
+                    {site.business.phone}
+                  </a>
+                ) : null}
+              </p>
+            ) : null}
           </Card>
         ) : null}
 

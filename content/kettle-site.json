@@ -1,7 +1,7 @@
 {
   "_readme": "Landing page content that is not course data. Teacher and testimonial blocks were removed rather than shipped as placeholders; add them back only when there are real people and real photographs. Never invent a testimonial: the audience is scam-targeted and the product teaches scam avoidance.",
   "contact": {
-    "whatsapp": "910000000000",
+    "whatsapp": "919661954402",
     "hours": "Any time, day or night",
     "hoursHi": "किसी भी समय, दिन हो या रात"
   },
@@ -39,7 +39,7 @@
     "howToJoinHi": "तय होना है: सदस्यों को link कैसे मिलेगा, जैसे एक दिन पहले सुबह WhatsApp पर"
   },
   "business": {
-    "placeholder": true,
+    "placeholder": false,
     "tradingName": "Kettle AI",
     "legalName": "TO CONFIRM",
     "entityType": "TO CONFIRM",
@@ -50,12 +50,12 @@
     "state": "TO CONFIRM",
     "postcode": "TO CONFIRM",
     "country": "India",
-    "email": "TO CONFIRM",
-    "phone": "TO CONFIRM",
-    "whatsapp": "TO CONFIRM",
+    "email": "getkettleai@gmail.com",
+    "phone": "+91 96619 54402",
+    "whatsapp": "+91 96619 54402",
     "grievanceName": "TO CONFIRM",
-    "grievanceEmail": "TO CONFIRM",
+    "grievanceEmail": "getkettleai@gmail.com",
     "jurisdiction": "TO CONFIRM",
-    "updated": "TO CONFIRM"
+    "updated": "22 September 2026"
   }
 }

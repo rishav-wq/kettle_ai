@@ -228,7 +228,13 @@ export default async function Home() {
         </Reveal>
 
         <Reveal>
-          <Footer whatsapp={whatsapp} hours={site.contact.hours} hoursHi={site.contact.hoursHi} />
+          <Footer
+            whatsapp={whatsapp}
+            hours={site.contact.hours}
+            hoursHi={site.contact.hoursHi}
+            email={site.business?.email ?? null}
+            phone={site.business?.phone ?? null}
+          />
         </Reveal>
       </div>
     </div>

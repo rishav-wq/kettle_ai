@@ -297,7 +297,19 @@ export function ClosingCta({ href, whatsapp }: { href: string; whatsapp: string 
   well as in the promise block on purpose: a footer is where people go looking
   for who they are actually dealing with, and this audience is scam-targeted.
 */
-export function Footer({ whatsapp, hours, hoursHi }: { whatsapp: string | null; hours: string; hoursHi: string }) {
+export function Footer({
+  whatsapp,
+  hours,
+  hoursHi,
+  email,
+  phone,
+}: {
+  whatsapp: string | null;
+  hours: string;
+  hoursHi: string;
+  email: string | null;
+  phone: string | null;
+}) {
   /* aria-label on each nav needs a plain string, so every group carries both
      and the heading renders the pair. */
   const groups = [
@@ -353,6 +365,28 @@ export function Footer({ whatsapp, hours, hoursHi }: { whatsapp: string | null; 
               <ChatIcon className="h-[18px] w-[18px]" />
               <T hi="WhatsApp पर हमसे पूछिए" en="Ask us on WhatsApp" />
             </a>
+          ) : null}
+          {/*
+            Email and telephone as plain links, not only WhatsApp. A footer is
+            where people go to find out who they are actually dealing with,
+            and this audience is more likely to phone than to message.
+          */}
+          {email || phone ? (
+            <p className="flex flex-col gap-1 text-[0.86rem] text-ink-2">
+              {email ? (
+                <a href={`mailto:${email}`} className="min-h-[36px] w-fit py-1.5 underline underline-offset-4 hover:text-violet">
+                  {email}
+                </a>
+              ) : null}
+              {phone ? (
+                <a
+                  href={`tel:${phone.replace(/\s+/g, "")}`}
+                  className="min-h-[36px] w-fit py-1.5 tabular-nums underline underline-offset-4 hover:text-violet"
+                >
+                  {phone}
+                </a>
+              ) : null}
+            </p>
           ) : null}
           {hours ? (
             <p className="text-[0.8rem] text-ink-3">
