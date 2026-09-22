@@ -45,8 +45,36 @@ export async function POST(req: Request) {
 
     await enforceRate(`order:${viewer.userId}`, LIMITS.orderCreate);
 
+    /*
+      The idempotency key, and the key id is part of it on purpose.
+
+      A double tap or a retry on a flaky mobile connection must reuse the same
+      order rather than create a second charge, so the receipt is derived from
+      the payer, the amount and the day. Two orders that agree on all three are
+      the same intent.
+
+      They are not the same intent across Razorpay accounts. An unsettled order
+      created against the test keys has no meaning to the live account, and
+      reusing its id is worse than useless: checkout is handed a live key and a
+      test order id, and Razorpay answers with a generic "something went wrong"
+      that names neither. That is exactly what happened on the first live
+      attempt, and it was invisible from the outside — no new payment row was
+      written, because the reuse path returned before writing one.
+
+      Including the key id makes the collision impossible rather than merely
+      unlikely. It also covers switching to a different Razorpay account, which
+      this product has already done once.
+
+      The day is UTC, and stays UTC. It is nearly six hours behind India, so
+      "today" here runs to 05:30 local — which is how a test order from the
+      previous evening was still live-matching after midnight. Making it local
+      would move that seam, not remove it, and would make the receipt depend on
+      where the server happens to run.
+    */
     const receipt = createHash("sha256")
-      .update(`${viewer.userId}:${GOLD.amountPaise}:${new Date().toISOString().slice(0, 10)}`)
+      .update(
+        `${viewer.userId}:${GOLD.amountPaise}:${new Date().toISOString().slice(0, 10)}:${razorpayPublicKeyId() ?? "simulated"}`
+      )
       .digest("hex")
       .slice(0, 32);
 

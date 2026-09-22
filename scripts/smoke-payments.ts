@@ -132,6 +132,28 @@ async function main() {
   check(order.json?.simulated !== true, "and it is not the simulated stand-in");
   check(order.json?.amountPaise === 349900, "for the configured amount", `→ ${order.json?.amountPaise}`);
 
+  /*
+    The order id must belong to the account whose key checkout will be opened
+    with. These can diverge, and when they do nothing here notices: the order
+    endpoint answers 200 with a perfectly well formed id, and the failure shows
+    up only inside Razorpay's hosted sheet as a generic "something went wrong"
+    that names neither the key nor the order.
+
+    That happened for real. An unsettled order created against the test keys
+    was reused after the switch to live, because the receipt that de-duplicates
+    orders did not include the key id. The reuse path returns before writing a
+    payment row, so there was no new row to find and nothing in the log.
+
+    Asking Razorpay whether it knows this order, using the same credentials the
+    browser is about to be handed, is the cheapest way to catch it.
+  */
+  const { keyId: checkoutKey, keySecret } = razorpayKeys();
+  const lookup = await fetch(`https://api.razorpay.com/v1/orders/${orderId}`, {
+    headers: { authorization: `Basic ${Buffer.from(`${checkoutKey}:${keySecret}`).toString("base64")}` },
+  });
+  check(lookup.status === 200, "and Razorpay knows it under the key checkout will use", `→ HTTP ${lookup.status}`);
+  check(order.json?.keyId === checkoutKey, "the key handed to the browser is the one that made the order");
+
   console.log("\n— what must not grant anything —");
   const forged = await req("/api/webhooks/razorpay", {
     method: "POST",
