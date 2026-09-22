@@ -75,6 +75,13 @@ services:
       - key: RAZORPAY_LIVE_WEBHOOK_SECRET
         sync: false
 
+      # The regular price, struck through beside the one charged, in paise.
+      # 599900 renders "₹3499  ₹5999" with the second struck. Unset shows no
+      # strike at all, which is the default and the safe state — see the note
+      # in src/components/price.tsx before setting it.
+      - key: GOLD_LIST_PRICE_PAISE
+        sync: false
+
       # Walking the paid flow on the real domain before real money is on.
       #
       # A date, like 2026-10-05. While it is in the future this service runs on

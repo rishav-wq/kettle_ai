@@ -54,6 +54,12 @@ const schema = z.object({
 
   /* Gold plan. Price is a product decision; these are the knobs, not the answer. */
   GOLD_PRICE_PAISE: z.coerce.number().int().positive().default(349900),
+  /*
+    The regular price, shown struck through beside the one charged. Unset
+    means no strike, which is the default and the safe state: setting it
+    asserts the higher number is real and the lower one is a launch price.
+  */
+  GOLD_LIST_PRICE_PAISE: z.coerce.number().int().positive().optional(),
   GOLD_MONTHS: z.coerce.number().int().positive().default(12),
 
   /*

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Sheet } from "@/components/ui";
+import { Price } from "@/components/price";
 import { ShieldIcon } from "@/components/icons";
 import { post } from "@/lib/http";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
@@ -36,7 +37,6 @@ export function Paywall({
   onClose,
   reason,
   from = "lesson",
-  price,
   months,
   signedIn,
 }: {
@@ -51,7 +51,6 @@ export function Paywall({
    * without having chosen one.
    */
   from?: "lesson" | "gold";
-  price: string;
   months: number;
   signedIn: boolean;
 }) {
@@ -182,12 +181,7 @@ export function Paywall({
         <p className="max-w-[40ch] text-[0.92rem] leading-relaxed text-on-gold/80">
           <T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />
         </p>
-        <div className="mt-4 flex items-baseline gap-2">
-          <span className="text-[2.3rem] font-bold leading-none tabular-nums">{price}</span>
-          <span className="text-[0.9rem] font-medium text-on-gold/75">
-            <T hi={`${months} महीने के लिए`} en={`for ${months} months`} />
-          </span>
-        </div>
+        <Price />
       </div>
 
       <ul className="flex flex-col gap-2.5 pt-1">

@@ -7,7 +7,7 @@ import { getLesson } from "@/lib/content/queries";
 import { getLessonProgress } from "@/lib/content/progress";
 import { slug as slugSchema } from "@/lib/security/validators";
 import { toPlayable } from "@/lib/video/embed";
-import { GOLD, formatRupees } from "@/lib/payments/plan";
+import { GOLD } from "@/lib/payments/plan";
 import { freeLeft, getViewer, lockReason } from "@/lib/viewer";
 import { pageMetadata, SITE_NAME } from "@/lib/seo";
 import { LessonStage } from "./stage";
@@ -88,7 +88,6 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
             startAtSec={progress?.watchedSec ?? 0}
             tracking={Boolean(viewer.userId)}
             signedIn={Boolean(viewer.userId)}
-            price={formatRupees(GOLD.amountPaise)}
             months={GOLD.months}
           />
           </div>

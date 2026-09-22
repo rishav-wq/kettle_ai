@@ -33,12 +33,10 @@ export type LessonRowData = {
 */
 export function CategoryLessons({
   rows,
-  price,
   months,
   signedIn,
 }: {
   rows: LessonRowData[];
-  price: string;
   months: number;
   signedIn: boolean;
 }) {
@@ -67,7 +65,6 @@ export function CategoryLessons({
         open={reason !== null}
         onClose={() => setReason(null)}
         reason={reason ?? "locked_lesson"}
-        price={price}
         months={months}
         signedIn={signedIn}
       />
@@ -86,7 +83,6 @@ export function StartLessonCta({
   href,
   label,
   lockedBecause,
-  price,
   months,
   signedIn,
   className,
@@ -95,7 +91,6 @@ export function StartLessonCta({
   /* Visible text, so it arrives as <T hi en /> and CSS picks. */
   label: ReactNode;
   lockedBecause: LockReason | null;
-  price: string;
   months: number;
   signedIn: boolean;
   className?: string;
@@ -115,7 +110,7 @@ export function StartLessonCta({
       <Button size="lg" full className={className} onClick={() => setOpen(true)}>
         {label}
       </Button>
-      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} price={price} months={months} signedIn={signedIn} />
+      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} months={months} signedIn={signedIn} />
     </>
   );
 }
@@ -128,7 +123,6 @@ export function ResumePlayButton({
   href,
   label,
   lockedBecause,
-  price,
   months,
   signedIn,
   children,
@@ -137,7 +131,6 @@ export function ResumePlayButton({
   href: string;
   label: string;
   lockedBecause: LockReason | null;
-  price: string;
   months: number;
   signedIn: boolean;
   children: React.ReactNode;
@@ -158,7 +151,7 @@ export function ResumePlayButton({
       <button type="button" aria-label={`${label} — Kettle Gold`} onClick={() => setOpen(true)} className={className}>
         {children}
       </button>
-      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} price={price} months={months} signedIn={signedIn} />
+      <Paywall open={open} onClose={() => setOpen(false)} reason={lockedBecause} months={months} signedIn={signedIn} />
     </>
   );
 }

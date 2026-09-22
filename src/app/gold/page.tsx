@@ -3,7 +3,8 @@ import Link from "next/link";
 import { AppShell, GradHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui";
 import { ShieldIcon } from "@/components/icons";
-import { GOLD, formatRupees } from "@/lib/payments/plan";
+import { GOLD } from "@/lib/payments/plan";
+import { Price } from "@/components/price";
 import { GOLD_INCLUDES } from "@/lib/payments/includes";
 import { getViewer } from "@/lib/viewer";
 import { GoldCta } from "./cta";
@@ -33,12 +34,7 @@ export default async function GoldPage() {
           title={<T hi="हर lesson खोल लीजिए" en="Open every lesson" />}
           subtitle={<T hi="एक बार का payment। अपने आप कुछ भी दोबारा नहीं कटता।" en="One payment. Nothing renews on its own." />}
         >
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-[2.6rem] font-bold leading-none tabular-nums">{formatRupees(GOLD.amountPaise)}</span>
-            <span className="text-[0.95rem] font-medium text-on-gold/75">
-              <T hi={`${GOLD.months} महीने के लिए`} en={`for ${GOLD.months} months`} />
-            </span>
-          </div>
+          <Price size="page" />
         </GradHeader>
       }
     >
@@ -67,7 +63,7 @@ export default async function GoldPage() {
         </Card>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-8">
-          <GoldCta price={formatRupees(GOLD.amountPaise)} months={GOLD.months} signedIn={Boolean(viewer.userId)} />
+          <GoldCta months={GOLD.months} signedIn={Boolean(viewer.userId)} />
 
           <p className="flex items-center justify-center gap-1.5 px-2 text-center text-[0.84rem] leading-relaxed text-ink-3">
             <ShieldIcon className="h-4 w-4 flex-none text-gold-deep" />

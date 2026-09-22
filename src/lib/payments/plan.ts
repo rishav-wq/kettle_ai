@@ -12,6 +12,13 @@ import { env } from "@/lib/env";
 */
 export const GOLD = {
   amountPaise: env.GOLD_PRICE_PAISE,
+  /*
+    What Gold costs when it is not a launch price. Display only — nothing is
+    ever charged from this, and the order endpoint does not read it. Unset
+    means no regular price is shown. See src/components/price.tsx for why it
+    defaults to off.
+  */
+  listPaise: env.GOLD_LIST_PRICE_PAISE ?? null,
   months: env.GOLD_MONTHS,
   currency: "INR" as const,
 };
